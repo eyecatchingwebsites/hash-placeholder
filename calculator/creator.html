@@ -1,0 +1,291 @@
+<title>$HASH Creator Earnings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: scenario strip on top, settings rack left, readout + three time charts right (log time axis: hours to months) */
+:root {
+  --bg: #f3f4f1; --panel: #ffffff; --ink: #1b1f1d; --muted: #5d6662; --line: #d9ddd8;
+  --accent: #b4540f; --fee: #0f8a7a; --hold: #c9820c; --mcap: #3f5e78; --vol: #9aa7b2; --bad: #b3261e;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121514; --panel: #1a1e1c; --ink: #e8ebe8; --muted: #9aa39f; --line: #2c3330;
+    --accent: #f08a3c; --fee: #2fc4ad; --hold: #f2b23a; --mcap: #8fb3d1; --vol: #5f6b74; --bad: #ff7a6e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121514; --panel: #1a1e1c; --ink: #e8ebe8; --muted: #9aa39f; --line: #2c3330;
+  --accent: #f08a3c; --fee: #2fc4ad; --hold: #f2b23a; --mcap: #8fb3d1; --vol: #5f6b74; --bad: #ff7a6e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 48px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 1.9rem; margin: 0; text-wrap: balance; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 18px; max-width: 70ch; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.card h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0 0 2px; }
+.cap { margin: 0 0 12px; color: var(--muted); font-size: .85rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.chip { font: 600 .82rem var(--display); letter-spacing: .03em; padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pdesc { color: var(--muted); margin: 0; max-width: 85ch; font-size: .88rem; }
+.pdesc b { color: var(--ink); }
+.grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 20px; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.rack { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px 16px 12px; }
+fieldset { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 14px 0 6px; display: grid; gap: 12px; }
+fieldset:first-child { border-top: 0; }
+legend { font-family: var(--display); font-weight: 600; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); padding: 0; margin-bottom: 4px; float: left; width: 100%; }
+.ctl { display: grid; gap: 4px; }
+.ctl .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ctl label { font-weight: 500; }
+.ctl output { font-family: var(--mono); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: .78rem; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.main { display: grid; gap: 20px; min-width: 0; }
+.readout { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 760px) { .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cell { background: var(--panel); padding: 14px 16px; display: grid; gap: 2px; align-content: start; }
+.cell .k { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.cell .v { font-family: var(--display); font-weight: 700; font-size: 1.55rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.cell .d { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
+.cell.hero .v { color: var(--accent); }
+.chartbox { position: relative; height: 300px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 640px; }
+th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .82rem; }
+th { font-family: var(--body); font-weight: 600; color: var(--muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+th:first-child, td:first-child { text-align: left; font-family: var(--body); }
+tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
+.note { color: var(--muted); font-size: .8rem; max-width: 85ch; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <h1><span>$HASH</span> Creator Earnings</h1>
+  <p class="sub">What you earn from the 0.5% development fee plus your 1% holding as the coin plays out. These are illustrative paths for how memecoins tend to move, not forecasts.</p>
+
+  <section class="card">
+    <h2>How the coin plays out</h2>
+    <div class="chips" id="chips" role="group" aria-label="Scenario"></div>
+    <p class="pdesc" id="pdesc"></p>
+  </section>
+
+  <div class="grid">
+    <form class="rack" id="form" onsubmit="return false">
+      <fieldset>
+        <legend>Your take</legend>
+        <div class="ctl"><div class="row"><label for="devFee">Development fee</label><output id="devFeeO"></output></div>
+          <input type="range" id="devFee" min="0" max="2" step="0.05"></div>
+        <div class="ctl"><div class="row"><label for="hold">Your holding</label><output id="holdO"></output></div>
+          <input type="range" id="hold" min="0" max="5" step="0.1"></div>
+        <div class="ctl"><div class="row"><label for="lock">Holding locked for</label><output id="lockO"></output></div>
+          <input type="range" id="lock" min="0" max="180" step="1"></div>
+        <div class="ctl"><div class="row"><label for="haircut">Exit cost on your holding</label><output id="haircutO"></output></div>
+          <input type="range" id="haircut" min="0" max="50" step="1">
+          <span class="hint">Transfer fee plus price impact when you sell. Large sells move the price.</span></div>
+        <div class="ctl"><div class="row"><label for="costs">Running costs</label><output id="costsO"></output></div>
+          <input type="range" id="costs" min="0" max="3000" step="50">
+          <span class="hint">Servers, pool and RPC fees, per month. Subtracted from fees.</span></div>
+      </fieldset>
+      <fieldset>
+        <legend>Coin path</legend>
+        <div class="ctl"><div class="row"><label for="start">Launch market cap</label><output id="startO"></output></div>
+          <input type="range" id="start" min="0" max="1000" step="1"></div>
+        <div class="ctl"><div class="row"><label for="peak">Peak market cap</label><output id="peakO"></output></div>
+          <input type="range" id="peak" min="0" max="1000" step="1"></div>
+        <div class="ctl"><div class="row"><label for="tPeak">Time to peak</label><output id="tPeakO"></output></div>
+          <input type="range" id="tPeak" min="0" max="1000" step="1"></div>
+        <div class="ctl"><div class="row"><label for="halfLife">Fade speed after peak (half-life)</label><output id="halfLifeO"></output></div>
+          <input type="range" id="halfLife" min="0" max="1000" step="1"></div>
+        <div class="ctl"><div class="row"><label for="floor">Where it settles</label><output id="floorO"></output></div>
+          <input type="range" id="floor" min="0" max="1000" step="1"></div>
+        <div class="ctl"><div class="row"><label for="turnPeak">Launch volume ÷ market cap</label><output id="turnPeakO"></output></div>
+          <input type="range" id="turnPeak" min="0.1" max="5" step="0.1"></div>
+        <div class="ctl"><div class="row"><label for="turnFloor">Long-run daily volume ÷ market cap</label><output id="turnFloorO"></output></div>
+          <input type="range" id="turnFloor" min="0" max="30" step="0.5"></div>
+        <div class="ctl"><div class="row"><label for="horizon">Time span shown</label><output id="horizonO"></output></div>
+          <input type="range" id="horizon" min="1" max="365" step="1"></div>
+      </fieldset>
+    </form>
+
+    <div class="main">
+      <div class="readout" aria-live="polite">
+        <div class="cell"><span class="k">First 24 hours</span><span class="v" id="r1"></span><span class="d">fees</span></div>
+        <div class="cell"><span class="k">First 7 days</span><span class="v" id="r7"></span><span class="d">fees</span></div>
+        <div class="cell"><span class="k">First 30 days</span><span class="v" id="r30"></span><span class="d">fees</span></div>
+        <div class="cell"><span class="k" id="rHk"></span><span class="v" id="rH"></span><span class="d" id="rHd"></span></div>
+        <div class="cell hero"><span class="k">Total at end</span><span class="v" id="rT"></span><span class="d" id="rTd"></span></div>
+      </div>
+
+      <section class="card">
+        <h2>Market cap and volume</h2>
+        <p class="cap">The path you picked. The time axis is logarithmic, so the first hours get as much room as the later months.</p>
+        <div class="chartbox"><canvas id="chPath" aria-label="Market cap and daily volume over time"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>What you've earned so far</h2>
+        <p class="cap">Fees collected to date (after running costs), plus what your holding would sell for at that moment. The holding is dashed while it's locked.</p>
+        <div class="chartbox"><canvas id="chEarn" aria-label="Cumulative creator earnings over time"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>All scenarios side by side</h2>
+        <p class="cap">Total earnings (fees plus holding value) for every scenario, using your take settings.</p>
+        <div class="chartbox"><canvas id="chCmp" aria-label="Total creator earnings over time for each scenario"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>Scenario summary</h2>
+        <p class="cap" id="tblCap"></p>
+        <div class="tablewrap"><table id="tbl"></table></div>
+        <p class="note">Fees assume the 3% transfer fee applies to every trade, with your share collected continuously. The holding is valued at market cap × your share × (1 − exit cost). Selling it in practice would move the price more than this. Your dev buy at launch costs roughly your holding share × launch market cap. None of this is financial advice.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const SCEN = [
+  { id: "hours", name: "Dies in hours", c: "#b3261e",
+    p: { start: 20000, peak: 1500000, tPeak: 0.17, halfLife: 0.2, floor: 15000, turnPeak: 4, turnFloor: 1 },
+    d: "The most common outcome. It pumps to $1.5M in about four hours, then traders dump and it's nearly dead by the next day." },
+  { id: "runner", name: "$10M runner, few days", c: "#c9820c",
+    p: { start: 30000, peak: 10000000, tPeak: 1.5, halfLife: 1.2, floor: 150000, turnPeak: 3, turnFloor: 2 },
+    d: "A big run to $10M in a day and a half, fading within a week to $150K with little volume." },
+  { id: "steady", name: "Stable $500K–1M, 6 months", c: "#0f8a7a",
+    p: { start: 50000, peak: 1000000, tPeak: 3, halfLife: 20, floor: 700000, turnPeak: 2, turnFloor: 6 },
+    d: "Your preferred path. It reaches $1M in a few days, then holds around $700K–1M with steady daily volume of about 6% of market cap, the kind a community of active miners and traders keeps up." },
+  { id: "plateau", name: "Run, then plateau", c: "#3f5e78",
+    p: { start: 40000, peak: 5000000, tPeak: 7, halfLife: 8, floor: 1200000, turnPeak: 2.5, turnFloor: 5 },
+    d: "A week-long run to $5M, then it settles at about $1.2M with a lasting community." },
+  { id: "flop", name: "Flop", c: "#6b7a86",
+    p: { start: 20000, peak: 150000, tPeak: 0.5, halfLife: 1, floor: 20000, turnPeak: 1.5, turnFloor: 1 },
+    d: "It never takes off. A small bump, then little activity." },
+];
+const DEF = { devFee: 0.5, hold: 1, lock: 90, haircut: 15, costs: 300, horizon: 180 };
+const $ = id => document.getElementById(id);
+const LOGS = { start: [5000, 1e6], peak: [20000, 1e8], floor: [1000, 5e7], tPeak: [0.04, 60], halfLife: [0.04, 365] };
+const toPos = (k, v) => { const [a, b] = LOGS[k]; return Math.round(1000 * Math.log(v / a) / Math.log(b / a)); };
+const fromPos = (k, p) => { const [a, b] = LOGS[k]; return a * Math.pow(b / a, p / 1000); };
+const nice = v => { const m = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / m) * m; };
+const usd = v => { const a = Math.abs(v), s = v < 0 ? "-$" : "$";
+  if (a >= 1e6) return s + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + "M";
+  if (a >= 1e3) return s + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "K";
+  return s + a.toFixed(0); };
+const dur = d => d < 1 ? Math.round(d * 24) + "h" : d < 2 ? (d * 24).toFixed(0) + "h" : d < 60 ? d.toFixed(d < 10 ? 1 : 0) + " days" : (d / 30).toFixed(1) + " months";
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+let S = { ...DEF, ...SCEN[2].p }, scen = "steady";
+try { const s = JSON.parse(localStorage.getItem("hashcreator") || "null"); if (s) { S = { ...S, ...s.S }; scen = s.scen ?? null; } } catch (e) {}
+
+function mcapAt(p, t) {
+  if (t < p.tPeak) return p.start * Math.pow(p.peak / p.start, t / p.tPeak);
+  const base = p.floor + (p.peak - p.floor) * Math.pow(0.5, (t - p.tPeak) / p.halfLife);
+  return base;
+}
+function turnAt(p, t) { // daily volume / mcap; hype fades with ~1.5 day half-life after peak (min 0.5 day)
+  const hh = Math.max(0.5, Math.min(p.tPeak + p.halfLife, 3));
+  return p.turnFloor / 100 + (p.turnPeak - p.turnFloor / 100) * Math.pow(0.5, t / hh);
+}
+// hourly simulation
+function simulate(p, take) {
+  const hours = Math.round(take.horizon * 24);
+  const out = [];
+  let fees = 0;
+  for (let h = 1; h <= hours; h++) {
+    const t = h / 24, m = mcapAt(p, t), vol = m * turnAt(p, t);
+    fees += vol / 24 * take.devFee / 100 - take.costs / 30 / 24;
+    const holdVal = m * take.hold / 100 * (1 - take.haircut / 100);
+    out.push({ t, mcap: m, vol, fees, holdVal, locked: t < take.lock, total: fees + holdVal });
+  }
+  return out;
+}
+function sampleIdx(n) { // log-spaced indices for charts
+  const idx = new Set(); for (let i = 0; i < 240; i++) idx.add(Math.min(n - 1, Math.round(Math.pow(n, i / 239)) - 1)); return [...idx].sort((a, b) => a - b);
+}
+const feesBy = (sim, d) => sim[Math.min(sim.length, Math.round(d * 24)) - 1]?.fees ?? 0;
+
+function bind() {
+  SCEN.forEach(s => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.s = s.id; b.textContent = s.name;
+    b.addEventListener("click", () => { Object.assign(S, s.p); scen = s.id; update(); }); $("chips").append(b); });
+  ["devFee", "hold", "lock", "haircut", "costs", "turnPeak", "turnFloor", "horizon"].forEach(k => $(k).addEventListener("input", e => {
+    S[k] = parseFloat(e.target.value); if (k === "turnPeak" || k === "turnFloor") scen = null; update(); }));
+  Object.keys(LOGS).forEach(k => $(k).addEventListener("input", e => { S[k] = k === "tPeak" || k === "halfLife" ? +fromPos(k, +e.target.value).toPrecision(2) : nice(fromPos(k, +e.target.value)); scen = null; update(); }));
+}
+
+let charts = {};
+function axisOpts(yTitle, yLog, yFmt) {
+  const ink = cssVar("--muted"), grid = cssVar("--line");
+  return {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, interaction: { mode: "index", intersect: false },
+    plugins: { legend: { labels: { color: ink, boxWidth: 12 } }, tooltip: { callbacks: { title: it => "After " + dur(it[0].parsed.x), label: c => `${c.dataset.label}: ${yFmt(c.parsed.y)}` } } },
+    scales: {
+      x: { type: "logarithmic", min: 1 / 24, max: S.horizon, title: { display: true, text: "Time since launch", color: ink }, grid: { color: grid },
+        ticks: { color: ink, autoSkip: false, callback: v => ({ [1/24]: "1h", [6/24]: "6h", 1: "1d", 3: "3d", 7: "1w", 30: "1mo", 90: "3mo", 180: "6mo", 365: "1y" })[v] ?? "" },
+        afterBuildTicks: ax => { ax.ticks = [1/24, 6/24, 1, 3, 7, 30, 90, 180, 365].filter(v => v <= S.horizon + 1e-9).map(v => ({ value: v })); } },
+      y: { type: yLog ? "logarithmic" : "linear", title: { display: true, text: yTitle, color: ink }, grid: { color: grid }, ticks: { color: ink, callback: v => yLog && !/^[125]/.test(String(v)) ? "" : yFmt(v) } },
+    },
+  };
+}
+function draw() {
+  if (!window.Chart) return;
+  const sim = simulate(S, S), idx = sampleIdx(sim.length);
+  const pts = (arr, f) => idx.map(i => ({ x: arr[i].t, y: f(arr[i]) }));
+  const ds = (label, data, color, extra = {}) => ({ label, data, borderColor: color, backgroundColor: color, pointRadius: 0, borderWidth: 2, tension: 0.15, ...extra });
+  const pathSets = [ds("Market cap", pts(sim, r => r.mcap), cssVar("--mcap")), ds("Daily volume", pts(sim, r => r.vol), cssVar("--vol"), { borderDash: [5, 4] })];
+  const lockedPts = pts(sim, r => r.locked ? r.holdVal : null), freePts = pts(sim, r => r.locked ? null : r.holdVal);
+  const earnSets = [
+    ds("Fees to date (net of costs)", pts(sim, r => r.fees), cssVar("--fee"), { fill: "origin", backgroundColor: cssVar("--fee") + "33" }),
+    ds("Holding value (locked)", lockedPts, cssVar("--hold"), { borderDash: [5, 4], spanGaps: false }),
+    ds("Holding value", freePts, cssVar("--hold"), { spanGaps: false }),
+    ds("Total", pts(sim, r => r.total), cssVar("--accent"), { borderWidth: 3 }),
+  ];
+  const cmpSets = SCEN.map(s => { const sm = simulate({ ...S, ...s.p }, S); return ds(s.name, pts(sm, r => r.total), s.c, { borderWidth: s.id === scen ? 3.5 : 1.5 }); });
+  const specs = { chPath: [pathSets, axisOpts("USD (log scale)", true, usd)], chEarn: [earnSets, axisOpts("USD", false, usd)], chCmp: [cmpSets, axisOpts("USD", false, usd)] };
+  for (const [id, [sets, opts]] of Object.entries(specs)) {
+    if (charts[id]) { charts[id].data.datasets = sets; charts[id].options = opts; charts[id].update("none"); }
+    else charts[id] = new Chart($(id), { type: "line", data: { datasets: sets }, options: opts });
+  }
+}
+
+function readout() {
+  const sim = simulate(S, S), last = sim[sim.length - 1];
+  $("r1").textContent = usd(feesBy(sim, 1)); $("r7").textContent = usd(feesBy(sim, Math.min(7, S.horizon)));
+  $("r30").textContent = usd(feesBy(sim, Math.min(30, S.horizon)));
+  $("rHk").textContent = "Holding at " + dur(S.horizon); $("rH").textContent = usd(last.holdVal);
+  $("rHd").textContent = last.locked ? "still locked" : `unlocked after ${S.lock} days`;
+  $("rT").textContent = usd(last.total); $("rTd").textContent = `${usd(last.fees)} fees + ${usd(last.holdVal)} holding`;
+  let h = "<thead><tr><th>Scenario</th><th>Peak</th><th>Day 1 fees</th><th>Day 7</th><th>Day 30</th><th>Fees at end</th><th>Holding at end</th><th>Total</th></tr></thead><tbody>";
+  SCEN.forEach(s => { const sm = simulate({ ...S, ...s.p }, S), l = sm[sm.length - 1];
+    h += `<tr class="${s.id === scen ? "mine" : ""}"><td>${s.name}</td><td>${usd(s.p.peak)}</td><td>${usd(feesBy(sm, 1))}</td><td>${usd(feesBy(sm, Math.min(7, S.horizon)))}</td><td>${usd(feesBy(sm, Math.min(30, S.horizon)))}</td><td>${usd(l.fees)}</td><td>${usd(l.holdVal)}</td><td><b>${usd(l.total)}</b></td></tr>`; });
+  $("tbl").innerHTML = h + "</tbody>";
+  $("tblCap").textContent = `After ${dur(S.horizon)}, with a ${S.devFee}% development fee, a ${S.hold}% holding locked ${S.lock} days, and ${usd(S.costs)}/month running costs. Your launch dev buy would cost about ${usd(S.start * S.hold / 100)} at a ${usd(S.start)} launch market cap.`;
+}
+
+function sync() {
+  document.querySelectorAll("#chips .chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.s === scen)));
+  const sc = SCEN.find(s => s.id === scen);
+  $("pdesc").innerHTML = sc ? `<b>${sc.name}.</b> ${sc.d}` : "<b>Custom path.</b> Pick a scenario above to reset it.";
+  ["devFee", "hold", "lock", "haircut", "costs", "turnPeak", "turnFloor", "horizon"].forEach(k => $(k).value = S[k]);
+  Object.keys(LOGS).forEach(k => $(k).value = toPos(k, S[k]));
+  $("devFeeO").textContent = S.devFee.toFixed(2) + "%"; $("holdO").textContent = S.hold.toFixed(1) + "% of supply";
+  $("lockO").textContent = S.lock + " days"; $("haircutO").textContent = S.haircut + "%"; $("costsO").textContent = usd(S.costs) + "/mo";
+  $("startO").textContent = usd(S.start); $("peakO").textContent = usd(S.peak); $("floorO").textContent = usd(S.floor);
+  $("tPeakO").textContent = dur(S.tPeak); $("halfLifeO").textContent = dur(S.halfLife);
+  $("turnPeakO").textContent = S.turnPeak.toFixed(1) + "× per day"; $("turnFloorO").textContent = S.turnFloor + "% per day";
+  $("horizonO").textContent = dur(S.horizon);
+}
+function update() { sync(); readout(); draw(); try { localStorage.setItem("hashcreator", JSON.stringify({ S, scen })); } catch (e) {} }
+bind(); update();
+const redraw = () => { Object.values(charts).forEach(c => c.destroy()); charts = {}; draw(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
