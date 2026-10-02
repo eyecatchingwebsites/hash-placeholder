@@ -93,6 +93,13 @@ th:first-child, td:first-child { text-align: left; font-family: var(--body); }
 tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
 .note { color: var(--muted); font-size: .8rem; max-width: 80ch; }
 .note b { color: var(--ink); }
+.presets { display: grid; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 .8rem var(--display); letter-spacing: .03em; padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip .wk { font: 400 .72rem var(--mono); opacity: .75; margin-left: 4px; }
+.pdesc { color: var(--muted); font-size: .85rem; margin: 0; max-width: 80ch; }
+.pdesc b { color: var(--ink); font-weight: 600; }
 .formula { font-family: var(--mono); font-size: .8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto; white-space: pre; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
@@ -213,6 +220,12 @@ tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); fon
     </form>
 
     <div class="main">
+      <section class="card presets">
+        <h2>Scenario</h2>
+        <div class="chips" id="chips" role="group" aria-label="Scenario presets"></div>
+        <p class="pdesc" id="pdesc"></p>
+      </section>
+
       <div class="readout" aria-live="polite">
         <div class="cell hero"><span class="k">Your $/day</span><span class="v" id="rTotal"></span><span class="d" id="rTotalD"></span></div>
         <div class="cell"><span class="k">Mining multiplier</span><span class="v" id="rMult"></span><span class="d" id="rMultD"></span></div>
@@ -270,10 +283,36 @@ const GPUS = [
   { id: "5090",  name: "RTX 5090",        rev: 10.00, w: 500 },
   { id: "custom", name: "Custom", rev: 2.50, w: 200 },
 ];
+// Stage presets. Market and miner inputs only; your rig and level stay as set.
+// Rough memecoin norms plus the 90-day simulation in sim/. Holders assume ~$1K of market cap per holder.
+const PRESETS = [
+  { id: "launch", name: "Launch day", wk: "day 1",
+    v: { mcap: 300000, vol: 600000, miners: 80, avgRev: 3.0, p2: 30, p3: 0 },
+    d: "First 24 hours. Volume is often 2× market cap as snipers and flippers trade. Few people have set up mining yet, so each GPU gets a huge share. Nobody can be Level 3 before day 14." },
+  { id: "hype", name: "Hype week", wk: "days 2–7",
+    v: { mcap: 1000000, vol: 300000, miners: 400, avgRev: 2.5, p2: 50, p3: 0 },
+    d: "Your base case. Traders start mining on gaming PCs, and about 40% of holders mine. Many buy $50 for Level 2. Level 3 is still locked by the 14-day rule." },
+  { id: "peak", name: "Peak run", wk: "weeks 2–3",
+    v: { mcap: 5000000, vol: 2000000, miners: 1500, avgRev: 4.0, p2: 55, p3: 15 },
+    d: "The coin runs. Rented 5090s arrive, so average earnings per miner rise. The first Level 3 wallets unlock. The chest is at its largest, but it's split among the most miners." },
+  { id: "cool", name: "Cooling off", wk: "month 2",
+    v: { mcap: 1500000, vol: 100000, miners: 600, avgRev: 3.0, p2: 40, p3: 30 },
+    d: "Volume falls to about 7% of market cap. Renters leave first. The miners who stay are mostly holders, and Level 3 grows." },
+  { id: "steady", name: "Steady state", wk: "month 3+",
+    v: { mcap: 800000, vol: 25000, miners: 250, avgRev: 2.5, p2: 35, p3: 40 },
+    d: "Volume settles at about 3% of market cap per day, the long-run level in the simulation. The bonus is modest, and committed Level 3 holders take most of it." },
+  { id: "flop", name: "Flop", wk: "any time",
+    v: { mcap: 150000, vol: 8000, miners: 40, avgRev: 2.0, p2: 30, p3: 10 },
+    d: "Hype never arrives or dies quickly. Volume is thin, and the bonus barely covers power for most cards. This is the most common outcome for new memecoins." },
+  { id: "breakout", name: "Breakout", wk: "best case",
+    v: { mcap: 50000000, vol: 10000000, miners: 8000, avgRev: 4.5, p2: 50, p3: 25 },
+    d: "A rare big run. Huge volume, but thousands of miners and a lot of rented hashpower. The multiplier is lower than in the early days, but dollar payouts are the highest." },
+];
+let preset = "hype";
 const DEFAULTS = {
   gpu: "4070", myRev: 3.0, watts: 200, elec: 0.15, level: 2,
-  vol: 200000, mcap: 1000000, fee: 5, chestPct: 3, creatorPct: 0.5, minerVol: true,
-  miners: 500, avgRev: 2.5, p2: 40, p3: 20, m2: 2, m3: 4, alpha: 0.5, cap: 5, sellFee: false,
+  vol: 300000, mcap: 1000000, fee: 5, chestPct: 3, creatorPct: 0.5, minerVol: true,
+  miners: 400, avgRev: 2.5, p2: 50, p3: 0, m2: 2, m3: 4, alpha: 0.5, cap: 5, sellFee: false,
 };
 const $ = id => document.getElementById(id);
 
@@ -284,7 +323,8 @@ const fromPos = (k, p) => { const [a, b] = LOGS[k]; return a * Math.pow(b / a, p
 const nice = (v) => { const m = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / m) * m; };
 
 let S = { ...DEFAULTS };
-try { const saved = JSON.parse(localStorage.getItem("hashcalc") || "null"); if (saved) S = { ...S, ...saved }; } catch (e) {}
+try { const saved = JSON.parse(localStorage.getItem("hashcalc2") || "null"); if (saved) { S = { ...S, ...saved.S }; preset = saved.preset ?? null; } } catch (e) {}
+const PRESET_KEYS = ["mcap", "vol", "miners", "avgRev", "p2", "p3"];
 
 const usd = (v, d) => {
   const a = Math.abs(v);
@@ -320,6 +360,13 @@ function model(s, o = {}) {
 }
 
 function bind() {
+  PRESETS.forEach(p => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.p = p.id;
+    b.innerHTML = `${p.name}<span class="wk">${p.wk}</span>`;
+    b.addEventListener("click", () => { Object.assign(S, p.v); preset = p.id; update(); });
+    $("chips").append(b);
+  });
+  $("form").addEventListener("input", e => { if (PRESET_KEYS.includes(e.target.id)) preset = null; }, true);
   const sel = $("gpu");
   GPUS.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name + (g.id === "custom" ? "" : ` · $${g.rev.toFixed(2)}/day`); sel.append(o); });
   sel.addEventListener("change", () => {
@@ -336,7 +383,7 @@ function bind() {
     $(k).addEventListener("input", e => { let v = nice(fromPos(k, +e.target.value)); if (k === "miners") v = Math.round(v); S[k] = v; update(); }));
   ["minerVol", "sellFee"].forEach(k => $(k).addEventListener("change", e => { S[k] = e.target.checked; update(); }));
   document.querySelectorAll("#levelSeg button").forEach(b => b.addEventListener("click", () => { S.level = +b.dataset.l; update(); }));
-  $("reset").addEventListener("click", () => { S = { ...DEFAULTS }; update(); });
+  $("reset").addEventListener("click", () => { S = { ...DEFAULTS }; preset = "hype"; update(); });
 }
 function clampFees(k) {
   if (S.chestPct + S.creatorPct > S.fee) {
@@ -365,6 +412,11 @@ function syncInputs(syncNumbers = true) {
   $("creatorPctO").textContent = S.creatorPct.toFixed(1) + "%";
   $("burnHint").textContent = `Remaining ${Math.max(0, S.fee - S.chestPct - S.creatorPct).toFixed(1)}% goes to buyback and burn.`;
   $("minersO").textContent = S.miners.toLocaleString();
+  document.querySelectorAll("#chips .chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.p === preset)));
+  const P = PRESETS.find(p => p.id === preset);
+  const holders = Math.max(1, Math.round(S.mcap / 1000));
+  const ratio = `About ${holders.toLocaleString()} holders at ~$1K of market cap each, so <b>${pct(Math.min(100, 100 * S.miners / holders))} of holders are mining</b> and the rest only trade.`;
+  $("pdesc").innerHTML = (P ? `<b>${P.name}.</b> ${P.d} ` : "<b>Custom.</b> You've changed the market or miner inputs. Pick a scenario to reset them. ") + ratio;
   $("avgRevO").textContent = "$" + S.avgRev.toFixed(2);
   $("p2O").textContent = S.p2 + "%"; $("p3O").textContent = S.p3 + "%";
   $("mixHint").textContent = `Level 1: ${Math.max(0, 100 - S.p2 - S.p3)}% of miners.`;
@@ -470,7 +522,7 @@ function update(syncNumbers = true) {
   syncInputs(syncNumbers);
   drawReadout();
   drawCharts();
-  try { localStorage.setItem("hashcalc", JSON.stringify(S)); } catch (e) {}
+  try { localStorage.setItem("hashcalc2", JSON.stringify({ S, preset })); } catch (e) {}
 }
 
 bind();
