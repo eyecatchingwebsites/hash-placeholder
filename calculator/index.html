@@ -1,0 +1,481 @@
+<title>$HASH Earnings Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: control rack on the left (stacks on phones), result readout + two charts on the right */
+:root {
+  --bg: #f3f4f1;
+  --panel: #ffffff;
+  --ink: #1b1f1d;
+  --muted: #5d6662;
+  --line: #d9ddd8;
+  --accent: #b4540f;
+  --l1: #6b7a86;
+  --l2: #0f8a7a;
+  --l3: #c9820c;
+  --base: #8b8f8c;
+  --good: #1f7a3d;
+  --bad: #b3261e;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121514; --panel: #1a1e1c; --ink: #e8ebe8; --muted: #9aa39f; --line: #2c3330;
+    --accent: #f08a3c; --l1: #9aabb8; --l2: #2fc4ad; --l3: #f2b23a; --base: #7c817e;
+    --good: #5ccf7f; --bad: #ff7a6e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121514; --panel: #1a1e1c; --ink: #e8ebe8; --muted: #9aa39f; --line: #2c3330;
+  --accent: #f08a3c; --l1: #9aabb8; --l2: #2fc4ad; --l3: #f2b23a; --base: #7c817e;
+  --good: #5ccf7f; --bad: #ff7a6e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 20px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 1.9rem; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; max-width: 62ch; }
+.grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.rack { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px 16px 12px; }
+fieldset { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 14px 0 6px; display: grid; gap: 12px; }
+fieldset:first-child { border-top: 0; }
+legend { font-family: var(--display); font-weight: 600; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); padding: 0; margin-bottom: 4px; float: left; width: 100%; }
+.ctl { display: grid; gap: 4px; }
+.ctl .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ctl label { font-weight: 500; }
+.ctl output, .val { font-family: var(--mono); font-size: .85rem; font-variant-numeric: tabular-nums; color: var(--ink); }
+.hint { color: var(--muted); font-size: .78rem; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+select, input[type=number] { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+input[type=number] { font-family: var(--mono); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: 600 .85rem var(--display); letter-spacing: .04em; padding: 8px 4px; border: 0; background: transparent; color: var(--muted); cursor: pointer; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { color: #fff; }
+.seg button[data-l="1"][aria-pressed="true"] { background: var(--l1); }
+.seg button[data-l="2"][aria-pressed="true"] { background: var(--l2); }
+.seg button[data-l="3"][aria-pressed="true"] { background: var(--l3); }
+.check { display: flex; gap: 8px; align-items: center; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reset { font: 500 .8rem var(--body); background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+
+.main { display: grid; gap: 20px; min-width: 0; }
+.readout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 640px) { .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cell { background: var(--panel); padding: 14px 16px; display: grid; gap: 2px; align-content: start; }
+.cell .k { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.cell .v { font-family: var(--display); font-weight: 700; font-size: 1.7rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.cell .d { font-family: var(--mono); font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cell.hero .v { color: var(--accent); }
+.pill { display: inline-block; font: 600 .72rem var(--display); letter-spacing: .06em; padding: 2px 8px; border-radius: 99px; color: #fff; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.card h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0 0 2px; }
+.card p.cap { margin: 0 0 12px; color: var(--muted); font-size: .85rem; }
+.chartbox { position: relative; height: 300px; }
+.breakdown { display: grid; gap: 6px; }
+.bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; background: var(--bg); }
+.bar div { height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 520px; }
+th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .82rem; }
+th { font-family: var(--body); font-weight: 600; color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+th:first-child, td:first-child { text-align: left; font-family: var(--body); }
+tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
+.note { color: var(--muted); font-size: .8rem; max-width: 80ch; }
+.note b { color: var(--ink); }
+.formula { font-family: var(--mono); font-size: .8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto; white-space: pre; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span>$HASH</span> Earnings Calculator</h1>
+      <p class="sub">What your GPU earns from mining plus its share of the fee chest, by level. Every input is a scenario assumption. The chest changes with trading volume and with the number of miners, so actual payouts vary.</p>
+    </div>
+    <button class="reset" id="reset" type="button">Reset to example</button>
+  </header>
+
+  <div class="grid">
+    <form class="rack" id="form" onsubmit="return false">
+      <fieldset>
+        <legend>Your rig</legend>
+        <div class="ctl">
+          <label for="gpu">GPU</label>
+          <select id="gpu"></select>
+        </div>
+        <div class="two">
+          <div class="ctl">
+            <label for="myRev">Mining $/day</label>
+            <input type="number" id="myRev" min="0.05" step="0.05">
+          </div>
+          <div class="ctl">
+            <label for="watts">Power (W)</label>
+            <input type="number" id="watts" min="0" step="5">
+          </div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="elec">Electricity</label><output id="elecO"></output></div>
+          <input type="range" id="elec" min="0" max="0.5" step="0.01">
+        </div>
+        <div class="ctl">
+          <label>Your level</label>
+          <div class="seg" id="levelSeg" role="group" aria-label="Your level">
+            <button type="button" data-l="1">LEVEL 1</button>
+            <button type="button" data-l="2">LEVEL 2</button>
+            <button type="button" data-l="3">LEVEL 3</button>
+          </div>
+          <span class="hint" id="levelHint"></span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Market</legend>
+        <div class="ctl">
+          <div class="row"><label for="vol">24h trading volume</label><output id="volO"></output></div>
+          <input type="range" id="vol" min="0" max="1000" step="1">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="mcap">Market cap</label><output id="mcapO"></output></div>
+          <input type="range" id="mcap" min="0" max="1000" step="1">
+          <span class="hint" id="turnHint"></span>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="fee">Total trading fee</label><output id="feeO"></output></div>
+          <input type="range" id="fee" min="0" max="10" step="0.1">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="chestPct">Fee to chest</label><output id="chestPctO"></output></div>
+          <input type="range" id="chestPct" min="0" max="10" step="0.1">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="creatorPct">Fee to creator</label><output id="creatorPctO"></output></div>
+          <input type="range" id="creatorPct" min="0" max="5" step="0.1">
+          <span class="hint" id="burnHint"></span>
+        </div>
+        <label class="check"><input type="checkbox" id="minerVol"> Count miners' own conversions as volume</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Miners</legend>
+        <div class="ctl">
+          <div class="row"><label for="miners">Total miners</label><output id="minersO"></output></div>
+          <input type="range" id="miners" min="0" max="1000" step="1">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="avgRev">Average mining $/day per miner</label><output id="avgRevO"></output></div>
+          <input type="range" id="avgRev" min="0.5" max="20" step="0.1">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="p2">Share of miners at Level 2</label><output id="p2O"></output></div>
+          <input type="range" id="p2" min="0" max="100" step="1">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="p3">Share of miners at Level 3</label><output id="p3O"></output></div>
+          <input type="range" id="p3" min="0" max="100" step="1">
+          <span class="hint" id="mixHint"></span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Rules</legend>
+        <div class="two">
+          <div class="ctl">
+            <div class="row"><label for="m2">L2 weight</label><output id="m2O"></output></div>
+            <input type="range" id="m2" min="1" max="6" step="0.5">
+          </div>
+          <div class="ctl">
+            <div class="row"><label for="m3">L3 weight</label><output id="m3O"></output></div>
+            <input type="range" id="m3" min="1" max="12" step="0.5">
+          </div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="alpha">GPU balancing exponent</label><output id="alphaO"></output></div>
+          <input type="range" id="alpha" min="0.3" max="1" step="0.05">
+          <span class="hint">0.5 = square root (default). 1 = no balancing, so payouts are proportional to earnings.</span>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="cap">Max chest share per wallet</label><output id="capO"></output></div>
+          <input type="range" id="cap" min="0.5" max="100" step="0.5">
+        </div>
+        <label class="check"><input type="checkbox" id="sellFee"> Show value after paying the sell fee</label>
+      </fieldset>
+    </form>
+
+    <div class="main">
+      <div class="readout" aria-live="polite">
+        <div class="cell hero"><span class="k">Your $/day</span><span class="v" id="rTotal"></span><span class="d" id="rTotalD"></span></div>
+        <div class="cell"><span class="k">Mining multiplier</span><span class="v" id="rMult"></span><span class="d" id="rMultD"></span></div>
+        <div class="cell"><span class="k">Net after power</span><span class="v" id="rNet"></span><span class="d" id="rNetD"></span></div>
+        <div class="cell"><span class="k">Per 30 days</span><span class="v" id="rMonth"></span><span class="d" id="rMonthD"></span></div>
+      </div>
+
+      <section class="card">
+        <h2>Where your daily $HASH comes from</h2>
+        <p class="cap" id="bdCap"></p>
+        <div class="breakdown">
+          <div class="bar" id="bdBar"></div>
+          <div class="legend" id="bdLegend"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Your daily income as trading volume changes</h2>
+        <p class="cap">Your GPU at each level, holding every other input fixed. The dot marks your current settings.</p>
+        <div class="chartbox"><canvas id="chVol" aria-label="Daily income versus trading volume by level"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>Mining multiplier as more miners join</h2>
+        <p class="cap">Total payout divided by plain mining revenue for your GPU. 1× means the chest adds nothing.</p>
+        <div class="chartbox"><canvas id="chMin" aria-label="Multiplier versus total miners by level"></canvas></div>
+      </section>
+
+      <section class="card">
+        <h2>Every GPU at today's settings</h2>
+        <p class="cap">Daily payout in $HASH (mining plus chest) and the multiplier, for each GPU at each level.</p>
+        <div class="tablewrap"><table id="tbl"></table></div>
+      </section>
+
+      <section class="card">
+        <h2>How it's calculated</h2>
+        <div class="formula" id="formula"></div>
+        <p class="note">
+          <b>Weights.</b> Each miner's weight is (mining $/day)<sup>exponent</sup> × level weight. Other miners are approximated as all earning the average, so a mix of very different GPUs would shift the result slightly.
+          <b>What's left out.</b> $HASH price changes after payout, slippage on conversions, and the platform's PPS fee. GPU revenue figures for the 3060 Laptop, 4060, 4070 and 5090 come from project notes. The 4090 figure and all power draws are estimates, so edit them for your card.
+          This is not financial advice, and nothing here is a promise of returns.
+        </p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const GPUS = [
+  { id: "3060L", name: "RTX 3060 Laptop", rev: 1.20, w: 115 },
+  { id: "4060",  name: "RTX 4060",        rev: 2.00, w: 110 },
+  { id: "4070",  name: "RTX 4070",        rev: 3.00, w: 200 },
+  { id: "4090",  name: "RTX 4090 (est.)", rev: 6.00, w: 400 },
+  { id: "5090",  name: "RTX 5090",        rev: 10.00, w: 500 },
+  { id: "custom", name: "Custom", rev: 2.50, w: 200 },
+];
+const DEFAULTS = {
+  gpu: "4070", myRev: 3.0, watts: 200, elec: 0.15, level: 2,
+  vol: 200000, mcap: 1000000, fee: 5, chestPct: 3, creatorPct: 0.5, minerVol: true,
+  miners: 500, avgRev: 2.5, p2: 40, p3: 20, m2: 2, m3: 4, alpha: 0.5, cap: 5, sellFee: false,
+};
+const $ = id => document.getElementById(id);
+
+// log-mapped sliders (0..1000)
+const LOGS = { vol: [5000, 5e6], mcap: [100000, 1e8], miners: [10, 20000] };
+const toPos = (k, v) => { const [a, b] = LOGS[k]; return Math.round(1000 * Math.log(v / a) / Math.log(b / a)); };
+const fromPos = (k, p) => { const [a, b] = LOGS[k]; return a * Math.pow(b / a, p / 1000); };
+const nice = (v) => { const m = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / m) * m; };
+
+let S = { ...DEFAULTS };
+try { const saved = JSON.parse(localStorage.getItem("hashcalc") || "null"); if (saved) S = { ...S, ...saved }; } catch (e) {}
+
+const usd = (v, d) => {
+  const a = Math.abs(v);
+  if (a >= 1e6) return "$" + (v / 1e6).toFixed(a >= 1e7 ? 1 : 2) + "M";
+  if (a >= 1e4) return "$" + (v / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "K";
+  return (v < 0 ? "-$" : "$") + a.toFixed(d ?? (a < 100 ? 2 : 0));
+};
+const pct = v => (v >= 100 ? v.toFixed(0) : v.toFixed(1)) + "%";
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function model(s, o = {}) {
+  const x = { ...s, ...o };
+  const N = Math.max(1, x.miners);
+  const p3 = x.p3 / 100, p2 = Math.min(x.p2 / 100, 1 - p3), p1 = Math.max(0, 1 - p2 - p3);
+  const mults = [1, x.m2, x.m3];
+  const avgMult = p1 * 1 + p2 * x.m2 + p3 * x.m3;
+  const chestVol = x.vol + (x.minerVol ? N * x.avgRev : 0);
+  const chest = chestVol * x.chestPct / 100;
+  const othersW = (N - 1) * Math.pow(x.avgRev, x.alpha) * avgMult;
+  const myW = Math.pow(x.myRev, x.alpha) * mults[x.level - 1];
+  let share = myW / (othersW + myW);
+  const capped = share > x.cap / 100;
+  share = Math.min(share, x.cap / 100);
+  const bonus = chest * share;
+  const sellK = x.sellFee ? (1 - x.fee / 100) : 1;
+  const gross = (x.myRev + bonus) * sellK;
+  const power = x.watts * 24 / 1000 * x.elec;
+  return {
+    chest, chestVol, share, capped, bonus: bonus * sellK, mining: x.myRev * sellK, gross, power,
+    net: gross - power, mult: gross / x.myRev, burn: chestVol * Math.max(0, x.fee - x.chestPct - x.creatorPct) / 100,
+    creator: chestVol * x.creatorPct / 100, avgMult, p1, p2, p3,
+  };
+}
+
+function bind() {
+  const sel = $("gpu");
+  GPUS.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name + (g.id === "custom" ? "" : ` · $${g.rev.toFixed(2)}/day`); sel.append(o); });
+  sel.addEventListener("change", () => {
+    const g = GPUS.find(g => g.id === sel.value); S.gpu = g.id;
+    if (g.id !== "custom") { S.myRev = g.rev; S.watts = g.w; }
+    update();
+  });
+  ["myRev", "watts"].forEach(k => $(k).addEventListener("input", e => {
+    const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0) { S[k] = Math.max(k === "myRev" ? 0.05 : 0, v); S.gpu = "custom"; update(false); }
+  }));
+  ["elec", "fee", "chestPct", "creatorPct", "avgRev", "p2", "p3", "m2", "m3", "alpha", "cap"].forEach(k =>
+    $(k).addEventListener("input", e => { S[k] = parseFloat(e.target.value); clampFees(k); update(); }));
+  ["vol", "mcap", "miners"].forEach(k =>
+    $(k).addEventListener("input", e => { let v = nice(fromPos(k, +e.target.value)); if (k === "miners") v = Math.round(v); S[k] = v; update(); }));
+  ["minerVol", "sellFee"].forEach(k => $(k).addEventListener("change", e => { S[k] = e.target.checked; update(); }));
+  document.querySelectorAll("#levelSeg button").forEach(b => b.addEventListener("click", () => { S.level = +b.dataset.l; update(); }));
+  $("reset").addEventListener("click", () => { S = { ...DEFAULTS }; update(); });
+}
+function clampFees(k) {
+  if (S.chestPct + S.creatorPct > S.fee) {
+    if (k === "fee") { S.chestPct = Math.min(S.chestPct, S.fee); S.creatorPct = Math.min(S.creatorPct, S.fee - S.chestPct); }
+    else if (k === "chestPct") S.creatorPct = Math.max(0, S.fee - S.chestPct);
+    else if (k === "creatorPct") S.chestPct = Math.max(0, S.fee - S.creatorPct);
+    S.chestPct = Math.round(S.chestPct * 10) / 10; S.creatorPct = Math.round(S.creatorPct * 10) / 10;
+  }
+  if (k === "p2" && S.p2 + S.p3 > 100) S.p3 = 100 - S.p2;
+  if (k === "p3" && S.p2 + S.p3 > 100) S.p2 = 100 - S.p3;
+}
+
+function syncInputs(syncNumbers = true) {
+  $("gpu").value = S.gpu;
+  if (syncNumbers) { $("myRev").value = S.myRev; $("watts").value = S.watts; }
+  ["elec", "fee", "chestPct", "creatorPct", "avgRev", "p2", "p3", "m2", "m3", "alpha", "cap"].forEach(k => $(k).value = S[k]);
+  ["vol", "mcap", "miners"].forEach(k => $(k).value = toPos(k, S[k]));
+  $("minerVol").checked = S.minerVol; $("sellFee").checked = S.sellFee;
+  document.querySelectorAll("#levelSeg button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.l === S.level)));
+  $("elecO").textContent = "$" + S.elec.toFixed(2) + "/kWh";
+  $("volO").textContent = usd(S.vol);
+  $("mcapO").textContent = usd(S.mcap);
+  $("turnHint").textContent = `Daily volume is ${pct(100 * S.vol / S.mcap)} of market cap.`;
+  $("feeO").textContent = S.fee.toFixed(1) + "%";
+  $("chestPctO").textContent = S.chestPct.toFixed(1) + "%";
+  $("creatorPctO").textContent = S.creatorPct.toFixed(1) + "%";
+  $("burnHint").textContent = `Remaining ${Math.max(0, S.fee - S.chestPct - S.creatorPct).toFixed(1)}% goes to buyback and burn.`;
+  $("minersO").textContent = S.miners.toLocaleString();
+  $("avgRevO").textContent = "$" + S.avgRev.toFixed(2);
+  $("p2O").textContent = S.p2 + "%"; $("p3O").textContent = S.p3 + "%";
+  $("mixHint").textContent = `Level 1: ${Math.max(0, 100 - S.p2 - S.p3)}% of miners.`;
+  $("m2O").textContent = S.m2 + "×"; $("m3O").textContent = S.m3 + "×";
+  $("alphaO").textContent = S.alpha.toFixed(2);
+  $("capO").textContent = S.cap + "%";
+  const lh = { 1: "Level 1: no holding needed. Weight 1×.", 2: `Level 2: hold at least $50 of $HASH. Weight ${S.m2}×.`, 3: `Level 3: hold at least $500, 14+ days, never sold. Weight ${S.m3}×.` };
+  $("levelHint").textContent = lh[S.level];
+}
+
+let chVol, chMin;
+function lvlColors() { return [cssVar("--l1"), cssVar("--l2"), cssVar("--l3")]; }
+function baseOpts(xTitle, yTitle, xLog, yFmt) {
+  const ink = cssVar("--muted"), grid = cssVar("--line");
+  return {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { labels: { color: ink, boxWidth: 12, font: { family: "IBM Plex Sans" } } },
+      tooltip: { callbacks: { label: c => `${c.dataset.label}: ${yFmt(c.parsed.y)}`, title: it => xTitle + ": " + (xLog ? Math.round(it[0].parsed.x).toLocaleString() : usd(it[0].parsed.x)) } },
+    },
+    scales: {
+      x: { type: xLog ? "logarithmic" : "linear", title: { display: true, text: xTitle, color: ink }, ticks: { color: ink, maxTicksLimit: 8, callback: v => xLog ? (Number.isInteger(Math.log10(v)) || [20,50,200,500,2000,5000].includes(v) ? Number(v).toLocaleString() : "") : usd(v) }, grid: { color: grid } },
+      y: { beginAtZero: true, title: { display: true, text: yTitle, color: ink }, ticks: { color: ink, callback: yFmt }, grid: { color: grid } },
+    },
+  };
+}
+function series(xs, fn) { return xs.map(x => ({ x, y: fn(x) })); }
+
+function drawCharts() {
+  const cols = lvlColors(), base = cssVar("--base"), acc = cssVar("--accent");
+  const vmax = Math.max(500000, S.vol * 2.5);
+  const vx = Array.from({ length: 61 }, (_, i) => vmax * i / 60);
+  const volSets = [1, 2, 3].map(l => ({
+    label: "Level " + l, data: series(vx, v => model(S, { vol: v, level: l }).gross),
+    borderColor: cols[l - 1], backgroundColor: cols[l - 1], borderWidth: l === S.level ? 3 : 1.5, pointRadius: 0, tension: .2,
+  }));
+  volSets.push({ label: "Mining only", data: series(vx, () => model(S).mining), borderColor: base, borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0 });
+  volSets.push({ label: "You now", data: [{ x: S.vol, y: model(S).gross }], borderColor: acc, backgroundColor: acc, pointRadius: 6, pointHoverRadius: 7, showLine: false });
+
+  const mx = []; for (let n = 10; n <= 20000; n *= 1.15) mx.push(Math.round(n));
+  const minSets = [1, 2, 3].map(l => ({
+    label: "Level " + l, data: series(mx, n => model(S, { miners: n, level: l }).mult),
+    borderColor: cols[l - 1], backgroundColor: cols[l - 1], borderWidth: l === S.level ? 3 : 1.5, pointRadius: 0, tension: .2,
+  }));
+  minSets.push({ label: "1× (no bonus)", data: series(mx, () => 1), borderColor: base, borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0 });
+  minSets.push({ label: "You now", data: [{ x: S.miners, y: model(S).mult }], borderColor: acc, backgroundColor: acc, pointRadius: 6, showLine: false });
+
+  if (!window.Chart) return;
+  const multFmt = v => (v >= 10 ? v.toFixed(0) : v.toFixed(1)) + "×";
+  if (!chVol) {
+    chVol = new Chart($("chVol"), { type: "line", data: { datasets: volSets }, options: baseOpts("24h volume", "$ per day", false, v => usd(v)) });
+    chMin = new Chart($("chMin"), { type: "line", data: { datasets: minSets }, options: baseOpts("Total miners", "Multiplier", true, multFmt) });
+  } else {
+    chVol.data.datasets = volSets; chMin.data.datasets = minSets;
+    chVol.options = baseOpts("24h volume", "$ per day", false, v => usd(v));
+    chMin.options = baseOpts("Total miners", "Multiplier", true, multFmt);
+    chVol.update("none"); chMin.update("none");
+  }
+}
+
+function drawReadout() {
+  const r = model(S);
+  $("rTotal").textContent = usd(r.gross);
+  $("rTotalD").textContent = `${usd(r.mining)} mining + ${usd(r.bonus)} chest`;
+  $("rMult").textContent = (r.mult >= 10 ? r.mult.toFixed(1) : r.mult.toFixed(2)) + "×";
+  $("rMultD").textContent = `+${pct((r.mult - 1) * 100)} over mining alone`;
+  $("rNet").textContent = usd(r.net);
+  $("rNet").style.color = r.net < 0 ? cssVar("--bad") : "";
+  $("rNetD").textContent = `power ${usd(r.power)}/day`;
+  $("rMonth").textContent = usd(r.gross * 30);
+  $("rMonthD").textContent = `net ${usd(r.net * 30)} if nothing changes`;
+
+  const parts = [
+    { k: "Mining revenue", v: r.mining, c: cssVar("--base") },
+    { k: "Chest bonus (Level " + S.level + ")", v: r.bonus, c: lvlColors()[S.level - 1] },
+  ];
+  const tot = parts.reduce((a, p) => a + p.v, 0) || 1;
+  $("bdBar").innerHTML = parts.map(p => `<div style="width:${100 * p.v / tot}%;background:${p.c}" title="${p.k}: ${usd(p.v)}"></div>`).join("");
+  $("bdLegend").innerHTML = parts.map(p => `<span><i style="background:${p.c}"></i>${p.k}: ${usd(p.v)} (${pct(100 * p.v / tot)})</span>`).join("")
+    + `<span>Power cost: ${usd(r.power)}</span>`;
+  $("bdCap").textContent = `The chest gets ${usd(r.chest)} today, shared by ${S.miners.toLocaleString()} miners. Your share is ${pct(r.share * 100)}${r.capped ? " (at the wallet cap)" : ""}. Today also burns ${usd(r.burn)} and pays the creator ${usd(r.creator)}.`;
+
+  const lvls = [1, 2, 3], cols = lvlColors();
+  let h = `<thead><tr><th>GPU</th><th>Mining</th>${lvls.map(l => `<th><span class="pill" style="background:${cols[l - 1]}">L${l}</span> $/day</th><th>L${l} ×</th>`).join("")}</tr></thead><tbody>`;
+  GPUS.filter(g => g.id !== "custom").forEach(g => {
+    h += `<tr class="${g.id === S.gpu ? "mine" : ""}"><td>${g.name}</td><td>${usd(g.rev)}</td>`;
+    lvls.forEach(l => { const m = model(S, { myRev: g.rev, watts: g.w, level: l }); h += `<td>${usd(m.gross)}</td><td>${m.mult.toFixed(1)}×</td>`; });
+    h += "</tr>";
+  });
+  $("tbl").innerHTML = h + "</tbody>";
+
+  $("formula").textContent =
+`chest/day      = (volume ${S.minerVol ? "+ miners × avg mining" : ""}) × chest%       = ${usd(r.chest)}
+your weight    = ${S.myRev.toFixed(2)}^${S.alpha} × L${S.level} weight (${[1, S.m2, S.m3][S.level - 1]})
+others' weight = (${S.miners - 1}) × ${S.avgRev.toFixed(2)}^${S.alpha} × avg level weight (${r.avgMult.toFixed(2)})
+your share     = your weight ÷ (others + yours), max ${S.cap}%   = ${pct(r.share * 100)}
+your $/day     = mining + chest × share${S.sellFee ? " − sell fee" : ""}             = ${usd(r.gross)}
+multiplier     = your $/day ÷ mining                     = ${r.mult.toFixed(2)}×`;
+}
+
+function update(syncNumbers = true) {
+  syncInputs(syncNumbers);
+  drawReadout();
+  drawCharts();
+  try { localStorage.setItem("hashcalc", JSON.stringify(S)); } catch (e) {}
+}
+
+bind();
+update();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (chVol) { chVol.destroy(); chMin.destroy(); chVol = chMin = null; } drawCharts(); });
+new MutationObserver(() => { if (chVol) { chVol.destroy(); chMin.destroy(); chVol = chMin = null; } drawReadout(); drawCharts(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
