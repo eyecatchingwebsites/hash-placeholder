@@ -1,0 +1,9 @@
+scenario,median_extra_day7,median_extra_day30,median_extra_final,avg_renter_chest_pct,peak_rent_cards,home_miners_ever,final_price_x,burned_pct,creator_total
+original,188.45,59.15,25.2,37.45,346.0,309.0,0.17,0.0,0.0
+balanced,410.05,279.1,44.2,7.3,408.0,309.0,0.2,8.35,45043.0
+balanced_no_burn,553.25,310.2,56.4,7.8,436.0,309.0,0.15,0.0,38203.0
+heavy_burn,296.5,240.45,57.3,6.6,372.0,309.0,0.39,13.57,51085.5
+stake_200,597.6,321.55,64.3,10.0,504.0,309.0,0.49,8.57,61399.5
+linear_weights,166.15,134.7,43.35,24.15,498.0,309.0,0.27,8.3,39351.5
+cheap_rentals,402.2,207.95,47.2,10.6,496.0,309.0,0.29,8.34,44320.0
+slow_hype,248.35,74.85,49.9,4.05,158.0,216.0,0.12,5.22,9726.0
