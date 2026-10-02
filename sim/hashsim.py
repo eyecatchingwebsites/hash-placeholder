@@ -59,6 +59,15 @@ class Params:
     min_stake_usd: float = 50.0      # must hold this much $hash (USD value) to be eligible
     wallet_cap: float = 0.05         # max share of chest per wallet (0 = off)
 
+    # Level system (replaces hold ramp + min stake when levels=True)
+    levels: bool = False
+    level_mults: tuple = (1.0, 2.0, 4.0)
+    l2_usd: float = 50.0             # L2: position >= this
+    l3_usd: float = 500.0            # L3: position >= this, never sold, wallet age >= l3_days
+    l3_days: int = 14                # clock starts when $HASH first lands in the wallet
+    home_target_probs: tuple = (0.45, 0.35, 0.20)  # home miners who top up to $0 / L2 / L3
+    new_wallet_after_sell: float = 0.5  # chance a home miner who sells starts a fresh wallet
+
     # Home miners (recruited from traders/holders)
     home_pool: int = 600             # potential home miners at full hype
     home_join_rate: float = 0.08     # daily fraction of remaining pool that tries it
@@ -88,6 +97,10 @@ class Miner:
     cost_basis_usd: float = 0.0
     paid_usd: float = 0.0
     alive: bool = True
+    first_hash_day: int = -1
+    ever_sold: bool = False
+    target_usd: float = 0.0
+    level: int = 1
 
 
 class Pool:
@@ -155,25 +168,41 @@ def run(p: Params):
             t = rng.choices(tier_names, tier_w)[0]
             rev, pw, _ = GPU_TIERS[t]
             m = Miner("home", rev, pw, day, day)
+            if p.levels:
+                m.target_usd = rng.choices([0.0, p.l2_usd, p.l3_usd], p.home_target_probs)[0]
             miners.append(m)
             home_recruited += 1
 
         # --- renters: estimate per-card chest share from yesterday
         alive_r = [m for m in miners if m.alive and m.kind == "rent"]
         if last_chest_per_weight > 0:
-            w_wallet = (p.rent_rev_day * p.rent_cards_per_wallet) ** p.alpha * p.hold_min_mult
+            rent_mult = p.level_mults[1] if p.levels else p.hold_min_mult
+            w_wallet = (p.rent_rev_day * p.rent_cards_per_wallet) ** p.alpha * rent_mult
             exp_share_card = last_chest_per_weight * w_wallet / p.rent_cards_per_wallet
             profit = p.rent_rev_day + exp_share_card - p.rent_cost_day
             if profit > p.rent_hurdle:
                 n_wallets = max(1, min(p.rent_max_new_cards, int(profit * 4)) // p.rent_cards_per_wallet)
                 for _ in range(n_wallets):
                     c = p.rent_cards_per_wallet
-                    miners.append(Miner("rent", p.rent_rev_day * c, p.rent_cost_day * c, day, day))
+                    r = Miner("rent", p.rent_rev_day * c, p.rent_cost_day * c, day, day)
+                    r.target_usd = p.l2_usd  # renters keep just enough for L2
+                    miners.append(r)
         alive = [m for m in miners if m.alive]
 
         # --- minimum stake: miners buy in (renters too, then sell it on exit)
         stake_buys = 0.0
         for m in alive:
+            if p.levels:
+                need = m.target_usd - m.hash_tokens * pool.price
+                if need > 1:
+                    usd = need * (1 + fee_total)
+                    m.hash_tokens += pool.buy(need)
+                    m.cost_basis_usd += usd
+                    stake_buys += usd
+                    if m.first_hash_day < 0:
+                        m.first_hash_day = day
+                m.stake_ok = True
+                continue
             if p.min_stake_usd > 0 and m.hash_tokens * price < p.min_stake_usd:
                 need = p.min_stake_usd - m.hash_tokens * price
                 if m.kind == "home" and not p.home_buys_stake and m.hash_tokens == 0:
@@ -212,7 +241,18 @@ def run(p: Params):
         for m in alive:
             if not m.stake_ok:
                 continue
-            w = m.rev ** p.alpha * hold_mult(p, day - m.hold_start)
+            if p.levels:
+                val = m.hash_tokens * pool.price
+                if (val >= p.l3_usd and not m.ever_sold and m.first_hash_day >= 0
+                        and day - m.first_hash_day >= p.l3_days):
+                    m.level = 3
+                elif val >= p.l2_usd:
+                    m.level = 2
+                else:
+                    m.level = 1
+                w = m.rev ** p.alpha * p.level_mults[m.level - 1]
+            else:
+                w = m.rev ** p.alpha * hold_mult(p, day - m.hold_start)
             weights[id(m)] = w
         W = sum(weights.values())
         shares = {}
@@ -240,16 +280,20 @@ def run(p: Params):
         tokens_out = pool.buy(total_buy * taxed)
         per_usd = tokens_out / total_buy if total_buy else 0
         home_extra_pct = []
+        lvl_extra = {1: [], 2: [], 3: []}
         for m in alive:
             s = shares.get(id(m), 0.0)
             pay = m.rev + chest_usd * s
             m.hash_tokens += pay * per_usd
+            if m.first_hash_day < 0:
+                m.first_hash_day = day
             m.paid_usd += pay
             m.cost_basis_usd += m.cost
             extra = chest_usd * s / m.rev
             m.trailing = (m.trailing + [extra])[-7:]
             if m.kind == "home":
                 home_extra_pct.append(extra * 100)
+                lvl_extra[m.level].append(extra * 100)
         chest_to_renters = sum(chest_usd * shares.get(id(m), 0) for m in alive if m.kind == "rent")
 
         # --- exits / sells
@@ -262,6 +306,7 @@ def run(p: Params):
                 m.hash_tokens -= sell_t
                 if sell_t > 0:
                     m.hold_start = day  # selling resets holding time
+                    m.ever_sold = True
                 if day - m.joined >= p.renter_stays_days:
                     avg = statistics.mean(m.trailing) if m.trailing else 0
                     if m.rev * (1 + avg) < m.cost + p.rent_hurdle * (m.rev / p.rent_rev_day):
@@ -275,10 +320,14 @@ def run(p: Params):
                 if quit_ or cash:
                     pool.sell(m.hash_tokens * (1 - fee_total))
                     m.hash_tokens = 0
+                    m.ever_sold = True
                     if quit_:
                         m.alive = False
                     else:
                         m.hold_start = day  # sold: holding clock resets (new wallet)
+                        if p.levels and rng.random() < p.new_wallet_after_sell:
+                            m.ever_sold = False
+                            m.first_hash_day = -1
 
         home_alive = [m for m in miners if m.alive and m.kind == "home"]
         rent_alive = [m for m in miners if m.alive and m.kind == "rent"]
@@ -296,6 +345,9 @@ def run(p: Params):
             "home_extra_median_pct": round(statistics.median(home_extra_pct), 1) if home_extra_pct else 0,
             "home_extra_p90_pct": round(sorted(home_extra_pct)[int(0.9 * (len(home_extra_pct) - 1))], 1) if home_extra_pct else 0,
             "creator_cum": round(creator_usd),
+            **{f"L{l}_home": len(v) for l, v in lvl_extra.items()},
+            **{f"L{l}_extra_median_pct": round(statistics.median(v), 1) if v else 0
+               for l, v in lvl_extra.items()},
         })
 
     # outcome for home miners: value now (tokens marked at final price, after sell fee) + paid-out
@@ -312,6 +364,8 @@ def run(p: Params):
         "median_extra_day30": rows[min(29, p.days - 1)]["home_extra_median_pct"],
         "median_extra_final": rows[-1]["home_extra_median_pct"],
         "avg_renter_chest_pct": round(statistics.mean(r["renter_chest_pct"] for r in rows), 1),
+        **{f"L{l}_extra_day30": rows[min(29, p.days - 1)][f"L{l}_extra_median_pct"] for l in (1, 2, 3)},
+        **{f"L{l}_home_day30": rows[min(29, p.days - 1)][f"L{l}_home"] for l in (1, 2, 3)},
     }
     return rows, summary
 
@@ -326,6 +380,10 @@ SCENARIOS = {
     "linear_weights": dict(alpha=1.0),
     "cheap_rentals": dict(rent_cost_day=10.5),
     "slow_hype": dict(hype_halflife=4, turnover0=0.12),
+    # Level system: L1 free 1x, L2 >= $50 2x, L3 >= $500 + 14d + never sold 4x
+    "levels": dict(levels=True, hold_ramp_days=0, min_stake_usd=0),
+    "levels_1_3_6": dict(levels=True, hold_ramp_days=0, min_stake_usd=0, level_mults=(1.0, 3.0, 6.0)),
+    "levels_few_l3": dict(levels=True, hold_ramp_days=0, min_stake_usd=0, home_target_probs=(0.6, 0.35, 0.05)),
 }
 
 
@@ -361,7 +419,8 @@ def main():
         table.append(med)
 
     cols = ["scenario", "median_extra_day7", "median_extra_day30", "median_extra_final",
-            "avg_renter_chest_pct", "peak_rent_cards", "home_miners_ever",
+            "L1_extra_day30", "L2_extra_day30", "L3_extra_day30",
+            "L1_home_day30", "L2_home_day30", "L3_home_day30", "avg_renter_chest_pct", "peak_rent_cards", "home_miners_ever",
             "final_price_x", "burned_pct", "creator_total"]
     with open(out / "summary.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
