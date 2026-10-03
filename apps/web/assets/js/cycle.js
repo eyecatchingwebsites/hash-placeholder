@@ -1,8 +1,12 @@
 // Hero loop: five stations in a ring around the Hashcoin coin, joined by chain links.
 // One step at a time: the active station plays its animation, then the link to the next
-// station lights up from end to end and the next station takes over. Repeats forever.
-// Narrow screens stack the stations in a column with the same links. Pauses off-screen
-// and on request; click a station or a number to jump; static with reduced motion.
+// station draws itself and the next station takes over. Repeats forever.
+// Spokes to the coin (buy inflow, 5% tax, pays miners, pays holders) and their labels stay
+// visible the whole time; the ones that matter for the current step glow.
+// Smoothness: a station that finished keeps its last frame (class "seen") instead of snapping
+// back; it's reset only while dimmed, just before its turn. Links fade out instead of vanishing.
+// Narrow screens stack the stations in a column. Pauses off-screen and on request; click a
+// station or a number to jump; static with reduced motion.
 (function () {
   "use strict";
   const root = document.getElementById("cycle");
@@ -17,14 +21,14 @@
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
   const N = stations.length;
-  const DWELL_MS = 3400, LINK_MS = 1000;
-  const RING_MIN_WIDTH = 600;
+  const DWELL_MS = 3600, LINK_MS = 1300, OUT_DELAY_MS = 900;
+  const RING_MIN_WIDTH = 560;
   const CAPTIONS = [
-    "<b>1. Press Start.</b> One click on the gaming PC you already have. No mining experience needed.",
-    "<b>2. Your GPU mines.</b> The app picks whichever coin pays your graphics card most right now.",
-    "<b>3. It buys $HASH.</b> Everything every miner earns is swapped into $HASH on the open market: buy inflow into the coin, around the clock.",
-    "<b>4. Paid to your wallet.</b> Every 10 minutes. Holding levels you up and earns holder rewards, so what gets bought tends to stay held.",
-    "<b>5. Every trade pays 5%.</b> It flows back out to both sides: miners are topped up toward 5× their mining, holders get at least 1% of all volume.",
+    "<b>Press Start.</b> One click on any PC with a graphics card.",
+    "<b>Your GPU mines.</b> Only on spare power, on whichever coin pays most.",
+    "<b>It buys $HASH.</b> Every miner's earnings are market buys: steady buy inflow.",
+    "<b>Paid to your wallet.</b> Every 10 minutes. Holding levels you up.",
+    "<b>Every trade pays 5%.</b> The tax flows back out to miners and holders.",
   ];
 
   const el = (tag, attrs, parent) => {
@@ -33,10 +37,10 @@
     if (parent) parent.append(e);
     return e;
   };
-  // Spokes from the coin: station 2 (buys $HASH) flows in; stations 0 (miners) and 3 (holders) flow out on step 4.
-  const SPOKES = { 2: "in", 0: "out", 3: "out" };
+  // Spokes between the coin and a station. "in" flows to the coin, "out" flows to the station.
+  const SPOKES = { 2: "in", 4: "in", 0: "out", 3: "out" };
   const spokes = {};
-  Object.keys(SPOKES).forEach((k) => (spokes[k] = el("path", { class: "cycle-spoke" }, svg)));
+  Object.keys(SPOKES).forEach((k) => (spokes[k] = el("path", { class: "cycle-spoke " + SPOKES[k] }, svg)));
   const tags = {};
   root.querySelectorAll(".spoke-tag").forEach((t) => (tags[t.dataset.spoke] = t));
   // links[i] joins station i to station i+1 (the last one closes the loop)
@@ -65,38 +69,51 @@
   function layoutRing(W) {
     root.classList.add("ring");
     root.classList.remove("stack");
-    const cardW = Math.round(Math.min(250, Math.max(196, W * 0.29)));
+    const cardW = Math.round(Math.min(224, Math.max(190, W * 0.29)));
     stations.forEach((s) => (s.style.width = cardW + "px"));
     const cardH = Math.max(...stations.map((s) => s.offsetHeight));
-    // As wide as the column allows, but never so tight that neighbors overlap.
-    const R = Math.max((cardW + 26) / (2 * Math.sin(Math.PI / N)), Math.min((W - cardW - 8) / (2 * Math.cos(Math.PI / 10)), 300));
+    // As wide as the column allows (and, beside the title, short enough for the screen),
+    // but never so tight that neighbors overlap.
+    const minR = (cardW + 26) / (2 * Math.sin(Math.PI / N));
+    let maxR = Math.min((W - cardW - 12) / (2 * Math.cos(Math.PI / 10)), 290);
+    if (window.innerWidth >= 1180) maxR = Math.min(maxR, (window.innerHeight - 64 - 100 - cardH - 24) / (1 + Math.cos(Math.PI / 5)));
+    const R = Math.max(minR, maxR);
     const cx = W / 2;
-    const cy = cardH / 2 + R + 8;
+    const cy = cardH / 2 + R + 10;
     const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
     stations.forEach((s, i) => {
       s.style.left = cx + R * Math.cos(angle(i)) + "px";
       s.style.top = cy + R * Math.sin(angle(i)) + "px";
     });
-    const coinD = Math.round(Math.min(220, Math.max(130, (R - cardH / 2) * 1.5)));
+    // Distance from the center to where the ray toward station i enters its card.
+    const edge = (i) => {
+      const a = angle(i), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
+      return R - Math.min(c > 1e-6 ? cardW / 2 / c : Infinity, s > 1e-6 ? cardH / 2 / s : Infinity);
+    };
+    // Each label sits on its spoke just outside the card; the coin takes the room that's left.
+    const ext = (k) => {
+      const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), t = tags[k];
+      return Math.min(c > 1e-6 ? t.offsetWidth / 2 / c : Infinity, s > 1e-6 ? t.offsetHeight / 2 / s : Infinity);
+    };
+    const tagAt = {};
+    Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3));
+    const room = Math.min(...stations.map((_, i) => edge(i) - 26), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6));
+    const coinD = Math.round(Math.min(210, Math.max(120, 2 * room)));
     core.style.left = cx + "px";
     core.style.top = cy + "px";
     core.style.width = core.style.height = coinD + "px";
     Object.keys(spokes).forEach((k) => {
-      const a = angle(+k), r0 = coinD / 2 + 6;
-      const sx = cx + r0 * Math.cos(a), sy = cy + r0 * Math.sin(a);
-      const ex = cx + R * Math.cos(a), ey = cy + R * Math.sin(a);
-      spokes[k].setAttribute("d", `M ${sx} ${sy} L ${ex} ${ey}`);
-      const tagR = (r0 + (R - cardH / 2)) / 2 + 4;
-      if (tags[k]) { tags[k].style.left = cx + tagR * Math.cos(a) + "px"; tags[k].style.top = cy + tagR * Math.sin(a) + "px"; }
+      const a = angle(+k), r0 = coinD / 2 + 4;
+      spokes[k].setAttribute("d", `M ${cx + r0 * Math.cos(a)} ${cy + r0 * Math.sin(a)} L ${cx + R * Math.cos(a)} ${cy + R * Math.sin(a)}`);
+      tags[k].style.left = cx + tagAt[k] * Math.cos(a) + "px";
+      tags[k].style.top = cy + tagAt[k] * Math.sin(a) + "px";
     });
-    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 8;
+    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10;
     root.style.height = H + "px";
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     links.forEach((lk, i) => {
       const a1 = angle(i), a2 = angle(i + 1);
-      const p1 = { x: cx + R * Math.cos(a1), y: cy + R * Math.sin(a1) };
-      const p2 = { x: cx + R * Math.cos(a2), y: cy + R * Math.sin(a2) };
-      const d = `M ${p1.x} ${p1.y} A ${R} ${R} 0 0 1 ${p2.x} ${p2.y}`;
+      const d = `M ${cx + R * Math.cos(a1)} ${cy + R * Math.sin(a1)} A ${R} ${R} 0 0 1 ${cx + R * Math.cos(a2)} ${cy + R * Math.sin(a2)}`;
       lk.base.setAttribute("d", d);
       lk.lit.setAttribute("d", d);
     });
@@ -140,69 +157,104 @@
 
   // ---------- Step machine ----------
   let step = 0, phase = "dwell", t = 0, last = 0, raf = 0, visible = true, paused = false;
+  let outTimer = 0, capTimer = 0;
+  const reflow = (s) => void s.offsetWidth;
 
-  function activate(i) {
+  // Put a station back to its first frame. Only done while it's dimmed.
+  function reset(s) {
+    s.classList.remove("seen", "on", "prep");
+    reflow(s);
+  }
+  function activate(i, jumped) {
     stations.forEach((s, k) => {
-      s.classList.remove("on");
-      if (k === i) { void s.offsetWidth; s.classList.add("on"); } // restart its CSS animations
+      if (k === i) {
+        if (jumped || s.classList.contains("seen")) reset(s);
+        s.classList.add("on");
+      } else if (s.classList.contains("on")) {
+        s.classList.remove("on");
+        s.classList.add("seen");
+      }
     });
     stepBtns.forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
-    caption.innerHTML = CAPTIONS[i];
+    setCaption(CAPTIONS[i]);
     if (i === 3 && balance) countUp();
     paintSpokes(i);
   }
-  // Step 2 (buys $HASH): inflow into the coin. Step 4 (every trade pays 5%): out to miners and holders.
+  function setCaption(html) {
+    clearTimeout(capTimer);
+    caption.classList.add("swap");
+    capTimer = setTimeout(() => { caption.innerHTML = html; caption.classList.remove("swap"); }, 220);
+  }
+  // Glow the spokes that matter now: inflow on step 3; on step 5 the tax flows in, then out to both sides.
   function paintSpokes(i) {
-    const active = i === 2 ? ["2"] : i === 4 ? ["0", "3"] : [];
-    Object.keys(spokes).forEach((k) => {
-      const on = active.includes(k);
-      spokes[k].classList.toggle(SPOKES[k], on);
-      if (tags[k]) tags[k].classList.toggle("show", on);
+    clearTimeout(outTimer);
+    const hot = (keys) => Object.keys(spokes).forEach((k) => {
+      const on = keys.includes(k);
+      spokes[k].classList.toggle("hot", on);
+      if (tags[k]) tags[k].classList.toggle("hot", on);
     });
-    core.classList.toggle("pulse", i === 2);
+    if (i === 2) hot(["2"]);
+    else if (i === 4) { hot(["4"]); outTimer = setTimeout(() => hot(["4", "0", "3"]), OUT_DELAY_MS); }
+    else hot([]);
+    core.classList.toggle("pulse", i === 2 || i === 4);
   }
   function countUp() {
     const from = 12840, to = 13043, start = performance.now();
     const tick = (now) => {
-      const f = Math.min(1, (now - start - 600) / 1200);
-      balance.textContent = Math.round(from + (to - from) * Math.max(0, f)).toLocaleString("en-US") + " $HASH";
+      const f = Math.min(1, Math.max(0, (now - start - 700) / 1400));
+      const e = 1 - Math.pow(1 - f, 3);
+      balance.textContent = Math.round(from + (to - from) * e).toLocaleString("en-US") + " $HASH";
       if (f < 1 && stations[3].classList.contains("on")) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }
-  // The link into the active station stays lit while it plays; the outgoing link fills during the transition.
+  // The link into the active station stays lit while it plays; the outgoing link draws during the
+  // transition. Links that are done fade out through CSS instead of disappearing.
+  const ease = (f) => (f < 0.5 ? 4 * f * f * f : 1 - Math.pow(-2 * f + 2, 3) / 2);
   function paintLinks() {
     links.forEach((lk, i) => {
-      let fill = 0;
-      if (phase === "link" && i === step) {
-        const f = Math.min(1, t / LINK_MS);
-        fill = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
-      } else if (phase === "dwell" && i === (step - 1 + N) % N && t < DWELL_MS) {
-        fill = 1;
+      let fill = -1;
+      if (phase === "link" && i === step) fill = ease(Math.min(1, t / LINK_MS));
+      else if (phase === "dwell" && i === (step - 1 + N) % N && lit[i]) fill = 1;
+      if (fill >= 0) {
+        lk.lit.setAttribute("stroke-dashoffset", String(lk.len * (1 - fill)));
+        lk.lit.classList.add("on");
+      } else {
+        lk.lit.classList.remove("on");
       }
-      lk.lit.setAttribute("stroke-dashoffset", String(lk.len * (1 - fill)));
-      lk.lit.style.opacity = fill > 0 ? 1 : 0;
     });
   }
+  // lit[i]: link i finished drawing on the way into the current station (not set after a jump).
+  const lit = links.map(() => false);
   function go(i) {
     step = i;
     phase = "dwell";
     t = 0;
-    activate(i);
+    lit.fill(false);
+    activate(i, true);
     paintLinks();
     if (!reduce) kick();
   }
   function frame(now) {
     raf = 0;
     if (!running()) { last = 0; return; }
-    if (last) t += now - last;
+    if (last) t += Math.min(64, now - last);
     last = now;
     if (phase === "dwell" && t >= DWELL_MS) {
       phase = "link"; t = 0;
+      lit.fill(false);
+      // Rewind the next station while it's still dim, so it starts clean when the link arrives.
+      // Fade its picture out first so the rewind isn't visible.
+      const nx = stations[(step + 1) % N];
+      if (nx.classList.contains("seen")) {
+        nx.classList.add("prep");
+        setTimeout(() => { if (!nx.classList.contains("on")) reset(nx); nx.classList.remove("prep"); }, 320);
+      }
     } else if (phase === "link" && t >= LINK_MS) {
+      lit[step] = true;
       step = (step + 1) % N;
       phase = "dwell"; t = 0;
-      activate(step);
+      activate(step, false);
     }
     paintLinks();
     raf = requestAnimationFrame(frame);
@@ -231,10 +283,11 @@
   layout();
   if (reduce) {
     root.classList.add("static");
+    stations.forEach((s) => s.classList.add("seen"));
     pauseBtn.hidden = true;
     stepBtns.forEach((b) => (b.hidden = true));
-    links.forEach((lk) => { lk.lit.style.opacity = 1; lk.lit.setAttribute("stroke-dashoffset", "0"); });
-    Object.keys(spokes).forEach((k) => { spokes[k].style.opacity = 1; if (tags[k]) tags[k].classList.add("show"); });
+    links.forEach((lk) => { lk.lit.classList.add("on"); lk.lit.setAttribute("stroke-dashoffset", "0"); });
+    Object.keys(spokes).forEach((k) => { spokes[k].classList.add("hot"); if (tags[k]) tags[k].classList.add("hot"); });
     caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5% back to miners and holders.";
     return;
   }

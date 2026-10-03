@@ -132,18 +132,27 @@
     mult(v) { return (v >= 10 ? v.toFixed(0) : v.toFixed(1)) + "×"; },
   };
 
-  // GPU <select> builder shared by the home and calculator pages.
+  // GPU <select> builder shared by the home and calculator pages. Names only, grouped;
+  // laptop GPUs estimated from desktop data are marked "est.".
   window.hcFillGpuSelect = function (sel, selectedName) {
-    const order = ["NVIDIA", "AMD", "Intel", "Pro & mining cards"];
+    const GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
     const groups = {};
     (window.GPUS || []).forEach((g) => {
-      if (!groups[g.group]) { groups[g.group] = document.createElement("optgroup"); groups[g.group].label = g.group; }
-      const o = document.createElement("option");
-      o.value = g.name;
-      o.textContent = g.name;
-      if (g.name === selectedName) o.selected = true;
-      groups[g.group].append(o);
+      if (!groups[g.group]) groups[g.group] = [];
+      groups[g.group].push(g);
     });
-    order.forEach((k) => groups[k] && sel.append(groups[k]));
+    GROUPS.forEach(([key, label]) => {
+      if (!groups[key]) return;
+      const og = document.createElement("optgroup");
+      og.label = label;
+      groups[key].forEach((g) => {
+        const o = document.createElement("option");
+        o.value = g.name;
+        o.textContent = g.est ? g.name + " (est.)" : g.name;
+        if (g.name === selectedName) o.selected = true;
+        og.append(o);
+      });
+      sel.append(og);
+    });
   };
 })();
