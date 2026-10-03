@@ -135,7 +135,19 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 - **Renters take ~16%,** because $50 gets them L2. Fixes: a higher L2 threshold, or a wallet-age requirement for L2.
 - **Every design fades as the hype does.** The mechanism softens the decline but doesn't create demand.
 - **Assumptions:** 20% of miners top up to $500 and 35% to $50.
-- Note: the simulation still uses the old 5% split. Update it for 3% (2.5/0.5).
+- **Correction (Oct 3): the table above overstated prices.** The old sim treated every fee dollar (chest, burn, creator) as a market buy of $HASH. The Token-2022 tax is withheld in $HASH, so paying the chest, burning or paying holders creates no buying; only miners' mined coins do, and the dev share is sold for costs. Re-run with correct accounting (20 seeds, medians): Levels 1/2/4 at the old 3/1.5/0.5 split ends at **0.15×**, and the current 3% design (2.5% chest, 0.5% dev) at **0.12×**.
+
+**Simulation: 5% dual-ladder proposal vs current 3% (Oct 3, corrected accounting, 20 seeds, medians, same miner buy-in in both):**
+
+| Design | Miner extra d7 / d30 / d90 | Chest rate d7 / d30 | Holder pot (90d) | H3 yield d7 / d30 | Renters' chest share | Price d90 | Burned |
+|---|---|---|---|---|---|---|---|
+| Current: 3% fixed (2.5 chest / 0.5 dev) | 279% / 55% / 38% | 2.5% / 2.5% | $0 | – | 7.4% | 0.12× | 0% |
+| 5% dual, boost thresholds 0.5×–2× | 399% / 94% / 43% | 2.5% / 3.8% | $57K | 0.53% / 0.09% a day | 8.5% | 0.16× | 1.3% |
+
+- **Thresholds matter most.** With boost thresholds of 3×–10×, the miner boost drops below 3× after the hype week, the chest keeps the full 4.5%, and holders get almost nothing after week 1. Thresholds around 0.5×–2× give holders a real share early and hand most of the tax back to miners as hype fades.
+- **If 5% cuts volume by 30%,** miner income falls about 20% (lowboost: d30 extra 124% vs 152% with bigger buy-ins).
+- **Price is the weakest result.** Trader flow in the sim doesn't react to the tax rate or to holder rewards, so it can't show a 5% tax scaring flippers or holder rewards attracting buyers. Bigger assumed buy-ins (up to $2,500 for H3) lifted price to ~0.3×, so buy-in behavior drives the price outcome more than the split does.
+- **Renters aren't reduced** by M2 at 2 days mined (they stay ≥ 3 days and hold $50). A longer M2 window would cut them, at the cost of slower leveling.
 
 **Calculator presets (4070, L2, old 3% chest rate):**
 
@@ -220,7 +232,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
   - Some antivirus will still label any miner as "potentially unwanted": the FAQ explains, and users only ever allow the Hashcoin folder.
 
 ## 11. Open decisions
-- **Proposed (Oct 3): 5% tax with a dynamic split.** Dev fixed at 0.5%. The other 4.5% is split between the miner chest and a holder side (holder rewards + burn), set automatically by the miner "boost" (24h chest paid ÷ miners' mined USD; size-neutral and can't be gamed by splitting wallets). Low boost → up to 4.5% to the chest; high boost → chest falls to a floor (draft 1.5%) and the rest goes to holders and burn. Published formula, rate-limited changes, live on the site. Holder rewards are in (user decision). Notes: the tax is collected in $HASH, so the "buyback" part is a burn; 5% probably rules out the LaunchLab 1%/3% option. Needs a sim comparison vs fixed 3% before deciding thresholds.
+- **Proposed (Oct 3): 5% tax with a dynamic split and two ladders.** Dev fixed at 0.5%. The other 4.5% is split between the miner chest and a holder side (holder rewards + burn), set automatically by the miner "boost" (24h chest paid ÷ miners' mined USD; size-neutral and can't be gamed by splitting wallets). Low boost → up to 4.5% to the chest; high boost → chest falls to a floor (draft 1.5%). Published formula, rate-limited changes, live on the site. Holder rewards are in (user decision; many large tokens do it). **Holder levels H1–H3:** bag $50 / $500 / $2,500 and a hold clock (draft 0 / 24h / 72h; user wants it fast because tokens move fast) that selling shrinks in proportion; holder pot split by bag × 1/2/4, 5% cap per wallet. **Miner levels M1–M3:** by days mined (draft 0 / 2 / 5), weight √(GPU $) × 1/2/4; **M2 requires H1, M3 requires H2** (user decision). Notes: the tax is collected in $HASH, so the "buyback" part is a burn; 5% probably rules out the LaunchLab 1%/3% option. Sim results in §8; open: boost thresholds (sim suggests ~0.5×–2×, not 3×–10×), burn share of the holder side, exact clocks.
 - Launchpad: LaunchLab 3% reward launch vs our own Token-2022 token and pool (verify LaunchLab details).
 - L2 threshold or minimum wallet age, to reduce renter capture.
 - Payout cadence (10 min vs hourly) vs transaction cost.
