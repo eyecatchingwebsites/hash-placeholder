@@ -1,0 +1,164 @@
+# Hashcoin Technical Plan
+
+Written October 3, 2026 for the next (local) work sessions. Read `docs/PROJECT.md` for the decisions and numbers, and `docs/ARCHITECTURE.md` for the system diagram. This file is the **ordered build plan**: what to build, in what order, what each piece needs, and how we'll know it works.
+
+Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (accounts, money, hardware, decisions)
+
+---
+
+## 0. Where things stand
+| Area | State | Location |
+|---|---|---|
+| Payout engine (levels, weights, cap, epoch, hybrid payout, settlement, token split) | ✅ 15 tests | `packages/engine` |
+| Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
+| Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
+| Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
+| Website design (landing, levels, earnings example, token, trust, waitlist, FAQ) | 🟡 static draft | `apps/web/index.html` |
+| CI + Windows release workflow | 🟡 written, never run on GitHub | `.github/workflows` |
+| Simulation, calculators | ✅ (defaults still on the old 5% split) | `sim/`, `calculator/` |
+
+---
+
+## Phase 1: Decisions and research (first local session) 🔑
+These block real mining. Each one is research plus a decision from the user.
+
+1. **Miner programs per coin** (PRL, QUAN, QTC, and maybe EPIC).
+   - For each: name, NVIDIA/AMD/Intel support, open or closed source, **dev fee %**, license terms on redistributing or auto-downloading, and the Windows build URL and SHA-256.
+   - Must-haves:
+     - A local stats API (hashrate per GPU), for the dashboard and benchmarking.
+     - Device selection flags.
+     - No bundled crypto-wallet or telemetry surprises.
+   - Output: fill in `services/api/config/miners.json`.
+2. **Pools per coin.**
+   - Must-haves:
+     - **Per-worker stats API** (accepted shares or hashrate per worker name), because payouts are credited from this.
+     - Worker names in the form `wallet.rig-gpu`.
+     - Payout to one platform address.
+     - PPS/PPLNS terms and the pool fee.
+     - Regions.
+   - Output: fill in `services/api/config/coins.json`.
+   - Fallback if no pool fits: run our own pool for that coin (more work, see Phase 6).
+3. **Launchpad.** Raydium LaunchLab "reward launch" (verify: 3% option, who holds the Token-2022 fee authorities, where fees go) vs our own Token-2022 token + Raydium CPMM pool. 🔑 decision.
+4. **Accounts** 🔑:
+   - .com domain.
+   - Hosting:
+     - Web: Vercel.
+     - Backend: a small VPS (e.g. Hetzner or DigitalOcean) or Railway/Fly.
+   - Postgres (e.g. Neon or Supabase).
+   - Solana RPC (Helius, QuickNode or Triton, with webhooks or enhanced transactions for transfer indexing).
+   - Code-signing (Azure Trusted Signing is cheapest; otherwise an OV certificate).
+   - Squads multisig.
+5. **Legal check** 🔑 before any public marketing.
+
+## Phase 2: Devnet token and money flow
+Goal: prove fee → chest → payouts on devnet with fake miners.
+
+1. `packages/chain` (TypeScript, `@solana/web3.js` + `@solana/spl-token`):
+   - `createHashMint()`: Token-2022 mint with the transfer-fee extension at 300 bps, a high max fee, and both fee authorities set to a multisig. Devnet: a throwaway keypair from env, never committed.
+   - `harvestFees()`: collect withheld fees from token accounts (`harvestWithheldTokensToMint` + `withdrawWithheldTokensFromMint`), then split 2.5 : 0.5 into chest and dev wallets.
+   - `indexTransfers(fromSlot)`: stream every $HASH transfer, then call `applyBalanceChange` per wallet (any outflow sets `everSold`). Webhook or polling.
+   - `sendBatch(transfers)`: pack about 20 transfers per transaction (Token-2022 `transferChecked` with fee), with priority fees and retry. Create associated token accounts for new miners (budget ~0.002 SOL each).
+   - `buyHash(usd)`: Jupiter swap quote and execute from the treasury, with a max-slippage guard.
+   - Gross-up: a payout of N tokens needs N / (1 − 0.03) sent so the miner nets N. The withheld 3% returns via harvest.
+2. **Devnet end-to-end script:**
+   - Mint the token and seed a devnet pool.
+   - A bot trades to generate fees.
+   - Fake pool feed → engine `runEpoch` → `splitTokens` → `sendBatch`.
+   - Check the balances and the ledger.
+3. **Engine changes:**
+   - Exclude dev and treasury wallets from the chest (config list).
+   - Switch the defaults to the 3% fee (2.5 / 0.5, no burn). The engine already takes `chestUsd` as an input, so this is mostly config and docs.
+
+## Phase 3: Backend service
+`services/backend` (Node + Postgres), deployed on the VPS. Jobs:
+
+| Job | Every | Does |
+|---|---|---|
+| collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet |
+| chain-watch | live | Transfer indexer, then `WalletState` per wallet, plus the 1h average price |
+| fee-watch | 10 min | Harvests the Token-2022 fee, then the chest / dev buckets |
+| epoch | 10 min | `runEpoch` → buy $HASH → `splitTokens` → `sendBatch` → write the ledger |
+| settler | 15 min | Confirmed and sold mined coins → `settle` true-ups |
+| prices | 15 min | Per-card revenue per coin (hashrate.no API or our own calculation from network difficulty), feeding the switcher's quotes |
+| api | — | Assignments (existing), plus a public dashboard API: totals, recent payouts, wallet page (level, progress, paid / pending) |
+
+**Ledger tables (Postgres):**
+- `wallets` (address, first_hash_at, ever_sold, balance)
+- `workers` (wallet, rig, gpu, last_seen)
+- `epochs` (id, chest_usd, carry_usd, price)
+- `payout_lines` (epoch, wallet, level, mining_usd, immediate_usd, pending_usd, chest_usd)
+- `pending` (epoch, wallet, est_usd, settled)
+- `settlements`
+- `transfers` (sig, wallet, amount, status)
+- `float` (balance snapshots)
+- `waitlist`
+
+**Safety:**
+- Treasury in a Squads multisig. The hot payout wallet holds only the float, with an automatic refill from the multisig needing manual approval above a limit.
+- A kill switch: pause payouts.
+- Alerts: float low, epoch failed, pool feed stale, RPC errors, payout tx failures.
+- Watch for block withholding: expected vs actual blocks per pool, and flag wallets with many shares but no blocks.
+- Rate limiting on the API (per IP and per wallet).
+
+## Phase 4: Website (`apps/web`)
+The static design draft exists. Next:
+1. **Framework:** move to a small Next.js or Astro site on Vercel, keeping the current design (tokens, fonts, sections).
+2. **Pages:**
+   - `/`: landing (done as a draft)
+   - `/dashboard`: live totals, chest, burn of fees, recent payouts with Solscan links, coin mix, GPUs online
+   - `/wallet/[address]`: level, progress ("$12 to Level 2", "4 days to Level 3"), paid / pending, payout history
+   - `/download`: signed installer, SHA-256, VirusTotal link, antivirus FAQ
+   - `/calculator`: the full calculator (`calculator/index.html`), fed live inputs at launch
+3. **Waitlist backend:** a `waitlist` table, a POST endpoint, and a live counter. Store an X handle or email, the GPU model, and an optional public wallet. Rate-limit and validate.
+4. **Status strip and hero numbers** read from the dashboard API. Until launch they show "—", never invented numbers.
+5. **Rules (from CLAUDE.md):** no return promises, and the contract address published only on the site.
+6. **Launch requirement:** the trust section claims temperature/power limits and pause-while-gaming. **Those must ship in the app before the site goes live** (see Phase 5), or the copy changes.
+
+## Phase 5: Desktop app to release 🔑 (needs a Windows PC with a GPU)
+1. Put the real miners and pools into config. Run the app against the dev API on the user's PC. Confirm GPU detection (nvidia-smi, AMD and Intel via Win32_VideoController), download, verify, and that mining starts.
+2. **Benchmarks:** on first run, 60–120 s per supported algo per card, reading hashrate from the miner's local API. Report it in check-ins (the API already accepts `benchmarks`).
+3. **Safety:**
+   - Temperature limit (pause above ~83 °C).
+   - Power limit via the miner's flags where supported.
+   - Pause while a fullscreen game or a listed game process is running.
+   - "Mine only when idle" option.
+4. **Settings:**
+   - Auto-start at login (off by default).
+   - API region.
+   - A "Paid / Pending" panel read from `/wallet/[address]`.
+5. **Updates:** Tauri updater with a signed update feed.
+6. **Release:**
+   - Put the production public key in `TRUSTED_KEYS`.
+   - Enable the code-signing step.
+   - Run `desktop-release.yml`.
+   - Submit to Microsoft's false-positive portal and VirusTotal.
+   - Publish the SHA-256.
+7. **Proof video:** unedited install → first payout, with the Solscan link on screen.
+
+## Phase 6: Hardening and launch
+- Security review of the backend, payout signing and key handling. Consider an external review of `packages/chain` and the treasury flows.
+- Load test the epoch job (5,000 wallets → transfer batching and RPC limits).
+- Our own pool for any coin without a suitable pool (open-source stratum server + node), only if Phase 1 found no option.
+- Launch checklist:
+  - Multisig configured and fee authorities moved.
+  - Dev wallet locked or vested publicly.
+  - Float funded (~$1K).
+  - Kill switch tested.
+  - Alerts on.
+  - Waitlist emailed.
+  - Contract address posted on the site first.
+
+---
+
+## Open technical questions
+1. Payout cadence: 10 minutes (best proof, about 6× the transaction cost) vs hourly after launch week.
+2. The renter leak at L2 ($50 buys 2× immediately). Add a minimum wallet age for L2, or raise the threshold? Test in `sim/`.
+3. Price source for level thresholds: Jupiter price API vs our own pool's average (TWAP).
+4. Whether hashrate.no has an API or terms that allow automated use. Otherwise compute revenue from network difficulty, block reward and price per coin.
+5. How to handle a GPU that can only mine one coin, if that coin's pool goes down: stop it, or fall back to the next coin even if it scores lower?
+
+## Next session: suggested first steps
+1. Phase 1, items 1–2: research miners and pools, then fill in the configs.
+2. Phase 1, item 4: open the accounts.
+3. Phase 2: build `packages/chain` and run the devnet end-to-end.
+4. In parallel on the user's PC: Phase 5, step 1 (first real run of the app).

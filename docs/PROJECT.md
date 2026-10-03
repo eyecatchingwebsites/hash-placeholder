@@ -7,6 +7,8 @@ Last updated: October 2, 2026. Stage: design, simulation, and early build. Numbe
 - Simulation: `sim/` (see `sim/README.md`)
 - Payout engine (TypeScript, tested): `packages/engine`
 - Earnings calculator: `calculator/index.html` (published: https://claude.ai/artifact/CDWZXxmNsZw4DNCxHhdJY5)
+- **Technical plan (ordered build plan for the next sessions): `docs/TECHNICAL-PLAN.md`**
+- Website design draft: `apps/web/index.html` (published: https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ)
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
 - Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branch: `claude/lucid-fermat-16svvo`.
 
@@ -196,7 +198,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 3% token, fee collection, mock pool feed, batch payouts | Next |
-| Website at the .com: landing, dashboard, wallet page, waitlist | Next |
+| Website: landing page design (`apps/web`) | Draft done. Dashboard, wallet page, download page and waitlist backend next (see TECHNICAL-PLAN Phase 4) |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | To do |

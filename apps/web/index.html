@@ -1,0 +1,581 @@
+<title>Hashcoin</title>
+<meta name="description" content="The memecoin your GPU mines. Install the Hashcoin Miner, mine the best-paying coin for your card, get paid in $HASH.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: one dark "rig at night" world. Hero pairs the headline with a live share stream; sections run in a single 1120px column with alternating two-column splits. */
+:root {
+  --bg: #0e1110;
+  --bg2: #141816;
+  --panel: #181d1b;
+  --line: #29302d;
+  --ink: #ecefec;
+  --muted: #9aa49f;
+  --amber: #f08a3c;
+  --amber-dim: #f08a3c26;
+  --teal: #2fc4ad;
+  --l1: #9aabb8; --l2: #2fc4ad; --l3: #f2b23a;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); }
+a { color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+section { padding-block: 72px; border-top: 1px solid var(--line); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p { margin: 0; max-width: 62ch; }
+.eyebrow { font: 600 .78rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; display: block; }
+.lede { color: var(--muted); font-size: 1.08rem; margin-top: 14px; }
+.ticker { font-family: var(--display); color: var(--amber); }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: 700 1rem var(--display); letter-spacing: .02em; padding: 13px 22px; border-radius: 8px; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
+.btn-primary { background: var(--amber); color: #15110d; }
+.btn-ghost { border-color: var(--line); color: var(--ink); background: transparent; }
+.btn:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); }
+.tag { display: inline-block; font: 600 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+
+/* nav */
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+.logo { font: 700 1.25rem var(--display); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.logo svg { flex: none; }
+.navlinks { display: flex; gap: 22px; font-size: .92rem; color: var(--muted); }
+.navlinks a { text-decoration: none; }
+.navlinks a:hover { color: var(--ink); }
+@media (max-width: 860px) { .navlinks { display: none; } }
+
+/* hero */
+.hero { padding-block: 64px 56px; border-top: 0; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 48px; align-items: center; }
+@media (max-width: 900px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } }
+.hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); letter-spacing: -.01em; }
+.hero h1 em { font-style: normal; color: var(--amber); }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.hero .fine { margin-top: 18px; font-size: .85rem; color: var(--muted); }
+
+.stream { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; }
+.stream header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); font: 500 .78rem var(--mono); color: var(--muted); }
+.stream header b { color: var(--ink); font-weight: 500; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); display: inline-block; margin-right: 6px; box-shadow: 0 0 0 3px #2fc4ad22; }
+.log { height: 286px; overflow: hidden; padding: 10px 14px; font: 400 .8rem/1.75 var(--mono); position: relative; }
+.log::after { content: ""; position: absolute; inset: auto 0 0 0; height: 60px; background: linear-gradient(transparent, var(--bg2)); pointer-events: none; }
+.log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.log .ok { color: var(--teal); }
+.log .pay { color: var(--amber); }
+.stream footer { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.stream footer div { padding: 12px 14px; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.stream footer div:first-child { border-left: 0; }
+.stream footer span { font: 600 .68rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stream footer b { font: 700 1.15rem var(--display); font-variant-numeric: tabular-nums; }
+
+/* status strip */
+.status { padding-block: 0; border-top: 0; }
+.status .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+@media (max-width: 760px) { .status .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.status .cell { padding: 18px 20px; background: var(--panel); border-left: 1px solid var(--line); display: grid; gap: 4px; }
+.status .cell:first-child { border-left: 0; }
+@media (max-width: 760px) { .status .cell:nth-child(3) { border-left: 0; } .status .cell:nth-child(n+3) { border-top: 1px solid var(--line); } }
+.status .k { font: 600 .72rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.status .v { font: 700 1.6rem var(--display); font-variant-numeric: tabular-nums; }
+.status p { font-size: .82rem; color: var(--muted); margin-top: 10px; }
+
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 36px; counter-reset: s; }
+@media (max-width: 900px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+.step { border-top: 2px solid var(--amber); padding-top: 16px; display: grid; gap: 8px; align-content: start; }
+.step::before { counter-increment: s; content: "0" counter(s); font: 700 .85rem var(--mono); color: var(--amber); }
+.step p { color: var(--muted); font-size: .95rem; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; margin-top: 56px; }
+@media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.loop { width: 100%; max-width: 520px; height: auto; display: block; margin-inline: auto; }
+
+/* audiences */
+.aud { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: 36px; }
+@media (max-width: 760px) { .aud { grid-template-columns: minmax(0, 1fr); } }
+.aud article { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 26px; display: grid; gap: 14px; align-content: start; }
+.aud ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.aud li { padding-left: 22px; position: relative; color: var(--muted); }
+.aud li::before { content: ""; position: absolute; left: 0; top: .62em; width: 10px; height: 2px; background: var(--amber); }
+.aud li b { color: var(--ink); font-weight: 600; }
+
+/* levels */
+.levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+@media (max-width: 860px) { .levels { grid-template-columns: minmax(0, 1fr); } }
+.level { border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: var(--panel); display: grid; gap: 12px; align-content: start; position: relative; overflow: hidden; }
+.level .mult { font: 700 3rem/1 var(--display); }
+.level[data-l="1"] .mult { color: var(--l1); }
+.level[data-l="2"] .mult { color: var(--l2); }
+.level[data-l="3"] .mult { color: var(--l3); }
+.level .req { font: 500 .85rem var(--mono); color: var(--ink); }
+.level p { color: var(--muted); font-size: .92rem; }
+.level .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.level .bar i { display: block; height: 100%; }
+.rules { margin-top: 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; font-size: .9rem; color: var(--muted); }
+@media (max-width: 860px) { .rules { grid-template-columns: minmax(0, 1fr); } }
+.rules b { color: var(--ink); }
+
+/* calculator */
+.calc { margin-top: 36px; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+@media (max-width: 860px) { .calc { grid-template-columns: minmax(0, 1fr); } }
+.calc form { background: var(--panel); padding: 24px; display: grid; gap: 18px; align-content: start; }
+.calc label { font-weight: 600; font-size: .9rem; display: block; margin-bottom: 6px; }
+.calc select { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 500 .95rem var(--body); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: 600 .85rem var(--display); padding: 10px 6px; border: 0; border-left: 1px solid var(--line); background: var(--bg); color: var(--muted); cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--amber); color: #15110d; }
+.calc .out { padding: 28px; display: grid; gap: 18px; align-content: start; background: var(--bg2); }
+.calc .big { font: 700 clamp(2.4rem, 5vw, 3.4rem)/1 var(--display); color: var(--amber); font-variant-numeric: tabular-nums; }
+.calc .rows { display: grid; gap: 8px; font: 400 .9rem var(--mono); }
+.calc .rows div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+.calc .note { font-size: .82rem; color: var(--muted); }
+.stack { height: 14px; display: flex; border-radius: 4px; overflow: hidden; background: var(--line); }
+.stack i { display: block; height: 100%; }
+
+/* tokenomics */
+.toke { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; margin-top: 36px; align-items: start; }
+@media (max-width: 860px) { .toke { grid-template-columns: minmax(0, 1fr); } }
+.feebar { display: flex; height: 64px; border-radius: 10px; overflow: hidden; font: 700 .9rem var(--display); }
+.feebar div { display: flex; align-items: center; padding-inline: 14px; }
+.facts { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.facts div { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; padding-block: 14px; border-bottom: 1px solid var(--line); font-size: .95rem; }
+@media (max-width: 520px) { .facts div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.facts dt { color: var(--muted); font: 500 .82rem var(--mono); padding-top: 2px; }
+.facts dd { margin: 0; }
+
+/* trust */
+.trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 32px; margin-top: 36px; }
+@media (max-width: 860px) { .trust { grid-template-columns: minmax(0, 1fr); } }
+.trust div { display: grid; gap: 6px; align-content: start; }
+.trust p { color: var(--muted); font-size: .93rem; }
+.trust svg { margin-bottom: 4px; }
+
+/* waitlist */
+.wait { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: clamp(24px, 4vw, 44px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+@media (max-width: 860px) { .wait { grid-template-columns: minmax(0, 1fr); } }
+.wait form { display: grid; gap: 14px; }
+.wait input, .wait select { width: 100%; padding: 12px 13px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 500 .95rem var(--body); }
+.wait input.mono { font-family: var(--mono); font-size: .85rem; }
+.wait .hint { font-size: .8rem; color: var(--muted); margin-top: 4px; display: block; }
+.wait .msg { font-size: .9rem; padding: 12px 14px; border-radius: 8px; background: var(--amber-dim); border: 1px solid #f08a3c55; }
+.counter { font: 700 3.4rem/1 var(--display); color: var(--amber); font-variant-numeric: tabular-nums; margin-top: 18px; }
+
+/* faq */
+.faq { margin-top: 32px; border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; padding: 18px 0; font: 600 1.05rem var(--display); list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--amber); font-family: var(--mono); }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { color: var(--muted); padding-bottom: 18px; }
+
+footer.site { padding-block: 40px 56px; border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
+footer.site .wrap { display: grid; gap: 14px; }
+footer.site p { max-width: 90ch; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation: none !important; transition: none !important; } }
+</style>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Hashcoin home">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="6" fill="#f08a3c"/><path d="M10 7v14M18 7v14M7 11h14M7 17h14" stroke="#15110d" stroke-width="2.6" stroke-linecap="round"/></svg>
+      Hashcoin
+    </a>
+    <div class="navlinks">
+      <a href="#how">How it works</a><a href="#levels">Levels</a><a href="#earnings">Earnings</a><a href="#token">Token</a><a href="#faq">FAQ</a>
+    </div>
+    <a class="btn btn-primary" href="#waitlist" style="padding: 9px 16px; font-size: .9rem;">Register your GPU</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Solana · GPU mining · <span class="ticker">$HASH</span></span>
+      <h1>The memecoin your <em>GPU</em> mines.</h1>
+      <p class="lede">Install the Hashcoin Miner on your gaming PC and paste your wallet address. It mines whichever coin pays your card best, converts it to <span class="ticker">$HASH</span>, and sends it to your wallet every 10 minutes. On top of that, 2.5% of every <span class="ticker">$HASH</span> trade goes to miners.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#waitlist">Register your GPU</a>
+        <a class="btn btn-ghost" href="#how">How it works</a>
+      </div>
+      <p class="fine">Windows · NVIDIA, AMD and Intel Arc · Launching soon. Nothing here is financial advice, and payouts vary.</p>
+    </div>
+
+    <div class="stream" aria-label="Simulated preview of the miner's share log">
+      <header><span><span class="dot"></span><b>hashcoin-miner</b> · preview</span><span id="clock">00:00:00</span></header>
+      <div class="log" id="log" aria-hidden="true"></div>
+      <footer>
+        <div><span>Shares</span><b id="sShares">0</b></div>
+        <div><span>Coin</span><b id="sCoin">PRL</b></div>
+        <div><span>Next payout</span><b id="sNext">10:00</b></div>
+      </footer>
+    </div>
+  </div>
+</header>
+
+<section class="status" aria-label="Launch status">
+  <div class="wrap">
+    <div class="grid">
+      <div class="cell"><span class="k">GPUs registered</span><span class="v">—</span></div>
+      <div class="cell"><span class="k">Miners online</span><span class="v">—</span></div>
+      <div class="cell"><span class="k">$HASH bought by miners</span><span class="v">—</span></div>
+      <div class="cell"><span class="k">Paid to miners</span><span class="v">—</span></div>
+    </div>
+    <p>These fill in with live, on-chain numbers at launch. The share log above is a simulated preview of the app.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <span class="eyebrow">How it works</span>
+    <h2>Your GPU earns. Traders' fees add to it.</h2>
+    <div class="steps">
+      <div class="step"><h3>Install and paste your wallet</h3><p>Download the signed Windows app and paste your Solana address. Only the public address is needed. Hashcoin never asks for your seed phrase.</p></div>
+      <div class="step"><h3>Your card mines the best coin</h3><p>Our server checks every few minutes which coin pays your exact card best (Pearl, Quantum and others) and switches only when it's clearly worth it.</p></div>
+      <div class="step"><h3>We convert it to $HASH</h3><p>What your GPU mines is sold and used to buy $HASH on the open market. Every miner adds steady buy pressure.</p></div>
+      <div class="step"><h3>Paid every 10 minutes</h3><p>Mining earnings land in your wallet every 10 minutes, plus your share of the miner chest, which grows with your level.</p></div>
+    </div>
+
+    <div class="split">
+      <svg class="loop" viewBox="0 0 520 380" role="img" aria-label="Loop: trades pay a 3% fee, 2.5% goes to the miner chest, miners are paid in $HASH, mining buys $HASH, which brings more trading">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#f08a3c"/></marker></defs>
+        <g fill="none" stroke="#f08a3c" stroke-width="2" marker-end="url(#ar)">
+          <path d="M210 70 C 300 40, 380 60, 410 120"/>
+          <path d="M440 200 C 440 260, 390 300, 320 318"/>
+          <path d="M200 318 C 130 300, 80 260, 80 200"/>
+          <path d="M90 120 C 110 80, 140 70, 165 68"/>
+        </g>
+        <g font-family="Chakra Petch, sans-serif" font-weight="700" fill="#ecefec" text-anchor="middle">
+          <rect x="160" y="40" width="120" height="56" rx="10" fill="#181d1b" stroke="#29302d"/><text x="220" y="74" font-size="17">Trades</text>
+          <rect x="360" y="122" width="150" height="76" rx="10" fill="#181d1b" stroke="#29302d"/><text x="435" y="156" font-size="17">Miner chest</text><text x="435" y="180" font-size="12" font-family="JetBrains Mono, monospace" font-weight="400" fill="#9aa49f">2.5% of every trade</text>
+          <rect x="200" y="292" width="120" height="56" rx="10" fill="#181d1b" stroke="#29302d"/><text x="260" y="326" font-size="17">Miners</text>
+          <rect x="10" y="122" width="150" height="76" rx="10" fill="#181d1b" stroke="#29302d"/><text x="85" y="156" font-size="17">$HASH buys</text><text x="85" y="180" font-size="12" font-family="JetBrains Mono, monospace" font-weight="400" fill="#9aa49f">mined coins → $HASH</text>
+        </g>
+        <g font-family="JetBrains Mono, monospace" font-size="11" fill="#9aa49f" text-anchor="middle">
+          <text x="350" y="56">3% fee on-chain</text><text x="420" y="286">paid by level</text><text x="110" y="292">every 10 min</text><text x="100" y="84">price + volume</text>
+        </g>
+      </svg>
+      <div>
+        <span class="eyebrow">The loop</span>
+        <h2 style="font-size: clamp(1.5rem, 3vw, 2rem);">Mining feeds the token. The token feeds the miners.</h2>
+        <p class="lede">Every <span class="ticker">$HASH</span> trade pays a 3% fee that's built into the token itself, so it applies on every exchange and can't be routed around. 2.5% goes into the miner chest and is paid out in <span class="ticker">$HASH</span>. At the same time, everything miners mine is used to buy <span class="ticker">$HASH</span>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Who it's for</span>
+    <h2>Two ways in.</h2>
+    <div class="aud">
+      <article>
+        <span class="tag">Traders</span>
+        <h3>What's behind $HASH</h3>
+        <ul>
+          <li><b>Constant buying.</b> Every connected GPU's mining revenue is used to buy $HASH, around the clock.</li>
+          <li><b>Holders have a reason to stay.</b> Miners who hold reach higher levels and bigger payouts. Selling locks a wallet out of Level 3 for good.</li>
+          <li><b>A fee nobody can dodge.</b> The 3% fee is enforced by the Solana token program on every transfer, on every exchange.</li>
+          <li><b>Everything on-chain.</b> Payouts, the chest and the dev wallet are public. Check them on Solscan.</li>
+        </ul>
+      </article>
+      <article>
+        <span class="tag">Miners</span>
+        <h3>What your gaming PC gets</h3>
+        <ul>
+          <li><b>One install.</b> No pools, wallets or command lines to configure. Paste your address and press Start.</li>
+          <li><b>Best coin, per card.</b> NVIDIA, AMD and Intel Arc cards each mine what pays them most, and it switches automatically.</li>
+          <li><b>Paid every 10 minutes</b> in $HASH, plus a share of the miner chest.</li>
+          <li><b>Smaller cards get a boost.</b> Chest shares use square-root balancing, so a 3060 earns a bigger multiple than a 5090.</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="levels">
+  <div class="wrap">
+    <span class="eyebrow">Levels</span>
+    <h2>Hold more, for longer, earn a bigger share.</h2>
+    <p class="lede">Your share of the miner chest depends on your GPU and your level. Mined $HASH counts toward your level, so holding what you earn moves you up.</p>
+    <div class="levels">
+      <div class="level" data-l="1">
+        <span class="tag">Level 1</span>
+        <span class="mult">1×</span>
+        <span class="req">Just mine</span>
+        <p>Everyone starts here. You get your mining earnings plus a base share of the chest.</p>
+        <div class="bar"><i style="width: 25%; background: var(--l1);"></i></div>
+      </div>
+      <div class="level" data-l="2">
+        <span class="tag">Level 2</span>
+        <span class="mult">2×</span>
+        <span class="req">Hold $50 of $HASH</span>
+        <p>Double chest weight. Most miners get here within days just by holding their payouts.</p>
+        <div class="bar"><i style="width: 50%; background: var(--l2);"></i></div>
+      </div>
+      <div class="level" data-l="3">
+        <span class="tag">Level 3</span>
+        <span class="mult">4×</span>
+        <span class="req">Hold $500 · 14 days · never sold</span>
+        <p>Four times the chest weight, for wallets that have held for 14 days without ever selling or transferring out.</p>
+        <div class="bar"><i style="width: 100%; background: var(--l3);"></i></div>
+      </div>
+    </div>
+    <div class="rules">
+      <p><b>Dips don't reset you.</b> If your position falls under $500 you drop to Level 2, and you're back at Level 3 the moment it's above $500 again.</p>
+      <p><b>Selling is final for Level 3.</b> Any sale or transfer out of the wallet removes it from Level 3 permanently. Level 1 and 2 still apply.</p>
+      <p><b>Fair caps.</b> No single wallet can take more than 5% of the chest, so big farms can't crowd everyone out.</p>
+    </div>
+  </div>
+</section>
+
+<section id="earnings">
+  <div class="wrap">
+    <span class="eyebrow">Earnings example</span>
+    <h2>What could my card earn?</h2>
+    <p class="lede">An example only, using fixed scenarios. Real payouts depend on trading volume, how many people mine, your level, and the $HASH price.</p>
+    <div class="calc">
+      <form id="calcForm" onsubmit="return false">
+        <div>
+          <label for="gpu">Your graphics card</label>
+          <select id="gpu"></select>
+        </div>
+        <div>
+          <label>Your level</label>
+          <div class="seg" id="lvl" role="group" aria-label="Level">
+            <button type="button" data-v="1">Level 1</button><button type="button" data-v="2" aria-pressed="true">Level 2</button><button type="button" data-v="3">Level 3</button>
+          </div>
+        </div>
+        <div>
+          <label>Scenario</label>
+          <div class="seg" id="scn" role="group" aria-label="Scenario">
+            <button type="button" data-v="launch" aria-pressed="true">Launch week</button><button type="button" data-v="steady">Steady</button><button type="button" data-v="quiet">Quiet</button>
+          </div>
+        </div>
+        <p class="note" id="scnNote"></p>
+      </form>
+      <div class="out" aria-live="polite">
+        <div>
+          <span class="eyebrow" style="margin-bottom: 6px;">Example per day, paid in $HASH</span>
+          <div class="big" id="total">$0</div>
+        </div>
+        <div class="stack" aria-hidden="true"><i id="barMine" style="background: var(--muted);"></i><i id="barChest" style="background: var(--amber);"></i></div>
+        <div class="rows">
+          <div><span>Mining revenue</span><span id="rMine"></span></div>
+          <div><span>Chest share</span><span id="rChest"></span></div>
+          <div><span>Multiplier on mining</span><span id="rMult"></span></div>
+        </div>
+        <p class="note">Mining revenue per card from hashrate.no (October 3, 2026), which changes daily. The value of $HASH can go down as well as up, and a 3% fee applies when you sell. This is not a forecast or a promise.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="token">
+  <div class="wrap">
+    <span class="eyebrow">Token</span>
+    <h2>Simple, public, enforced on-chain.</h2>
+    <div class="toke">
+      <div style="display: grid; gap: 16px;">
+        <div class="feebar" role="img" aria-label="3% fee: 2.5% to miners, 0.5% to development">
+          <div style="flex: 5; background: var(--amber); color: #15110d;">2.5% to miners</div>
+          <div style="flex: 1.6; background: var(--line); color: var(--ink); justify-content: center;">0.5% dev</div>
+        </div>
+        <p class="muted">3% fee on every transfer, built into the token with Solana's Token-2022 transfer-fee extension. It can't be avoided by trading on a different exchange.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>Chain</dt><dd>Solana (Token-2022)</dd></div>
+        <div><dt>Transfer fee</dt><dd>3%: 2.5% to the miner chest, 0.5% to development</dd></div>
+        <div><dt>Fee controls</dt><dd>Held in a public multisig. The fee will never go above 3%.</dd></div>
+        <div><dt>Dev holding</dt><dd>1% of supply in one public wallet, locked 90 days, then released slowly. Excluded from miner payouts.</dd></div>
+        <div><dt>Contract address</dt><dd class="mono">Published here at launch, and only here.</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Trust</span>
+    <h2>Built to be checked.</h2>
+    <div class="trust">
+      <div>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M14 3l9 4v6c0 6-4 10-9 12-5-2-9-6-9-12V7z" fill="none" stroke="#f08a3c" stroke-width="2"/><path d="M10 14l3 3 5-6" fill="none" stroke="#f08a3c" stroke-width="2"/></svg>
+        <h3>Signed and open source</h3>
+        <p>The app is code-signed and its source is public. Every release lists its checksums, so you can verify what you install.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="5" y="12" width="18" height="12" rx="2" fill="none" stroke="#f08a3c" stroke-width="2"/><path d="M9 12V9a5 5 0 0110 0v3" fill="none" stroke="#f08a3c" stroke-width="2"/></svg>
+        <h3>Never your keys</h3>
+        <p>The app only needs your public address. It never asks for a seed phrase or private key, and nobody from Hashcoin ever will.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="10" fill="none" stroke="#f08a3c" stroke-width="2"/><path d="M14 8v6l4 3" fill="none" stroke="#f08a3c" stroke-width="2"/></svg>
+        <h3>You're in control</h3>
+        <p>Mining starts only when you press Start, and stops when you press Stop or Quit. A tray icon shows when it's running. Uninstall removes everything.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 22h18M8 18v-6M14 18V7M20 18v-9" fill="none" stroke="#f08a3c" stroke-width="2"/></svg>
+        <h3>Every payout on-chain</h3>
+        <p>Each 10-minute payout is a Solana transaction you can look up. The dashboard links every one.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M7 7h14v14H7z" fill="none" stroke="#f08a3c" stroke-width="2"/><path d="M11 11h6v6h-6z" fill="#f08a3c"/></svg>
+        <h3>Your hardware stays safe</h3>
+        <p>Temperature and power limits are on by default, and the miner can pause while you game.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 14h20M14 4v20" stroke="#f08a3c" stroke-width="2"/><circle cx="14" cy="14" r="4" fill="none" stroke="#f08a3c" stroke-width="2"/></svg>
+        <h3>Verified miners only</h3>
+        <p>The app runs only miner programs on our signed list, and checks each download's fingerprint before running it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="waitlist">
+  <div class="wrap">
+    <div class="wait">
+      <div>
+        <span class="eyebrow">Waitlist</span>
+        <h2>Register your GPU.</h2>
+        <p class="lede">Get the download link when the miner launches. Launch week is when the chest is shared between the fewest miners.</p>
+        <div class="counter" id="count">—</div>
+        <p class="muted" style="font-size: .85rem;">GPUs registered so far</p>
+      </div>
+      <form id="waitForm" novalidate>
+        <div>
+          <label for="wGpu" style="font-weight: 600;">Graphics card</label>
+          <select id="wGpu" required></select>
+        </div>
+        <div>
+          <label for="wHandle" style="font-weight: 600;">X handle or email</label>
+          <input id="wHandle" required placeholder="@yourname or you@example.com" autocomplete="email">
+        </div>
+        <div>
+          <label for="wWallet" style="font-weight: 600;">Solana wallet (optional)</label>
+          <input id="wWallet" class="mono" placeholder="Public address only" autocomplete="off" spellcheck="false">
+          <span class="hint">Your public address. Never paste a seed phrase or private key anywhere.</span>
+        </div>
+        <button class="btn btn-primary" type="submit">Register my GPU</button>
+        <div class="msg" id="wMsg" hidden></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <span class="eyebrow">FAQ</span>
+    <h2>Questions.</h2>
+    <div class="faq">
+      <details><summary>What do I need?</summary><p>A Windows PC with an NVIDIA RTX/GTX, AMD Radeon or Intel Arc graphics card and current drivers, plus a Solana wallet address. Laptops work too, but earn less and run warmer.</p></details>
+      <details><summary>Why does my antivirus warn about it?</summary><p>Some antivirus products flag every crypto miner as a "potentially unwanted application", because malware sometimes mines in secret. Hashcoin is signed, open source, only mines when you press Start, and shows a tray icon while running. If your antivirus blocks it, you can allow the Hashcoin folder only. Never turn your antivirus off.</p></details>
+      <details><summary>How much will I earn?</summary><p>It depends on your card, which coins pay best that day, how much $HASH is traded, how many people mine, and your level. The example above shows the range. Earnings are paid in $HASH, whose price moves, so we never promise an amount.</p></details>
+      <details><summary>Why am I paid in $HASH and not the coin I mined?</summary><p>Converting mined coins to $HASH is what creates steady buying for the token, and the miner chest is paid in $HASH too. You can hold it to level up, or sell it, keeping in mind that any sale ends Level 3 for that wallet.</p></details>
+      <details><summary>Does mining hurt my GPU?</summary><p>The app keeps temperature and power limits on by default, similar to normal gaming load. Fans will run. You can pause anytime, or let it pause automatically while you play.</p></details>
+      <details><summary>What are the risks?</summary><p>$HASH is a memecoin and can lose most or all of its value. Payouts fall when trading volume falls or more people join. Electricity costs money. Only take part with what you're comfortable losing, and check your local rules on crypto and taxes.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <a class="logo" href="#top"><svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="6" fill="#f08a3c"/><path d="M10 7v14M18 7v14M7 11h14M7 17h14" stroke="#15110d" stroke-width="2.6" stroke-linecap="round"/></svg>Hashcoin</a>
+    <p>$HASH is a memecoin with no intrinsic value and no expectation of financial return. Nothing on this site is financial, investment or tax advice. Mining payouts depend on market conditions and are never guaranteed. Hashcoin will never ask for your seed phrase or private key, and will only publish the contract address on this site.</p>
+  </div>
+</footer>
+
+<script>
+// GPUs from hashrate.no (24h revenue on each card's best coin, Oct 3 2026).
+const GPUS = [
+  ["RTX 5090", 10.71, "PRL"], ["RTX 4090", 7.81, "PRL"], ["RTX 5080", 5.22, "PRL"], ["RTX 5070 Ti", 4.37, "PRL"],
+  ["RTX 4080", 4.08, "PRL"], ["RTX 4070 Ti Super", 3.98, "PRL"], ["RTX 4070 Ti", 3.65, "PRL"], ["RTX 4070 Super", 3.39, "PRL"],
+  ["RTX 5070", 2.96, "PRL"], ["RTX 4070", 2.96, "PRL"], ["RTX 3080 Ti", 2.98, "PRL"], ["RTX 3090", 2.82, "PRL"],
+  ["RTX 3080", 2.70, "PRL"], ["RX 9070 XT", 2.37, "PRL"], ["RTX 4060 Ti 16GB", 2.32, "PRL"], ["RTX 5060 Ti 16GB", 2.24, "PRL"],
+  ["RTX 3070 Ti", 1.91, "PRL"], ["RTX 5060", 1.85, "PRL"], ["RTX 3070", 1.82, "PRL"], ["RX 7900 XTX", 1.56, "QTC"],
+  ["RTX 3060 Ti", 1.50, "PRL"], ["RX 7900 XT", 1.39, "QTC"], ["RTX 4060", 1.30, "QUAN"], ["RTX 3070 Laptop", 1.31, "QUAN"],
+  ["RTX 5050", 1.26, "PRL"], ["RTX 3060 Laptop", 1.09, "PRL"], ["RTX 3060", 1.08, "PRL"], ["RX 7800 XT", 0.99, "QTC"],
+  ["Arc A770", 0.72, "QTC"], ["RX 6600", 0.45, "QTC"],
+];
+const SCN = {
+  launch: { vol: 300000, miners: 400, avg: 2.5, p2: 0.5, p3: 0, note: "Example: $300K daily trading volume, 400 miners. Level 3 isn't reachable in launch week (it needs 14 days)." },
+  steady: { vol: 60000, miners: 300, avg: 2.5, p2: 0.4, p3: 0.35, note: "Example: $60K daily trading volume, 300 miners, many already at Level 3." },
+  quiet: { vol: 15000, miners: 200, avg: 2.5, p2: 0.35, p3: 0.4, note: "Example: $15K daily trading volume, 200 miners. Interest has cooled." },
+};
+const MULT = [1, 2, 4];
+const $ = (id) => document.getElementById(id);
+const usd = (v) => "$" + (v >= 100 ? v.toFixed(0) : v.toFixed(2));
+let state = { gpu: 9, lvl: 2, scn: "launch" };
+
+[$("gpu"), $("wGpu")].forEach((sel, i) => {
+  GPUS.forEach(([n, r, c], j) => { const o = document.createElement("option"); o.value = j; o.textContent = i ? n : `${n} · ~$${r.toFixed(2)}/day mining (${c})`; sel.append(o); });
+  if (i) { const o = document.createElement("option"); o.value = "other"; o.textContent = "Other / not listed"; sel.append(o); }
+  sel.value = 9;
+});
+
+function calc() {
+  const [, rev] = GPUS[state.gpu], s = SCN[state.scn];
+  const chest = (s.vol + s.miners * s.avg) * 0.025;
+  const avgMult = (1 - s.p2 - s.p3) + s.p2 * 2 + s.p3 * 4;
+  const others = (s.miners - 1) * Math.sqrt(s.avg) * avgMult;
+  const mine = Math.sqrt(rev) * MULT[state.lvl - 1];
+  const share = Math.min(0.05, mine / (others + mine));
+  const bonus = chest * share, total = rev + bonus;
+  $("total").textContent = usd(total);
+  $("rMine").textContent = usd(rev); $("rChest").textContent = usd(bonus); $("rMult").textContent = (total / rev).toFixed(1) + "×";
+  $("barMine").style.width = (100 * rev / total) + "%"; $("barChest").style.width = (100 * bonus / total) + "%";
+  $("scnNote").textContent = s.note;
+  document.querySelectorAll("#lvl button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.v === state.lvl)));
+  document.querySelectorAll("#scn button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === state.scn)));
+}
+$("gpu").addEventListener("change", (e) => { state.gpu = +e.target.value; calc(); });
+document.querySelectorAll("#lvl button").forEach((b) => b.addEventListener("click", () => { state.lvl = +b.dataset.v; calc(); }));
+document.querySelectorAll("#scn button").forEach((b) => b.addEventListener("click", () => { state.scn = b.dataset.v; calc(); }));
+calc();
+
+// Waitlist: the form isn't connected to a backend yet.
+const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+$("waitForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const msg = $("wMsg"); msg.hidden = false;
+  const handle = $("wHandle").value.trim(), wallet = $("wWallet").value.trim();
+  if (!handle) { msg.textContent = "Add your X handle or email so we can send the download link."; return; }
+  if (wallet && (!B58.test(wallet) || wallet.split(" ").length > 1)) { msg.textContent = "That isn't a Solana public address. Leave it blank, or paste your public address only. Never a seed phrase."; return; }
+  msg.textContent = "Preview only: the waitlist isn't connected yet, so nothing was saved. It goes live with the site.";
+});
+
+// Simulated share log for the hero (preview of the app, not live data).
+(() => {
+  const log = $("log"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const cards = [["RTX 4070", "PRL"], ["RX 7900 XTX", "QTC"], ["RTX 3060 Laptop", "PRL"], ["RTX 4060", "QUAN"], ["RTX 5090", "PRL"]];
+  let shares = 0, start = Date.now(), lines = [];
+  const hex = () => Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+  const t = () => new Date(Date.now()).toTimeString().slice(0, 8);
+  function push(html) { lines.push(html); if (lines.length > 14) lines.shift(); log.innerHTML = lines.join(""); }
+  function step() {
+    const [g, c] = cards[Math.floor(Math.random() * cards.length)];
+    shares++;
+    if (shares % 9 === 0) push(`<div class="pay">${t()} payout  +${(20000 + Math.random() * 60000).toFixed(0)} $HASH → 4Nd1…KEPF</div>`);
+    else push(`<div><span class="ok">${t()} accepted</span>  ${g.padEnd(16, " ")} ${c.padEnd(4, " ")} diff ${(1 + Math.random() * 7).toFixed(2)}G  0x${hex()}</div>`);
+    $("sShares").textContent = shares; $("sCoin").textContent = c;
+  }
+  for (let i = 0; i < 12; i++) step();
+  setInterval(() => {
+    $("clock").textContent = t();
+    const left = 600 - Math.floor((Date.now() - start) / 1000) % 600;
+    $("sNext").textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+  }, 1000);
+  if (!reduce) setInterval(step, 1400);
+})();
+</script>
