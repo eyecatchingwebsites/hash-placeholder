@@ -500,22 +500,16 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 /* ---------- Hero loop ---------- */
 .hero-head { max-width: 860px; }
 .hero-head h1 { max-width: 16ch; }
-.cycle {
-  position: relative; margin-top: clamp(36px, 5vw, 56px);
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto;
-  column-gap: clamp(28px, 4vw, 56px); row-gap: clamp(36px, 4vw, 52px);
-  grid-template-areas: "s0 s1 s2" "s4 core s3";
-}
+.cycle { position: relative; margin-top: clamp(36px, 5vw, 56px); }
 .cycle-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.cycle-track { fill: none; stroke: var(--gold-line); stroke-width: 2; stroke-dasharray: 6 8; animation: trackFlow 1.2s linear infinite; }
-@keyframes trackFlow { to { stroke-dashoffset: -14; } }
-.cycle-track-glow { fill: none; stroke: var(--gold); stroke-width: 8; opacity: .06; }
-.cycle-coin circle { fill: var(--gold); filter: drop-shadow(0 0 8px rgba(235, 180, 71, .8)); }
-.cycle-coin { transition: opacity .25s; }
-.cycle-coin text { fill: var(--gold-ink); font: 800 11px/1 var(--font-display); }
+.cycle-link { fill: none; stroke: var(--line-2); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 9; }
+.cycle-link-lit { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(235, 180, 71, .7)); }
 .st { position: relative; z-index: 1; display: grid; gap: 14px; align-content: start; padding: 16px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-2); transition: border-color .4s var(--ease), box-shadow .4s var(--ease); }
-.st[data-st="0"] { grid-area: s0; } .st[data-st="1"] { grid-area: s1; } .st[data-st="2"] { grid-area: s2; }
-.st[data-st="3"] { grid-area: s3; } .st[data-st="4"] { grid-area: s4; }
+/* Ring: stations placed around the coin by cycle.js */
+.cycle.ring .st { position: absolute; transform: translate(-50%, -50%); }
+.cycle.ring .cycle-core { position: absolute; transform: translate(-50%, -50%); width: 230px; }
+/* Stack (narrow screens): one column, connectors between cards, return lane on the right */
+.cycle.stack { display: grid; gap: 30px; padding-right: 22px; }
 .st.on { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(235, 180, 71, .08), 0 18px 50px rgba(0, 0, 0, .45); }
 .st-text { display: grid; grid-template-columns: 26px 1fr; gap: 2px 10px; }
 .st-n { grid-row: span 2; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold-line); color: var(--gold); font: 700 0.8rem/1 var(--font-mono); }
@@ -523,9 +517,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .st h3 { font-size: 1.08rem; }
 .st p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
 .art { position: relative; height: 128px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
-.cycle-core { grid-area: core; position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 12px; text-align: center; padding: 8px; }
-.cycle-core img { width: 84px; height: 84px; filter: drop-shadow(0 0 28px rgba(235, 180, 71, .35)); }
-.cycle-core p { font-size: .9rem; color: var(--muted); max-width: 26ch; background: var(--bg); }
+.cycle-core { position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 12px; text-align: center; padding: 8px; }
+.cycle-core img { width: 112px; height: 112px; filter: drop-shadow(0 0 28px rgba(235, 180, 71, .35)); }
+.cycle-core p { font-size: .9rem; color: var(--muted); max-width: 24ch; }
 .cycle-core b { color: var(--text); }
 .cycle-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
 .cycle-caption { color: var(--muted); font-size: .95rem; min-height: 1.5em; }
@@ -535,7 +529,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle .st { cursor: pointer; }
 .cycle .st > * { opacity: .4; transition: opacity .5s var(--ease); }
 .cycle .st.on > *, .cycle.static .st > * { opacity: 1; }
-.cycle-fx { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 2; }
 
 /* 1: PC with a Start click */
 .art-pc .mon { width: 150px; height: 88px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; display: grid; margin-top: -10px; }
@@ -612,14 +605,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .st.on .art-trades .tax-split span { animation: rowReveal .35s var(--ease) 1.6s both; }
 .st.on .art-trades .tax-split span + span { animation-delay: 2s; }
 
-@media (max-width: 960px) {
-  .cycle { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "s0 s1" "s4 s2" "core s3"; }
-}
-@media (max-width: 640px) {
-  .cycle { grid-template-columns: minmax(0, 1fr); grid-template-areas: "s0" "s1" "s2" "s3" "s4" "core"; padding-right: 22px; row-gap: 28px; }
-  .art { height: 120px; }
-  .art-trades .tape { height: 44px; }
-}
+.cycle.stack .art { height: 120px; }
+.cycle.stack .art-trades .tape { height: 44px; }
 
 .cycle.paused .art *, .cycle.paused .art { animation-play-state: paused !important; }
 .cycle-steps { display: flex; gap: 6px; }
@@ -1499,22 +1486,27 @@ window.HashModel = (function () {
 
 </script>
 <script>
-// Hero loop, one step at a time: the active station lights up and plays its animation,
-// then a $HASH coin carries the loop to the next station. Repeats forever.
-// Pauses off-screen and on request; click a station or a number to jump; static with reduced motion.
+// Hero loop: five stations in a ring around the Hashcoin coin, joined by chain links.
+// One step at a time: the active station plays its animation, then the link to the next
+// station lights up from end to end and the next station takes over. Repeats forever.
+// Narrow screens stack the stations in a column with the same links. Pauses off-screen
+// and on request; click a station or a number to jump; static with reduced motion.
 (function () {
   "use strict";
   const root = document.getElementById("cycle");
   if (!root) return;
   const svg = root.querySelector(".cycle-svg");
   const stations = Array.from(root.querySelectorAll(".st"));
+  const core = root.querySelector(".cycle-core");
   const caption = document.getElementById("cycle-caption");
   const pauseBtn = document.getElementById("cycle-pause");
   const stepsBox = document.getElementById("cycle-steps");
   const balance = root.querySelector("[data-bal]");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
-  const DWELL_MS = 3400, TRAVEL_MS = 900;
+  const N = stations.length;
+  const DWELL_MS = 3400, LINK_MS = 1000;
+  const RING_MIN_WIDTH = 900;
   const CAPTIONS = [
     "<b>1. Press Start.</b> One click on the gaming PC you already have. No mining experience needed.",
     "<b>2. Your GPU mines.</b> The app picks whichever coin pays your graphics card most right now.",
@@ -1529,15 +1521,12 @@ window.HashModel = (function () {
     if (parent) parent.append(e);
     return e;
   };
-  const glow = el("path", { class: "cycle-track-glow" }, svg);
-  const track = el("path", { class: "cycle-track" }, svg);
-  // The coin draws above the cards so it stays visible while it travels.
-  const fx = el("svg", { class: "cycle-fx", "aria-hidden": "true", focusable: "false" });
-  root.append(fx);
-  const coin = el("g", { class: "cycle-coin" }, fx);
-  el("circle", { r: 10 }, coin);
-  const coinText = el("text", { "text-anchor": "middle", "dominant-baseline": "central" }, coin);
-  coinText.textContent = "#";
+  // links[i] joins station i to station i+1 (the last one closes the loop)
+  const links = stations.map(() => ({
+    base: el("path", { class: "cycle-link" }, svg),
+    lit: el("path", { class: "cycle-link-lit" }, svg),
+    len: 0,
+  }));
 
   const stepBtns = stations.map((_, i) => {
     const b = document.createElement("button");
@@ -1550,62 +1539,73 @@ window.HashModel = (function () {
   });
   stations.forEach((s, i) => s.addEventListener("click", () => go(i)));
 
-  // ---------- Path through the station centers, with elbows and rounded corners ----------
-  let L = 0, stops = [];
-  function centers() {
-    const box = root.getBoundingClientRect();
-    return stations.map((s) => {
-      const r = s.getBoundingClientRect();
-      return { x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2 };
+  // ---------- Layout ----------
+  function rel(elm) {
+    const box = root.getBoundingClientRect(), r = elm.getBoundingClientRect();
+    return { l: r.left - box.left, t: r.top - box.top, w: r.width, h: r.height, cx: r.left - box.left + r.width / 2, cy: r.top - box.top + r.height / 2 };
+  }
+  function layoutRing(W) {
+    root.classList.add("ring");
+    root.classList.remove("stack");
+    const cardW = Math.min(290, Math.max(240, W * 0.25));
+    stations.forEach((s) => (s.style.width = cardW + "px"));
+    const cardH = Math.max(...stations.map((s) => s.offsetHeight));
+    const R = Math.min(W / 2 - cardW / 2 - 4, Math.max(300, cardW * 1.18));
+    const cx = W / 2;
+    const cy = cardH / 2 + R + 8;
+    const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
+    stations.forEach((s, i) => {
+      s.style.left = cx + R * Math.cos(angle(i)) + "px";
+      s.style.top = cy + R * Math.sin(angle(i)) + "px";
+    });
+    core.style.left = cx + "px";
+    core.style.top = cy + "px";
+    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 8;
+    root.style.height = H + "px";
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    links.forEach((lk, i) => {
+      const a1 = angle(i), a2 = angle(i + 1);
+      const p1 = { x: cx + R * Math.cos(a1), y: cy + R * Math.sin(a1) };
+      const p2 = { x: cx + R * Math.cos(a2), y: cy + R * Math.sin(a2) };
+      const d = `M ${p1.x} ${p1.y} A ${R} ${R} 0 0 1 ${p2.x} ${p2.y}`;
+      lk.base.setAttribute("d", d);
+      lk.lit.setAttribute("d", d);
     });
   }
-  function roundedPath(pts, rad) {
-    const n = pts.length;
-    let d = "";
-    for (let i = 0; i < n; i++) {
-      const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n];
-      const d1 = Math.hypot(p1.x - p0.x, p1.y - p0.y), d2 = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-      const r = Math.min(rad, d1 / 2, d2 / 2);
-      const a = { x: p1.x + ((p0.x - p1.x) / d1) * r, y: p1.y + ((p0.y - p1.y) / d1) * r };
-      const b = { x: p1.x + ((p2.x - p1.x) / d2) * r, y: p1.y + ((p2.y - p1.y) / d2) * r };
-      d += (i === 0 ? `M ${a.x} ${a.y}` : ` L ${a.x} ${a.y}`) + ` Q ${p1.x} ${p1.y} ${b.x} ${b.y}`;
-    }
-    return d + " Z";
+  function layoutStack(W) {
+    root.classList.add("stack");
+    root.classList.remove("ring");
+    root.style.height = "";
+    stations.forEach((s) => { s.style.width = s.style.left = s.style.top = ""; });
+    core.style.left = core.style.top = "";
+    const H = root.offsetHeight;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const r = stations.map(rel);
+    const lane = W - 8;
+    links.forEach((lk, i) => {
+      const a = r[i], b = r[(i + 1) % N];
+      let d;
+      if (i < N - 1) {
+        d = `M ${a.cx} ${a.t + a.h} L ${b.cx} ${b.t}`;
+      } else {
+        // back to the top along the right edge
+        const y1 = a.cy, y2 = b.cy, x0 = a.l + a.w, rr = 12;
+        d = `M ${x0} ${y1} L ${lane - rr} ${y1} Q ${lane} ${y1} ${lane} ${y1 - rr} L ${lane} ${y2 + rr} Q ${lane} ${y2} ${lane - rr} ${y2} L ${b.l + b.w} ${y2}`;
+      }
+      lk.base.setAttribute("d", d);
+      lk.lit.setAttribute("d", d);
+    });
   }
   function layout() {
-    const box = root.getBoundingClientRect();
-    if (!box.width) return;
-    svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
-    fx.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
-    const c = centers();
-    const pts = [];
-    const oneColumn = c.every((p) => Math.abs(p.x - c[0].x) < 2);
-    for (let i = 0; i < c.length; i++) {
-      const p = c[i], q = c[(i + 1) % c.length];
-      pts.push(p);
-      if (oneColumn && i === c.length - 1) {
-        const lane = box.width - 8; // return lane down the right edge
-        pts.push({ x: lane, y: p.y }, { x: lane, y: q.y });
-      } else if (Math.abs(p.x - q.x) > 2 && Math.abs(p.y - q.y) > 2) {
-        pts.push({ x: q.x, y: p.y });
-      }
-    }
-    const d = roundedPath(pts, 28);
-    track.setAttribute("d", d);
-    glow.setAttribute("d", d);
-    L = track.getTotalLength();
-    // Where along the path each station sits (nearest sampled point to its center).
-    const samples = 600;
-    stops = c.map((p) => {
-      let best = 0, bestD = Infinity;
-      for (let k = 0; k < samples; k++) {
-        const q = track.getPointAtLength((k / samples) * L);
-        const dd = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
-        if (dd < bestD) { bestD = dd; best = (k / samples) * L; }
-      }
-      return best;
+    const W = root.clientWidth;
+    if (!W) return;
+    if (W >= RING_MIN_WIDTH) layoutRing(W);
+    else layoutStack(W);
+    links.forEach((lk) => {
+      lk.len = lk.lit.getTotalLength();
+      lk.lit.setAttribute("stroke-dasharray", `${lk.len} ${lk.len}`);
     });
-    placeCoin();
+    paintLinks();
   }
 
   // ---------- Step machine ----------
@@ -1629,28 +1629,26 @@ window.HashModel = (function () {
     };
     requestAnimationFrame(tick);
   }
-  function placeCoin() {
-    if (!L || !stops.length) return;
-    let at;
-    if (phase === "travel") {
-      const a = stops[step], b0 = stops[(step + 1) % stops.length];
-      const b = b0 <= a ? b0 + L : b0;
-      const f = Math.min(1, t / TRAVEL_MS);
-      const ease = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
-      at = (a + (b - a) * ease) % L;
-    } else {
-      at = stops[step];
-    }
-    const p = track.getPointAtLength(at);
-    coin.setAttribute("transform", `translate(${p.x} ${p.y})`);
-    coin.style.opacity = phase === "travel" ? 1 : 0;
+  // The link into the active station stays lit while it plays; the outgoing link fills during the transition.
+  function paintLinks() {
+    links.forEach((lk, i) => {
+      let fill = 0;
+      if (phase === "link" && i === step) {
+        const f = Math.min(1, t / LINK_MS);
+        fill = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+      } else if (phase === "dwell" && i === (step - 1 + N) % N && t < DWELL_MS) {
+        fill = 1;
+      }
+      lk.lit.setAttribute("stroke-dashoffset", String(lk.len * (1 - fill)));
+      lk.lit.style.opacity = fill > 0 ? 1 : 0;
+    });
   }
   function go(i) {
     step = i;
     phase = "dwell";
     t = 0;
     activate(i);
-    placeCoin();
+    paintLinks();
     if (!reduce) kick();
   }
   function frame(now) {
@@ -1659,22 +1657,25 @@ window.HashModel = (function () {
     if (last) t += now - last;
     last = now;
     if (phase === "dwell" && t >= DWELL_MS) {
-      phase = "travel"; t = 0;
-      stations[step].classList.remove("on");
-    } else if (phase === "travel" && t >= TRAVEL_MS) {
-      step = (step + 1) % stations.length;
+      phase = "link"; t = 0;
+    } else if (phase === "link" && t >= LINK_MS) {
+      step = (step + 1) % N;
       phase = "dwell"; t = 0;
       activate(step);
     }
-    placeCoin();
+    paintLinks();
     raf = requestAnimationFrame(frame);
   }
   const running = () => visible && !paused && !document.hidden && !reduce;
   function kick() { if (running() && !raf) { last = 0; raf = requestAnimationFrame(frame); } }
 
   // ---------- Wire up ----------
-  if ("ResizeObserver" in window) new ResizeObserver(layout).observe(root);
-  else window.addEventListener("resize", layout);
+  if ("ResizeObserver" in window) {
+    let lastW = 0;
+    new ResizeObserver(() => { if (root.clientWidth !== lastW) { lastW = root.clientWidth; layout(); } }).observe(root);
+  } else {
+    window.addEventListener("resize", layout);
+  }
   if ("IntersectionObserver" in window) {
     new IntersectionObserver((en) => { visible = en[0].isIntersecting; kick(); }, { threshold: 0.05 }).observe(root);
   }
@@ -1690,8 +1691,8 @@ window.HashModel = (function () {
   if (reduce) {
     root.classList.add("static");
     pauseBtn.hidden = true;
-    coin.style.display = "none";
     stepBtns.forEach((b) => (b.hidden = true));
+    links.forEach((lk) => { lk.lit.style.opacity = 1; lk.lit.setAttribute("stroke-dashoffset", "0"); });
     caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5% back to miners and holders.";
     return;
   }

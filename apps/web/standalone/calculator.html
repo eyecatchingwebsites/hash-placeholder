@@ -500,22 +500,16 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 /* ---------- Hero loop ---------- */
 .hero-head { max-width: 860px; }
 .hero-head h1 { max-width: 16ch; }
-.cycle {
-  position: relative; margin-top: clamp(36px, 5vw, 56px);
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto;
-  column-gap: clamp(28px, 4vw, 56px); row-gap: clamp(36px, 4vw, 52px);
-  grid-template-areas: "s0 s1 s2" "s4 core s3";
-}
+.cycle { position: relative; margin-top: clamp(36px, 5vw, 56px); }
 .cycle-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.cycle-track { fill: none; stroke: var(--gold-line); stroke-width: 2; stroke-dasharray: 6 8; animation: trackFlow 1.2s linear infinite; }
-@keyframes trackFlow { to { stroke-dashoffset: -14; } }
-.cycle-track-glow { fill: none; stroke: var(--gold); stroke-width: 8; opacity: .06; }
-.cycle-coin circle { fill: var(--gold); filter: drop-shadow(0 0 8px rgba(235, 180, 71, .8)); }
-.cycle-coin { transition: opacity .25s; }
-.cycle-coin text { fill: var(--gold-ink); font: 800 11px/1 var(--font-display); }
+.cycle-link { fill: none; stroke: var(--line-2); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 9; }
+.cycle-link-lit { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(235, 180, 71, .7)); }
 .st { position: relative; z-index: 1; display: grid; gap: 14px; align-content: start; padding: 16px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-2); transition: border-color .4s var(--ease), box-shadow .4s var(--ease); }
-.st[data-st="0"] { grid-area: s0; } .st[data-st="1"] { grid-area: s1; } .st[data-st="2"] { grid-area: s2; }
-.st[data-st="3"] { grid-area: s3; } .st[data-st="4"] { grid-area: s4; }
+/* Ring: stations placed around the coin by cycle.js */
+.cycle.ring .st { position: absolute; transform: translate(-50%, -50%); }
+.cycle.ring .cycle-core { position: absolute; transform: translate(-50%, -50%); width: 230px; }
+/* Stack (narrow screens): one column, connectors between cards, return lane on the right */
+.cycle.stack { display: grid; gap: 30px; padding-right: 22px; }
 .st.on { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(235, 180, 71, .08), 0 18px 50px rgba(0, 0, 0, .45); }
 .st-text { display: grid; grid-template-columns: 26px 1fr; gap: 2px 10px; }
 .st-n { grid-row: span 2; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold-line); color: var(--gold); font: 700 0.8rem/1 var(--font-mono); }
@@ -523,9 +517,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .st h3 { font-size: 1.08rem; }
 .st p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
 .art { position: relative; height: 128px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
-.cycle-core { grid-area: core; position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 12px; text-align: center; padding: 8px; }
-.cycle-core img { width: 84px; height: 84px; filter: drop-shadow(0 0 28px rgba(235, 180, 71, .35)); }
-.cycle-core p { font-size: .9rem; color: var(--muted); max-width: 26ch; background: var(--bg); }
+.cycle-core { position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 12px; text-align: center; padding: 8px; }
+.cycle-core img { width: 112px; height: 112px; filter: drop-shadow(0 0 28px rgba(235, 180, 71, .35)); }
+.cycle-core p { font-size: .9rem; color: var(--muted); max-width: 24ch; }
 .cycle-core b { color: var(--text); }
 .cycle-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
 .cycle-caption { color: var(--muted); font-size: .95rem; min-height: 1.5em; }
@@ -535,7 +529,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle .st { cursor: pointer; }
 .cycle .st > * { opacity: .4; transition: opacity .5s var(--ease); }
 .cycle .st.on > *, .cycle.static .st > * { opacity: 1; }
-.cycle-fx { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 2; }
 
 /* 1: PC with a Start click */
 .art-pc .mon { width: 150px; height: 88px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; display: grid; margin-top: -10px; }
@@ -612,14 +605,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .st.on .art-trades .tax-split span { animation: rowReveal .35s var(--ease) 1.6s both; }
 .st.on .art-trades .tax-split span + span { animation-delay: 2s; }
 
-@media (max-width: 960px) {
-  .cycle { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "s0 s1" "s4 s2" "core s3"; }
-}
-@media (max-width: 640px) {
-  .cycle { grid-template-columns: minmax(0, 1fr); grid-template-areas: "s0" "s1" "s2" "s3" "s4" "core"; padding-right: 22px; row-gap: 28px; }
-  .art { height: 120px; }
-  .art-trades .tape { height: 44px; }
-}
+.cycle.stack .art { height: 120px; }
+.cycle.stack .art-trades .tape { height: 44px; }
 
 .cycle.paused .art *, .cycle.paused .art { animation-play-state: paused !important; }
 .cycle-steps { display: flex; gap: 6px; }
