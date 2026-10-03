@@ -1,0 +1,32 @@
+{
+  "_note": "Placeholder pools and miners. Replace *.invalid hosts with real pools that expose per-worker stats before launch.",
+  "coins": [
+    {
+      "id": "PRL", "algo": "pearlhash", "enabled": true, "vendors": ["nvidia", "amd"],
+      "liquidityUsdPerDay": 50000, "confirmHours": 10,
+      "pools": [{ "url": "stratum+tcp://prl-us.pool.invalid:3333", "region": "us" }, { "url": "stratum+tcp://prl-eu.pool.invalid:3333", "region": "eu" }],
+      "miner": { "nvidia": "prl-miner", "amd": "prl-miner" }
+    },
+    {
+      "id": "QUAN", "algo": "quanhash", "enabled": true, "vendors": ["nvidia", "amd"],
+      "liquidityUsdPerDay": 30000, "confirmHours": 2,
+      "pools": [{ "url": "stratum+tcp://quan.pool.invalid:4444", "region": "us" }],
+      "miner": { "nvidia": "multi-miner", "amd": "multi-miner" }
+    },
+    {
+      "id": "QTC", "algo": "qhash", "enabled": true, "vendors": ["amd", "intel", "nvidia"],
+      "liquidityUsdPerDay": 20000, "confirmHours": 1,
+      "pools": [{ "url": "stratum+tcp://qtc.pool.invalid:5555", "region": "us" }],
+      "miner": { "amd": "multi-miner", "intel": "multi-miner", "nvidia": "multi-miner" }
+    },
+    {
+      "id": "EPIC", "algo": "progpow-epic", "enabled": false, "vendors": ["nvidia", "amd"],
+      "liquidityUsdPerDay": 5000, "confirmHours": 3,
+      "pools": [{ "url": "stratum+tcp://epic.pool.invalid:6666", "region": "us" }],
+      "miner": { "nvidia": "multi-miner", "amd": "multi-miner" }
+    }
+  ],
+  "policy": { "minGain": 0.12, "sustainMs": 1800000, "minDwellMs": 7200000 },
+  "score": { "delayRiskPerHour": 0.002, "slippageK": 0.5, "slippageCap": 0.3 },
+  "ttlMs": 900000
+}

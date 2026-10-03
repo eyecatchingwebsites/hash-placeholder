@@ -1,0 +1,28 @@
+{
+  "_note": "Placeholder entries. Fill in official release URLs and SHA-256 hashes for each miner build after reviewing its license and dev fee.",
+  "version": 1,
+  "miners": [
+    {
+      "id": "prl-miner",
+      "version": "0.0.0",
+      "algos": ["pearlhash"],
+      "devFee": 0,
+      "builds": {
+        "windows-x86_64": { "url": "https://downloads.invalid/prl-miner-win64.zip", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "prl-miner.exe" },
+        "linux-x86_64": { "url": "https://downloads.invalid/prl-miner-linux.tar.gz", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "prl-miner" }
+      },
+      "args": ["--algo", "{algo}", "--pool", "{pool}", "--user", "{user}", "--pass", "{pass}", "--devices", "{device}", "--api", "127.0.0.1:{apiPort}"]
+    },
+    {
+      "id": "multi-miner",
+      "version": "0.0.0",
+      "algos": ["quanhash", "qhash", "progpow-epic"],
+      "devFee": 0,
+      "builds": {
+        "windows-x86_64": { "url": "https://downloads.invalid/multi-miner-win64.zip", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "multi-miner.exe" },
+        "linux-x86_64": { "url": "https://downloads.invalid/multi-miner-linux.tar.gz", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "multi-miner" }
+      },
+      "args": ["-a", "{algo}", "-o", "{pool}", "-u", "{user}", "-p", "{pass}", "-d", "{device}", "--api-bind", "127.0.0.1:{apiPort}"]
+    }
+  ]
+}
