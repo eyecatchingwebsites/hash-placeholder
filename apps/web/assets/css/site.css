@@ -428,11 +428,11 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle { position: relative; }
 .cycle-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .cycle-link { fill: none; stroke: var(--line-2); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 9; }
-.cycle-link-lit { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(235, 180, 71, .7)); opacity: 0; transition: opacity .9s ease; }
+.cycle-link-lit { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gold) 70%, transparent)); opacity: 0; transition: opacity .9s ease; }
 .cycle-link-lit.on { opacity: 1; transition: opacity .15s ease; }
 .st { position: relative; z-index: 1; display: grid; gap: 9px; align-content: start; padding: 10px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-2); cursor: pointer;
   transition: border-color .7s var(--ease), box-shadow .7s var(--ease), transform .7s var(--ease); }
-.st.on { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(235, 180, 71, .08), 0 18px 50px rgba(0, 0, 0, .45); }
+.st.on { border-color: var(--gold); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 9%, transparent), 0 18px 50px rgba(0, 0, 0, .45); }
 .cycle .st > * { opacity: .42; transition: opacity .7s var(--ease); }
 .cycle .st.on > *, .cycle.static .st > * { opacity: 1; }
 .cycle .st.prep > .art { opacity: 0; transition: opacity .3s ease; }
@@ -458,13 +458,13 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 /* Spokes: always visible, gently flowing; the ones that matter now glow and flow faster. */
 .cycle-spoke { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 2 9; opacity: .32; animation: spokeIn 1.4s linear infinite; transition: opacity .6s ease, stroke-width .6s ease; }
 .cycle-spoke.out { animation-name: spokeOut; }
-.cycle-spoke.hot { opacity: 1; stroke-width: 3.5; filter: drop-shadow(0 0 5px rgba(235, 180, 71, .6)); animation-duration: .6s; }
+.cycle-spoke.hot { opacity: 1; stroke-width: 3.5; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--gold) 60%, transparent)); animation-duration: .6s; }
 @keyframes spokeIn { to { stroke-dashoffset: 11; } }
 @keyframes spokeOut { to { stroke-dashoffset: -11; } }
 .spoke-tag { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: 4px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--gold-line); color: var(--gold); font: 700 .72rem/1 var(--font-display); white-space: nowrap; pointer-events: none;
   transition: background .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease), transform .5s var(--ease), box-shadow .5s var(--ease); }
-.spoke-tag.hot { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 22px rgba(235, 180, 71, .45); }
-.cycle.stack .spoke-tag { display: none; }
+.spoke-tag.hot { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 22px color-mix(in srgb, var(--gold) 45%, transparent); }
+.cycle.stack .spoke-tag { z-index: 3; }
 /* Stack (narrow screens): one column, connectors between cards, return lane on the right */
 .cycle.stack { display: grid; gap: 30px; padding-right: 22px; }
 .cycle.stack .art { height: 112px; }
@@ -757,20 +757,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .fly-switch button[aria-selected="true"] .fw-n { background: var(--gold-ink); border-color: var(--gold-ink); color: var(--gold); }
 .st.seen .art .buys span, .st.seen .art .w-levels span, .st.seen .art .lv-track i, .st.seen .art .lv-steps span, .st.seen .art .mult, .st.seen .art .b-row { animation-play-state: running !important; }
 
-/* Coin 1: miners' earnings become buys */
-.art-minebuy { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.art-minebuy .gpu.mini { display: flex; padding: 8px 10px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; color: var(--muted); }
-.art-minebuy .fan { width: 34px; height: 34px; }
-.st.on .art-minebuy .fan, .st.seen .art-minebuy .fan { animation: spinUp 1.2s cubic-bezier(.4, 0, .8, .6) both, spin .35s linear 1.2s infinite; }
-.st.on .art-minebuy .gpu { border-color: var(--gold-line); color: var(--text); }
-.art-minebuy .arrow { color: var(--gold); font: 700 1.1rem/1 var(--font-display); }
-.art-minebuy .buys { display: grid; gap: 4px; }
-.art-minebuy .buys span { font: 800 .6rem/1 var(--font-mono); color: var(--gold-ink); background: var(--gold); padding: 3px 8px; border-radius: 3px; opacity: 0; }
-.st.on .art-minebuy .buys span, .st.seen .art-minebuy .buys span { animation: rise .4s var(--ease) .7s both; }
-.st.on .art-minebuy .buys span:nth-child(2), .st.seen .art-minebuy .buys span:nth-child(2) { animation-delay: 1.1s; }
-.st.on .art-minebuy .buys span:nth-child(3), .st.seen .art-minebuy .buys span:nth-child(3) { animation-delay: 1.5s; }
-.cycle.static .art-minebuy .buys span { opacity: 1; }
-
 /* Coin 2: hold clock fills, levels light up */
 .art-hold .wallet { width: min(184px, 90%); display: grid; gap: 7px; padding: 9px 11px; border: 1px solid var(--line-2); border-radius: 6px; background: #0E1013; }
 .art-hold .w-label { display: flex; justify-content: space-between; align-items: center; font: 600 .62rem/1 var(--font-mono); color: var(--dim); }
@@ -853,11 +839,61 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   .cycle-controls { flex: none; }
 }
 
-/* Coin 1: the price line climbs as the buys land */
-.art-minebuy .chart { position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); overflow: visible; opacity: .55; }
+
+/* ---------- Flywheels, round 2 ---------- */
+.fly-stage { position: relative; }
+.cycle { transition: opacity .48s ease, transform .48s var(--ease); }
+.cycle.leaving, .cycle.entering { opacity: 0; transform: scale(.97); }
+.fly-note { margin-top: 10px; font-size: .8rem; color: var(--dim); text-align: right; }
+
+/* Bag wheel: the whole color scheme follows the level (mint, violet, gold) */
+@property --wheel { syntax: "<color>"; inherits: true; initial-value: #5ED3A5; }
+.cycle.bag { --wheel: var(--l1); transition: --wheel .9s var(--ease), opacity .48s ease, transform .48s var(--ease);
+  --gold: var(--wheel); --gold-line: color-mix(in srgb, var(--wheel) 40%, transparent); --gold-2: color-mix(in srgb, var(--wheel) 55%, #fff); --gold-soft: color-mix(in srgb, var(--wheel) 10%, transparent); }
+.cycle.bag[data-level="2"] { --wheel: var(--l2); }
+.cycle.bag[data-level="3"] { --wheel: var(--l3); }
+.cycle.bag .cycle-core img { filter: drop-shadow(0 0 36px color-mix(in srgb, var(--wheel) 35%, transparent)); }
+.bag-core { --lc: var(--wheel); }
+.hero-ring #fw-bag-tab[aria-selected="true"] { transition: background .9s var(--ease), border-color .9s var(--ease); }
+.hero-ring[data-bag-level="1"] #fw-bag-tab[aria-selected="true"] { background: var(--l1); border-color: var(--l1); }
+.hero-ring[data-bag-level="2"] #fw-bag-tab[aria-selected="true"] { background: var(--l2); border-color: var(--l2); }
+.hero-ring[data-bag-level="1"] #fw-bag-tab[aria-selected="true"] .fw-n,
+.hero-ring[data-bag-level="2"] #fw-bag-tab[aria-selected="true"] .fw-n { color: var(--text); }
+
+/* Coin 1: GPU, arrow, then the market panel with buys landing on a rising line */
+.art-minebuy { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 8px; padding: 8px 10px; place-items: center stretch; }
+.art-minebuy .gpu.mini { display: flex; padding: 6px 8px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; color: var(--muted); justify-self: start; }
+.art-minebuy .fan { width: 30px; height: 30px; }
+.st.on .art-minebuy .fan, .st.seen .art-minebuy .fan { animation: spinUp 1.2s cubic-bezier(.4, 0, .8, .6) both, spin .35s linear 1.2s infinite; }
+.st.on .art-minebuy .gpu { border-color: var(--gold-line); color: var(--text); }
+.art-minebuy .arrow { color: var(--gold); font: 700 1rem/1 var(--font-display); }
+.art-minebuy .mkt { position: relative; height: 62px; border: 1px solid var(--line-2); border-radius: 6px; background: #0E1013; }
+.art-minebuy .mkt-label { position: absolute; left: 7px; top: 6px; font: 700 .54rem/1 var(--font-mono); color: var(--dim); }
+.art-minebuy .chart { position: absolute; left: 6px; right: 6px; top: 18px; bottom: 6px; width: calc(100% - 12px); height: calc(100% - 24px); overflow: visible; }
 .art-minebuy .chart path { fill: none; stroke: var(--gold); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 220; stroke-dashoffset: 220; }
-.st.on .art-minebuy .chart path, .st.seen .art-minebuy .chart path { animation: draw 2s cubic-bezier(.4, 0, .2, 1) .7s both; }
-.st.seen .art .chart path { animation-play-state: running !important; }
+.st.on .art-minebuy .chart path, .st.seen .art-minebuy .chart path { animation: draw 2.2s cubic-bezier(.4, 0, .2, 1) .6s both; }
+.art-minebuy .dot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 25%, transparent); opacity: 0; }
+.art-minebuy .d1 { left: 30%; top: 70%; } .art-minebuy .d2 { left: 60%; top: 52%; } .art-minebuy .d3 { left: 88%; top: 30%; }
+.st.on .art-minebuy .dot, .st.seen .art-minebuy .dot { animation: dotIn .35s var(--ease) 1s both; }
+.st.on .art-minebuy .d2, .st.seen .art-minebuy .d2 { animation-delay: 1.6s; }
+.st.on .art-minebuy .d3, .st.seen .art-minebuy .d3 { animation-delay: 2.3s; }
+@keyframes dotIn { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: none; } }
+.st.seen .art .chart path, .st.seen .art .dot, .st.seen .art .fig { animation-play-state: running !important; }
 .cycle.static .art-minebuy .chart path { stroke-dashoffset: 0; }
-.art-minebuy .gpu, .art-minebuy .arrow, .art-minebuy .buys { position: relative; z-index: 1; }
-.art-minebuy .gpu.mini { background: rgba(14, 16, 19, .92); }
+.cycle.static .art-minebuy .dot { opacity: 1; }
+
+/* Bag 2-3: one big figure */
+.art-figure { align-content: center; gap: 6px; padding: 0 10px; text-align: center; }
+.art-figure .fig { font: 800 1.8rem/1 var(--font-display); letter-spacing: -.02em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.art-figure span { font-size: .64rem; color: var(--muted); }
+.st.on .art-figure .fig, .st.seen .art-figure .fig { animation: multPop .6s var(--ease) .3s both; }
+
+/* Bag 5: level steps note */
+.art-level .lv-note { font: 700 .62rem/1 var(--font-display); color: var(--gold); text-align: center; }
+.art-level { gap: 8px; }
+
+.art-split .sp-labels { gap: 8px; }
+.hero-ring { --l-active: var(--gold); }
+.hero-ring[data-active="bag"][data-bag-level="1"] .cycle-bar { --gold: var(--l1); }
+.hero-ring[data-active="bag"][data-bag-level="2"] .cycle-bar { --gold: var(--l2); }
+.cycle-steps button[aria-pressed="true"] { transition: background .9s var(--ease), border-color .9s var(--ease); }

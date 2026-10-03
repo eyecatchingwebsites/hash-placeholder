@@ -30,13 +30,13 @@
     return e;
   };
   // Count a number up on screen while its station is active.
-  function countTo(node, from, to, station, suffix = "", delay = 500, dur = 1500) {
+  function countTo(node, from, to, station, show = fmt, delay = 500, dur = 1500) {
     const start = performance.now();
     const tick = (now) => {
       const f = Math.min(1, Math.max(0, (now - start - delay) / dur));
-      node.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - f, 3))) + suffix;
+      node.textContent = show(from + (to - from) * (1 - Math.pow(1 - f, 3)));
       if (f < 1 && station.classList.contains("on")) requestAnimationFrame(tick);
-      else if (f < 1) node.textContent = fmt(to) + suffix;
+      else if (f < 1) node.textContent = show(to);
     };
     requestAnimationFrame(tick);
   }
@@ -68,7 +68,7 @@
       const baseH = Math.max(...stations.map((s) => s.offsetHeight));
       const sinA = Math.sin(Math.PI / N), cosB = Math.cos(Math.PI / 10), tall = 1 + Math.cos(Math.PI / 5);
       // Beside the title (wide screens) the ring also has to fit the window height.
-      const extra = [".fly-switch", ".cycle-bar"].reduce((a, q) => { const n = hero.querySelector(q); return a + (n ? n.offsetHeight + 18 : 0); }, 0);
+      const extra = [".fly-switch", ".cycle-bar", ".fly-note"].reduce((a, q) => { const n = hero.querySelector(q); return a + (n ? n.offsetHeight + 18 : 0); }, 0);
       const Hav = window.innerWidth >= 1180 ? window.innerHeight - 64 - 64 - extra : Infinity;
       const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
       const fit = (k) => Math.min((Wd - BASE_W * k - 12) / (2 * cosB), (Hav - baseH * k - 20) / tall);
@@ -124,6 +124,13 @@
       Object.values(spokes).forEach((sp) => sp.setAttribute("d", ""));
       svg.setAttribute("viewBox", `0 0 ${Wd} ${root.offsetHeight}`);
       const r = stations.map(rel), lane = Wd - 8;
+      // Each step's bubble sits on its card's top edge.
+      Object.keys(tags).forEach((k) => {
+        const c = r[+k];
+        if (!c) return;
+        tags[k].style.left = c.l + c.w - tags[k].offsetWidth / 2 - 12 + "px";
+        tags[k].style.top = c.t + "px";
+      });
       links.forEach((lk, i) => {
         const a = r[i], b = r[(i + 1) % N];
         let d;
@@ -227,79 +234,98 @@
   }
 
   // ---------- Flywheel 1: the coin ----------
+  const every = (n, ms) => Object.fromEntries(Array.from({ length: n }, (_, i) => [i, [[String(i)], ms]]));
   const coin = makeWheel(document.getElementById("fw-coin"), {
     captions: [
-      "<b>Miners buy in.</b> Every miner's earnings are swapped into $HASH on the market: steady buy inflow.",
-      "<b>Holders hold.</b> Holding levels you up and selling shrinks your clock, so less gets sold.",
-      "<b>Every trade pays 5%.</b> Built into the token, on every buy, sell and transfer.",
-      "<b>The split balances itself.</b> Miners are topped up to 5× their mining. Holders get the rest, never under 1%.",
-      "<b>More people join.</b> Bigger rewards bring more GPUs and holders, which means more buying. Around it goes.",
+      "<b>Miners buy in.</b> Every miner's earnings are swapped into $HASH on the market, around the clock.",
+      "<b>Holders hold.</b> Holding longer unlocks bigger rewards, so less gets sold.",
+      "<b>Trades fill the reward pot.</b> 5% of every buy and sell goes to miners and holders. More trading, bigger rewards.",
+      "<b>Both get paid, every 10 minutes.</b> Miners are topped up to 5× what they mine. Holders share the rest.",
+      "<b>More people join.</b> Bigger rewards draw more GPUs and holders, and more buying. Around it goes.",
     ],
-    spokes: { 0: "in", 2: "in", 4: "out" },
-    hot: { 0: [["0"], 900], 2: [["2"], 300], 3: [["2", "4"], 600], 4: [["4"], 200] },
-    pulse: [0, 3],
+    spokes: { 0: "in", 1: "in", 2: "in", 3: "out", 4: "in" },
+    hot: Object.assign(every(5, 600), { 3: [["2", "3"], 500] }),
+    pulse: [0, 2],
     onStep(i, st) {
-      if (i === 4) st.querySelectorAll("[data-count]").forEach((b) => { const [a, z] = b.dataset.count.split(",").map(Number); countTo(b, a, z, st, "", 400, 1800); });
+      if (i === 4) st.querySelectorAll("[data-count]").forEach((b) => { const [a, z] = b.dataset.count.split(",").map(Number); countTo(b, a, z, st, fmt, 400, 1800); });
     },
     onStatic(sts) { sts[4].querySelectorAll("[data-count]").forEach((b) => (b.textContent = fmt(+b.dataset.count.split(",")[1]))); },
   });
 
   // ---------- Flywheel 2: your bag, one loop per level ----------
+  // Example in dollars from the site's own estimate (assets/js/model.js): an RTX 4070 and a
+  // sample bag at each level. Each loop: mining, miner bonus, holder rewards, a week of growth,
+  // then the next level (a new color scheme for the whole wheel).
   const bagRoot = document.getElementById("fw-bag");
   const bagCore = bagRoot.querySelector("[data-core-lvl]").parentElement;
-  const BAG = [ // per level: bag before, mined this loop
-    { from: 4200, add: 203 },
-    { from: 18600, add: 410 },
-    { from: 61000, add: 830 },
-  ];
-  let bagLevel = 1, bagLoop = 0, bagTop = false;
+  const HM = window.HashModel;
+  const g4070 = (window.GPUS || []).find((g) => g.name === "RTX 4070") || { rev: 2.96 };
+  const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
+  const EXAMPLE_BAG = [450, 2200, 6000];
+  const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
+  const bagNums = (L) => {
+    const r = HM ? HM.miner({ myRev: g4070.rev, level: L }) : { mining: 2.96, chestShare: 5.18 * L, mult: 2.8 };
+    const bag = EXAMPLE_BAG[L - 1];
+    const h = HM ? HM.holder(bag, L) : { perDay: bag * 0.0088 * L, yieldPct: 0.88 * L };
+    return { r, bag, h, week: 7 * (r.total || r.mining + r.chestShare) + 7 * h.perDay };
+  };
+  let bagLevel = 1, bagTop = false;
   function setBagLevel(l) {
     bagLevel = l;
-    bagCore.dataset.level = l;
+    bagRoot.dataset.level = l;
+    hero.dataset.bagLevel = l;
     bagCore.querySelector("[data-core-lvl]").textContent = "Level " + l;
+  }
+  function fillBag(L) {
+    const n = bagNums(L);
+    B("mine").textContent = `RTX 4070 · ${usd(n.r.mining)} a day`;
+    B("bonus").textContent = "+" + usd(n.r.chestShare);
+    B("bonus-sub").textContent = `a day on top (${n.r.mult.toFixed(1)}× mining)`;
+    B("hold").textContent = "+" + usd(n.h.perDay);
+    B("hold-sub").textContent = `a day on a ${usd(n.bag)} bag (${n.h.yieldPct.toFixed(2)}%)`;
+    B("bal").textContent = usd(n.bag);
+    B("week").textContent = "+" + usd(n.week);
+    B("lvnote").textContent = L < 3 ? `Next: Level ${L + 1}, ${["", "", "2×", "4×"][L + 1]} share` : "Top level: 4× share";
+    return n;
   }
   const bag = makeWheel(bagRoot, {
     captions: [
-      "<b>You mine.</b> Press Start and your GPU mines on spare power.",
-      "<b>Your bag grows.</b> What you mine lands in your wallet as $HASH, every 10 minutes.",
-      "<b>You level up.</b> A bigger bag, held longer, unlocks the next level.",
-      "<b>Bigger share.</b> Level 2 gets twice the share of Level 1. Level 3 gets four times.",
-      "<b>Earn on both.</b> The miner bonus and holder rewards land on the same bag. Then around again, one level up.",
+      "<b>You mine.</b> Press Start and your GPU mines on spare power. What it earns becomes $HASH.",
+      "<b>Miner bonus.</b> On top of what you mine, you get a bonus from the reward pot. Bigger at higher levels.",
+      "<b>Holder rewards.</b> Your whole bag earns holder rewards, including the $HASH you mined.",
+      "<b>Your bag grows.</b> Mining, bonus and rewards all land in the same bag, every 10 minutes.",
+      "<b>Level up.</b> A bigger bag, held longer, unlocks the next level and a bigger share. Then around again.",
     ],
-    caption: (i) => (i === 2 && bagTop ? "<b>Top level.</b> Keep holding to keep Level 3 and its 4× share." : null),
-    spokes: { 0: "in", 2: "out", 4: "in" },
-    hot: { 0: [["0"], 1700], 1: [["0"], 300], 2: [["2"], 300], 4: [["4"], 900] },
-    pulse: [1, 4],
+    caption: (i) => (i === 4 && bagTop ? "<b>Top level.</b> Keep holding to keep Level 3 and its 4× share." : null),
+    spokes: { 0: "in", 1: "in", 2: "in", 3: "in", 4: "out" },
+    hot: every(5, 700),
+    pulse: [3],
     onStep(i, st) {
-      const b = BAG[Math.min(bagLoop, 2)];
-      if (i === 0 && bagLoop === 0) setBagLevel(1);
-      if (i === 1) {
-        st.querySelector("[data-bal-add]").textContent = "+" + fmt(b.add);
-        countTo(st.querySelector("[data-bal]"), b.from, b.from + b.add, st, " $HASH");
+      if (i === 0) fillBag(bagLevel);
+      if (i === 3) {
+        const n = bagNums(bagLevel);
+        B("bal").textContent = usd(n.bag);
+        countTo(B("bal"), n.bag, n.bag + n.week, st, (v) => "$" + fmt(v), 500, 1600);
       }
-      if (i === 2) {
+      if (i === 4) {
         const prev = bagLevel, next = Math.min(3, prev + 1);
         const art = st.querySelector(".art-level");
         art.style.setProperty("--from", ((prev - 1) / 2) * 100 + "%");
         art.style.setProperty("--to", ((next - 1) / 2) * 100 + "%");
         art.dataset.level = next;
         bagTop = prev === 3;
-        if (next !== prev) setTimeout(() => { setBagLevel(next); }, 1300);
-      }
-      if (i === 3) {
-        const m = st.querySelector("[data-mult]");
-        m.textContent = ["1×", "2×", "4×"][bagLevel - 1];
-        st.querySelector(".art-mult").dataset.level = bagLevel;
+        if (next !== prev) setTimeout(() => {
+          setBagLevel(next);
+          B("lvnote").textContent = `Level ${next} unlocked: ${next === 2 ? "2×" : "4×"} share`;
+        }, 1300);
       }
     },
     onStatic(sts) {
       setBagLevel(3);
-      sts[2].querySelector(".art-level").dataset.level = 3;
-      sts[3].querySelector("[data-mult]").textContent = "4×";
-      sts[3].querySelector(".art-mult").dataset.level = 3;
+      fillBag(3);
+      sts[4].querySelector(".art-level").dataset.level = 3;
     },
   });
-
   // ---------- Controller: tabs, shared caption, steps and pause ----------
   const wheels = [coin, bag];
   const tabs = Array.from(hero.querySelectorAll(".fly-switch [role=tab]"));
@@ -332,37 +358,56 @@
     };
   });
   // The coin wheel plays once, the bag wheel once per level; then they swap (until someone picks).
-  coin.onLoop = () => { if (auto) { show(1); return false; } return true; };
+  let bagLoop = 0;
+  coin.onLoop = () => { if (auto) { show(1, true); return false; } return true; };
   bag.onLoop = () => {
     bagLoop++;
     if (bagLoop < 3) return true;
     bagLoop = 0;
-    if (auto) { show(0); return false; }
+    if (auto) { show(0, true); return false; }
     setBagLevel(1);
     return true;
   };
-  function show(i) {
+  const note = document.getElementById("fly-note");
+  let swapTimer = 0;
+  // Crossfade: the old wheel fades and shrinks a touch, the new one fades in.
+  function show(i, fade) {
+    clearTimeout(swapTimer);
+    tabs.forEach((tb, k) => { tb.setAttribute("aria-selected", String(k === i)); tb.tabIndex = k === i ? 0 : -1; });
+    const from = wheels[active];
+    if (i === 1) hero.dataset.bagLevel = 1;
+    if (fade && !reduce && i !== active) {
+      from.root.classList.add("leaving");
+      caption.classList.add("swap");
+      swapTimer = setTimeout(() => { from.root.classList.remove("leaving"); enter(i, true); }, 480);
+    } else enter(i, false);
+  }
+  function enter(i, fade) {
     wheels[active].stop();
     active = i;
-    wheels.forEach((w, k) => (w.root.hidden = k !== i));
-    tabs.forEach((tb, k) => { tb.setAttribute("aria-selected", String(k === i)); tb.tabIndex = k === i ? 0 : -1; });
-    if (i === 1) { bagLoop = 0; setBagLevel(1); }
-    buildSteps(wheels[i]);
-    wheels[i].layout();
+    const w = wheels[i];
+    wheels.forEach((x, k) => (x.root.hidden = k !== i));
+    note.hidden = i !== 1;
+    hero.dataset.active = i === 1 ? "bag" : "coin";
+    if (i === 1) { bagLoop = 0; setBagLevel(1); fillBag(1); }
+    buildSteps(w);
+    if (fade) w.root.classList.add("entering");
+    w.layout();
     if (reduce) {
-      wheels[i].static();
+      w.static();
       stepBtns.forEach((b) => (b.hidden = true));
       caption.innerHTML = i === 0
-        ? "Miners buy in → holders hold → every trade pays 5% → the split balances itself → more people join."
-        : "You mine → your bag grows → you level up → bigger share → earn on both, then around again one level up.";
-    } else wheels[i].start();
+        ? "Miners buy in → holders hold → trades fill the reward pot → miners and holders get paid → more people join."
+        : "You mine → miner bonus → holder rewards on your whole bag → your bag grows → level up, then around again.";
+    } else w.start();
+    if (fade) requestAnimationFrame(() => requestAnimationFrame(() => w.root.classList.remove("entering")));
   }
   tabs.forEach((tb, i) => {
-    tb.addEventListener("click", () => { pick(); if (i !== active) show(i); });
+    tb.addEventListener("click", () => { pick(); if (i !== active) show(i, true); });
     tb.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       const n = (active + 1) % 2;
-      pick(); show(n); tabs[n].focus();
+      pick(); show(n, true); tabs[n].focus();
     });
   });
 
