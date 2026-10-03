@@ -8,6 +8,7 @@ Last updated: October 2, 2026. Stage: design, simulation, and early build. Numbe
 - Payout engine (TypeScript, tested): `packages/engine`
 - Earnings calculator: `calculator/index.html` (published: https://claude.ai/artifact/CDWZXxmNsZw4DNCxHhdJY5)
 - **Technical plan (ordered build plan for the next sessions): `docs/TECHNICAL-PLAN.md`**
+- Website design brief: `docs/DESIGN-BRIEF.md` · 3D asset brief: `docs/3D-BRIEF.md`
 - Website design draft: `apps/web/index.html` (published: https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ)
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
 - Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branch: `claude/lucid-fermat-16svvo`.
@@ -222,3 +223,23 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 - Payout cadence (10 min vs hourly) vs transaction cost.
 - Coins to support for switching, and which pools have per-worker APIs.
 - Legal review (payouts funded by other people's fees, custody, marketing language).
+
+## 12. Name candidates (name not final; user likes Hashcoin)
+Check each name, ticker and .com for existing use before choosing (e.g. HASH is already used by Provenance Blockchain).
+
+| Name | Ticker | Angle |
+|---|---|---|
+| Hashcoin | $HASH | Current working name. Clear, but generic and the ticker is taken elsewhere |
+| Night Shift | $SHIFT | "Your GPU works the night shift." Strong story for gamers' idle hours |
+| Overclock | $OC | Gamer vocabulary. Short ticker |
+| Idle | $IDLE | "Put your idle GPU to work." |
+| Rigpay | $RIG | Says exactly what it does |
+| Afterhours | $AFTER | Mining while you're away |
+| Hashback | $HSHB | "Cash back" for your GPU |
+| Overtime | $OT | Your GPU works overtime, you get paid |
+| Coolant | $COOL | Hardware culture, friendly |
+| Fanspin | $FAN | The visual hook is spinning fans |
+| Proof | $PROOF | Proof of work, proof it works |
+| Sidegig | $GIG | Your GPU's side hustle |
+
+Design direction from the user (Oct 3): product company look like usepaid.app / usehotbot.com / boneronlong.xyz. No rainbow buttons, no crowded layouts. Logo: the user makes it with ChatGPT. 3D: free models and code-built, try both. Colors undecided.
