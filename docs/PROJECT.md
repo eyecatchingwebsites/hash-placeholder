@@ -220,6 +220,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
   - Some antivirus will still label any miner as "potentially unwanted": the FAQ explains, and users only ever allow the Hashcoin folder.
 
 ## 11. Open decisions
+- **Proposed (Oct 3): 5% tax with a dynamic split.** Dev fixed at 0.5%. The other 4.5% is split between the miner chest and a holder side (holder rewards + burn), set automatically by the miner "boost" (24h chest paid ÷ miners' mined USD; size-neutral and can't be gamed by splitting wallets). Low boost → up to 4.5% to the chest; high boost → chest falls to a floor (draft 1.5%) and the rest goes to holders and burn. Published formula, rate-limited changes, live on the site. Holder rewards are in (user decision). Notes: the tax is collected in $HASH, so the "buyback" part is a burn; 5% probably rules out the LaunchLab 1%/3% option. Needs a sim comparison vs fixed 3% before deciding thresholds.
 - Launchpad: LaunchLab 3% reward launch vs our own Token-2022 token and pool (verify LaunchLab details).
 - L2 threshold or minimum wallet age, to reduce renter capture.
 - Payout cadence (10 min vs hourly) vs transaction cost.
