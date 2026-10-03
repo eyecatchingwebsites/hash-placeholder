@@ -1,6 +1,6 @@
 # $HASH / Hashcoin: Project File (v3)
 
-Last updated: October 2, 2026. Stage: design, simulation, and early build. Numbers are scenario assumptions, not forecasts. Not financial or legal advice.
+Last updated: October 3, 2026. Stage: design, simulation, and early build. Numbers are scenario assumptions, not forecasts. Not financial or legal advice.
 
 - Original v1 notes (from the earlier chat): `docs/PROJECT-v1-original.md`
 - Architecture: `docs/ARCHITECTURE.md`
@@ -8,7 +8,9 @@ Last updated: October 2, 2026. Stage: design, simulation, and early build. Numbe
 - Payout engine (TypeScript, tested): `packages/engine`
 - Earnings calculator: `calculator/index.html` (published: https://claude.ai/artifact/CDWZXxmNsZw4DNCxHhdJY5)
 - **Technical plan (ordered build plan for the next sessions): `docs/TECHNICAL-PLAN.md`**
-- Website design brief: `docs/DESIGN-BRIEF.md` · 3D asset brief: `docs/3D-BRIEF.md`
+- Website design brief: `docs/DESIGN-BRIEF.md` (3D brief `docs/3D-BRIEF.md` is shelved: no 3D models for now)
+- **Website questionnaire (generates the build prompt): `apps/web/brand/website-questionnaire.html`** (published: https://claude.ai/artifact/T7dniP5JRG8bMSfKyZEfSe)
+- Logo: `apps/web/brand/logo/` · logo explorations: https://claude.ai/artifact/JTubhyKEYFEAsCWrdL9jF9 · color picker: https://claude.ai/artifact/H4h9afZLydLLgRYaXWqFnd
 - Website design draft: `apps/web/index.html` (published: https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ)
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
 - Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branch: `claude/lucid-fermat-16svvo`.
@@ -199,7 +201,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 3% token, fee collection, mock pool feed, batch payouts | Next |
-| Website: landing page design (`apps/web`) | Draft done. Dashboard, wallet page, download page and waitlist backend next (see TECHNICAL-PLAN Phase 4) |
+| Website: landing page (`apps/web`) | Rough draft exists (to be replaced). Logo done. Questionnaire ready; the build happens from its generated prompt (front end only) |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | To do |
@@ -228,4 +230,10 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and "hash" is literally what payouts are measured by (hashrate). Before launch, check the .com and the $HASH ticker for clashes on Solana (HASH is also Provenance Blockchain's ticker on other chains).
 **Logo (decided Oct 3):** option C, an italic two-bar hash on a coin. Coin #EBB447, hash white. Final files in `apps/web/brand/logo/` (SVG master, PNGs 16–1024, favicon, wordmark lockups). Brand accent color = #EBB447.
 
-Design direction from the user (Oct 3): product company look like usepaid.app / usehotbot.com / boneronlong.xyz. No rainbow buttons, no crowded layouts. Logo: the user makes it with ChatGPT. 3D: free models and code-built, try both. Colors undecided.
+## 13. Website direction (Oct 3)
+- **Positioning:** a platform with a real function, not a joke memecoin. Look like a real product company. References: usepaid.app, usehotbot.com, boneronlong.xyz (plus octoprotocol.io).
+- **No rainbow or gradient buttons, no crowded layouts.**
+- **Brand:** logo option C (italic two-bar hash on a coin), gold **#EBB447**, white hash. Wordmark in Manrope ExtraBold.
+- **3D models dropped** for now (user decision). Use 2D/SVG animation for the mining cycle instead.
+- **Next step:** the user fills in the 20-question questionnaire, copies the generated prompt, clears context, and pastes it to build the website. That build is **front end only**: no backend, no sign-ups, no wallet connection; placeholders labeled "Coming soon"/"Preview".
+- **Not started yet (deliberately):** real miners and pools research, devnet token, backend, desktop app on Windows. See `docs/TECHNICAL-PLAN.md`.
