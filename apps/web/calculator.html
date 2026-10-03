@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Earnings calculator · Hashcoin</title>
-<meta name="description" content="Estimate what your GPU could earn with Hashcoin, by level and market scenario. Examples, not forecasts.">
+<meta name="description" content="Estimate what your GPU could earn with Hashcoin, based on daily volume per GPU mining. An estimate, not a promise.">
 <meta name="theme-color" content="#0B0C0D">
 <meta property="og:title" content="Hashcoin ($HASH)">
 <meta property="og:description" content="Your GPU mines. Every $HASH trade adds to a chest shared among miners.">
@@ -80,7 +80,7 @@
   <section class="page-head">
     <div class="wrap">
       <h1>What would your GPU make?</h1>
-      <p class="lede">Your cut comes down to two numbers: <b>24h volume</b> and <b>how many GPUs are mining.</b> Pick a scenario or set them yourself. Mining revenue per card is real (hashrate.no, Oct 3, 2026).</p>
+      <p class="lede">One pre-launch estimate, based on <b>daily volume per GPU mining.</b> Mining revenue per card is real (hashrate.no, Oct 3, 2026). Change the inputs if you think the ratio will be higher or lower.</p>
     </div>
   </section>
 
@@ -119,16 +119,12 @@
         </fieldset>
 
         <fieldset class="fieldset">
-          <legend>Market</legend>
-          <div class="chips" id="fc-scen" role="group" aria-label="Scenario"></div>
-          <p class="scenario-desc" id="fc-scen-desc"></p>
+          <legend>Estimate inputs</legend>
+          <p class="scenario-desc">The estimate uses one market number: <b>daily volume per GPU mining.</b> Default $750 = 30% daily volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining. <a class="gold" href="index.html#math">See the math</a></p>
           <div class="range-row">
-            <div class="range-top"><label for="fc-vol">24h volume</label><output id="fc-vol-o" for="fc-vol"></output></div>
-            <input type="range" id="fc-vol" min="0" max="1000" step="1">
-          </div>
-          <div class="range-row">
-            <div class="range-top"><label for="fc-miners">GPUs mining</label><output id="fc-miners-o" for="fc-miners"></output></div>
-            <input type="range" id="fc-miners" min="0" max="1000" step="1">
+            <div class="range-top"><label for="fc-ratio">Daily volume per GPU mining</label><output id="fc-ratio-o" for="fc-ratio"></output></div>
+            <input type="range" id="fc-ratio" min="0" max="1000" step="1">
+            <p class="range-hint" id="fc-ratio-hint"></p>
           </div>
           <div class="range-row">
             <div class="range-top"><label for="fc-avg">Average GPU mines, $/day</label><output id="fc-avg-o" for="fc-avg"></output></div>
@@ -151,7 +147,7 @@
       <div class="card calc-out" aria-live="polite" aria-atomic="false">
         <div class="calc-out-head">
           <h2 style="font-size: 1.3rem;">Your estimate</h2>
-          <span class="label-example">Scenario, not a promise</span>
+          <span class="label-example">Estimate, not a promise</span>
         </div>
         <div class="results-wrap">
           <table class="results five">
@@ -165,8 +161,8 @@
           </table>
         </div>
         <div class="calc-meta meta3">
-          <div class="meta"><span>Miner chest / day</span><b id="fc-chest">—</b></div>
-          <div class="meta"><span>Your share</span><b id="fc-share">—</b></div>
+          <div class="meta"><span>Chest per GPU / day</span><b id="fc-chest">—</b></div>
+          <div class="meta"><span>Your weight</span><b id="fc-share">—</b></div>
           <div class="meta"><span>vs mining alone</span><b id="fc-mult">—</b></div>
         </div>
         <div id="fc-flags"></div>

@@ -7,56 +7,55 @@
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const money = (v) => (v > 0 && v < 0.01 ? "<$0.01" : F.usd(v));
 
-  // ---------- Earnings panel ----------
-  const HERO_SCENS = ["launch", "hype", "peak", "steady"];
-  const S = { gpu: "RTX 4070", level: 2, scen: M.DEFAULT_SCEN };
+  // ---------- Earnings panel (one estimate: daily volume per GPU) ----------
+  const E = M.ESTIMATE;
+  const S = { gpu: "RTX 4070", level: 2 };
   const sel = $("#earn-gpu");
   hcFillGpuSelect(sel, S.gpu);
   [...sel.options].forEach((o) => {
     const g = GPUS.find((x) => x.name === o.value);
     if (g) o.textContent = `${g.name} · mines $${g.rev.toFixed(2)}/day`;
   });
-
-  const scenBox = $("#earn-scen");
-  HERO_SCENS.forEach((id) => {
-    const sc = M.scenario(id);
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "chip"; b.dataset.s = id;
-    b.innerHTML = `${sc.name}<span class="wk">${sc.wk}</span>`;
-    b.addEventListener("click", () => { S.scen = id; update(); });
-    scenBox.append(b);
-  });
   sel.addEventListener("change", () => { S.gpu = sel.value; update(); });
   $$("#earn-level button").forEach((b) => b.addEventListener("click", () => { S.level = +b.dataset.l; update(); }));
   $$(".lv-table tbody tr").forEach((tr) => tr.addEventListener("click", () => { S.level = +tr.dataset.l; update(); }));
+  const n2 = (v) => v.toFixed(2);
 
   function update() {
     const g = GPUS.find((x) => x.name === S.gpu) || GPUS[0];
-    const sc = M.scenario(S.scen);
-    const r = M.run({ ...sc.v, myRev: g.rev, level: S.level });
+    const r = M.estimate({ myRev: g.rev, level: S.level });
 
     $("#earn-day").textContent = money(r.total);
     $("#earn-sub").innerHTML = `About <b>${money(r.total / 144)}</b> every 10-minute payout.`;
     $("#earn-cut").textContent = money(r.chestShare) + "/day";
     $("#earn-mine").textContent = money(r.mining) + "/day";
-    $("#earn-share").textContent = F.pct(r.share * 100) + (r.capped ? " (5% cap)" : "");
-    $("#earn-assume").innerHTML = `<b>${sc.name}:</b> ${F.usd(sc.v.vol)} 24h volume, ${sc.v.miners.toLocaleString("en-US")} GPUs mining → ${F.usd(r.chest)}/day to miners.`;
-    $("#earn-flag").innerHTML = S.level === 3 && !sc.l3
-      ? `<p class="flag">Level 3 needs 14 days of holding, so nobody has it yet in this scenario. Shown for comparison.</p>` : "";
-    $$("#earn-scen .chip").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.s === S.scen)));
+    $("#earn-share").textContent = F.mult(r.rel) + " the average GPU";
+    $("#earn-assume").innerHTML = `Based on <b>$${E.volPerGpu} of daily volume per GPU mining</b>, which puts ${money(r.chestPerGpu)}/day into the chest per GPU.`;
+    $("#earn-flag").innerHTML = S.level === 3
+      ? `<p class="flag">Level 3 needs 14 days of holding, so it starts two weeks after launch.</p>` : "";
     $$("#earn-level button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.l === S.level)));
     sel.value = g.name;
 
-    // Levels table follows the same GPU and scenario.
-    const base = M.run({ ...sc.v, myRev: g.rev, level: 1 });
+    // Levels table follows the same GPU.
+    const base = M.estimate({ myRev: g.rev, level: 1 });
     [1, 2, 3].forEach((l) => {
-      const x = M.run({ ...sc.v, myRev: g.rev, level: l });
+      const x = M.estimate({ myRev: g.rev, level: l });
       const cell = $(`[data-lv="${l}"]`);
       cell.innerHTML = `${money(x.total)}/day<small>${l === 1 ? "mining + 1× cut" : "+" + money(x.total - base.total) + " vs Level 1"}</small>`;
       cell.parentElement.classList.toggle("on", l === S.level);
     });
-    $("#lv-col").textContent = `Per day`;
-    $("#levels-lede").textContent = `Same GPU, same chest. Your level multiplies your share. Numbers below: ${g.name}, ${sc.name} scenario (${F.usd(sc.v.vol)} volume, ${sc.v.miners} GPUs).`;
+    $("#levels-lede").textContent = `Same GPU, same chest. Your level multiplies your share. Numbers below: ${g.name}, estimated at $${E.volPerGpu} of daily volume per GPU.`;
+
+    // The math, with this GPU plugged in.
+    const m = M.MULT[S.level - 1];
+    const chestPer = (M.CHEST / 100) * (E.volPerGpu + E.avgRev);
+    $("#plug-gpu").textContent = `${g.name} · Level ${S.level}`;
+    $("#plug-eq").innerHTML =
+      `cut = 2.5% × ($${E.volPerGpu} + $${n2(E.avgRev)}) × √${n2(g.rev)} × ${m} ÷ (√${n2(E.avgRev)} × ${E.avgMult})\n` +
+      `    = $${n2(chestPer)} × ${Math.sqrt(g.rev).toFixed(3)} × ${m} ÷ ${(Math.sqrt(E.avgRev) * E.avgMult).toFixed(3)}\n` +
+      `    = <b>${money(r.chestShare)}/day</b>\n\n` +
+      `+ mining     ${money(r.mining)}/day\n` +
+      `= total      <b>${money(r.total)}/day</b>`;
   }
   update();
 

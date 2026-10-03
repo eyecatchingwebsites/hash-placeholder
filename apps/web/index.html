@@ -96,9 +96,8 @@
       </div>
 
       <div class="panel" id="earn" aria-labelledby="earn-title">
-        <div class="panel-head"><span id="earn-title">What your GPU makes</span><span class="tag gold">Scenario</span></div>
+        <div class="panel-head"><span id="earn-title">What your GPU makes</span><span class="tag gold">Pre-launch estimate</span></div>
         <div class="panel-body">
-          <div class="scen" id="earn-scen" role="group" aria-label="Market scenario"></div>
           <div class="earn-inputs">
             <label class="sr-only" for="earn-gpu">Your GPU</label>
             <select class="select" id="earn-gpu"></select>
@@ -115,12 +114,13 @@
           <dl class="rows">
             <div><dt>Your cut of the 2.5% tax</dt><dd id="earn-cut">—</dd></div>
             <div><dt>What your GPU mines</dt><dd id="earn-mine">—</dd></div>
-            <div><dt>Your share of the chest</dt><dd id="earn-share">—</dd></div>
+            <div><dt>Your weight in the chest</dt><dd id="earn-share">—</dd></div>
           </dl>
           <div id="earn-flag"></div>
           <p class="assume" id="earn-assume"></p>
+          <a class="btn btn-ghost btn-sm" href="#math">See the math</a>
         </div>
-        <div class="panel-foot">Not a promise: your cut moves with volume and how many people mine. Before electricity. <a href="calculator.html">Change the numbers</a></div>
+        <div class="panel-foot">An estimate, not a promise. Before electricity. <a href="calculator.html">Change the inputs</a></div>
       </div>
     </div>
   </section>
@@ -165,6 +165,50 @@
         <div><span class="n">03</span><h3>Miners split it every 10 min</h3><p>Everyone mining gets a cut. <b>Bigger GPU and bigger bag = bigger cut.</b> Paid straight to your wallet in $HASH.</p></div>
       </div>
       <p class="buy-note reveal"><b>Plus what your GPU mines.</b> The app mines whatever coin pays your card most, sells it, and buys $HASH with it for you. So every miner payout is also a market buy of $HASH.</p>
+    </div>
+  </section>
+
+
+  <!-- MATH -->
+  <section class="section" id="math" aria-labelledby="math-title">
+    <div class="wrap">
+      <div class="head reveal">
+        <h2 id="math-title">The estimate is one number: volume per GPU.</h2>
+        <p class="lede">Your cut depends on how much $HASH trades and how many GPUs share the chest. Work through the formula and those two only ever appear as one ratio: <b>daily volume ÷ GPUs mining.</b> So the estimate is built on that ratio, not on a guess about one particular day.</p>
+      </div>
+      <div class="math reveal">
+        <ol class="derive">
+          <li><p>Your cut is your share of the chest.</p><code>cut = chest × your weight ÷ everyone's weight</code></li>
+          <li><p>The chest is 2.5% of the day's volume <i>V</i>, plus the platform's own $HASH buys for payouts (about <i>a</i> per GPU).</p><code>chest = 2.5% × (V + N × a)</code></li>
+          <li><p>Weight is √(GPU earnings) × level. Across <i>N</i> GPUs it adds up to about</p><code>everyone's weight ≈ N × √a × L</code></li>
+          <li><p>Divide step 2 by step 3. <i>N</i> cancels out everywhere except in <i>V ÷ N</i>:</p><code>cut = 2.5% × (<b>V ÷ N</b> + a) × √(your GPU) × your level ÷ (√a × L)</code></li>
+        </ol>
+        <p class="legend"><i>V</i> = daily volume · <i>N</i> = GPUs mining · <i>a</i> = average mining GPU's earnings per day · <i>L</i> = average level multiplier</p>
+      </div>
+
+      <div class="math-grid reveal">
+        <div class="panel">
+          <div class="panel-head"><span>Why $750 per GPU</span></div>
+          <div class="panel-body">
+            <code class="eq">V ÷ N = (V ÷ mcap) × (mcap ÷ holders) ÷ (miners ÷ holders)<br>      = 30% × $1,000 ÷ 40% = <b>$750</b></code>
+            <p class="muted">Market cap cancels out. The same estimate holds for a $500K coin or a $50M coin, as long as people trade and mine in the same proportions.</p>
+            <dl class="kv">
+              <div><dt>Volume / mcap</dt><dd><b>30% a day.</b> An active memecoin in its first weeks. Launch days often run 100%+.</dd></div>
+              <div><dt>Mcap / holder</dt><dd><b>$1,000.</b> A $1M Solana memecoin has roughly 1,000 holders.</dd></div>
+              <div><dt>Holders mining</dt><dd><b>40%.</b> The coin is aimed at traders with gaming PCs.</dd></div>
+              <div><dt>Average GPU</dt><dd><b><i>a</i> = $2.50/day,</b> about an RTX 3080 (hashrate.no).</dd></div>
+              <div><dt>Level mix</dt><dd><b><i>L</i> = 1.5×.</b> Half of miners hold $50 for Level 2. Level 3 starts after day 14.</dd></div>
+            </dl>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span>Your GPU, plugged in</span><span class="tag" id="plug-gpu"></span></div>
+          <div class="panel-body">
+            <code class="eq" id="plug-eq"></code>
+            <p class="muted">The cut moves in a straight line with volume per GPU. At $375 per GPU it's about half; at $1,500 it's about double. After launch, this estimate is replaced by what each level was actually paid in the last 24 hours.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -333,7 +377,7 @@
       </div>
       <div class="faq reveal">
         <details><summary>Can I just trade it without mining?</summary><div class="a"><p>Yes. It trades like any Solana token. But the 2.5% only goes to wallets that are mining, so holding without mining earns nothing from the chest.</p></div></details>
-        <details><summary>How much will I actually make?</summary><div class="a"><p>It depends on two things: how much $HASH is traded, and how many GPUs are mining. High volume with few miners means a big cut; low volume with lots of miners means a small one. The calculator shows the scenarios. Nobody can promise a number, and after launch the site will show what each level was actually paid in the last 24 hours.</p></div></details>
+        <details><summary>How much will I actually make?</summary><div class="a"><p>Your cut depends on one ratio: daily volume divided by GPUs mining. The estimate uses $750 of volume per GPU; <a href="#math" class="gold">the math is here</a>. If the real ratio is half that, your cut is about half. After launch the site shows what each level was actually paid in the last 24 hours instead.</p></div></details>
         <details><summary>Is this a rug?</summary><div class="a"><p>The tax is enforced by the token program and can never be raised. The dev bag is 1%, bought in public and locked for 90 days, and it gets no chest payouts. The treasury is a multisig, the code is open source, and every payout is on-chain. Check it all on Solscan at launch.</p></div></details>
         <details><summary>What happens if I sell?</summary><div class="a"><p>You pay the 3% tax like everyone else, and that wallet can never be Level 3 again. You can still mine at Level 1 or 2.</p></div></details>
         <details><summary>Will my antivirus flag the app?</summary><div class="a"><p>Some antivirus products flag every crypto miner as "potentially unwanted". The app is code-signed and open source with published checksums. You never need to turn off your antivirus.</p></div></details>
@@ -359,7 +403,7 @@
       </ul></div>
     </div>
     <div class="disclaimer">
-      <p><b>Risk.</b> $HASH is a highly volatile memecoin and can lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Scenario figures on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live.</p>
+      <p><b>Risk.</b> $HASH is a highly volatile memecoin and can lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Estimates on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live.</p>
       <p><b>Security.</b> We will never ask for your seed phrase or private key. The contract address is published only on this site.</p>
       <p>© 2026 Hashcoin. Pre-launch preview.</p>
     </div>

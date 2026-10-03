@@ -208,6 +208,22 @@ p { margin: 0; }
 .buy-note { margin-top: 28px; padding: 16px 18px; border-left: 2px solid var(--gold); background: var(--panel); border-radius: 0 var(--radius) var(--radius) 0; color: var(--muted); font-size: .95rem; }
 .buy-note b { color: var(--text); font-weight: 600; }
 
+/* ---------- Math ---------- */
+.derive { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); counter-reset: d; }
+.derive li { display: grid; grid-template-columns: 80px minmax(0, 1fr) minmax(0, 1.25fr); gap: 20px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); counter-increment: d; }
+.derive li::before { content: "Step " counter(d); font: 600 .7rem/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+.derive p { color: var(--muted); font-size: .95rem; }
+.derive i, .legend i, .kv i { font-family: var(--font-mono); font-style: normal; color: var(--text); }
+code, .eq { font: 500 .86rem/1.6 var(--font-mono); color: var(--text); }
+.derive code { display: block; padding: 10px 12px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); overflow-x: auto; }
+.derive li:last-child code { border-color: var(--gold-line); }
+.derive code b { color: var(--gold); }
+.legend { margin-top: 16px; font-size: .84rem; color: var(--dim); }
+.math-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 16px; margin-top: 32px; align-items: start; }
+.eq { display: block; padding: 14px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); overflow-x: auto; white-space: pre; }
+.eq b { color: var(--gold); font-weight: 700; }
+.math-grid .kv > div { grid-template-columns: 130px 1fr; }
+
 /* ---------- Why ---------- */
 .why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .why > div { padding: 28px 28px 30px 0; display: grid; gap: 10px; align-content: start; }
@@ -408,7 +424,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   .sim-chest { grid-column: 1 / -1; grid-row: 1; border-bottom: 1px solid var(--line); padding: 18px 16px; gap: 10px; }
   .sim-col + .sim-chest, .sim-chest + .sim-col { border-left: 0; }
   .sim-chest + .sim-col { border-left: 1px solid var(--line); }
-  .why, .steps3, .rules { grid-template-columns: minmax(0, 1fr); }
+  .why, .steps3, .rules, .math-grid { grid-template-columns: minmax(0, 1fr); }
+  .derive li { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+  .derive li::before { grid-column: 1 / -1; }
   .why > div, .why > div + div, .steps3 > div, .steps3 > div + div { padding: 20px 0; border-left: 0; }
   .why > div + div, .steps3 > div + div { border-top: 1px solid var(--line); }
   .calc-out { position: static; }
@@ -433,7 +451,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   .lv-table td:nth-child(3) { grid-row: 1; grid-column: 2; }
   .lv-table td:nth-child(4) { grid-column: 1 / -1; grid-row: 3; margin-top: 10px; text-align: left; }
   .lv-table tr.on td { background: none; }
-  .kv > div { grid-template-columns: 1fr; gap: 4px; }
+  .kv > div, .math-grid .kv > div { grid-template-columns: 1fr; gap: 4px; }
+  .derive li { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .eq { white-space: pre-wrap; }
 }
 @media (max-width: 560px) {
   .hide-sm { display: none; }

@@ -26,7 +26,7 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 
 | File | What it is |
 |---|---|
-| `index.html` | Home, written for traders: hero with a "what your GPU makes" panel, a simulated chest (trades → tax → split to miners), why the tax pays out, levels table, the miner app, tokenomics, status, waitlist with countdown, FAQ |
+| `index.html` | Home, written for traders: hero with a "what your GPU makes" estimate, a simulated chest (trades → tax → split to miners), the estimate math, why the tax pays out, levels table, the miner app, tokenomics, status, waitlist with countdown, FAQ |
 | `calculator.html` | Full earnings calculator: GPU, power, electricity, level, and market scenarios |
 | `faq.html` | FAQ and docs: getting started, mining, payouts, levels, token, safety, risks |
 
@@ -38,7 +38,7 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 | `assets/js/config.js` | **Launch settings:** `launchAt`, `ca` (contract address), `x`, `discord`, `github`. All `null` until launch |
 | `assets/js/site.js` | Shared behavior: header, mobile menu, placeholder toasts, countdown, contract-address button, scroll reveal |
 | `standalone/` | Generated single-file copies of the pages (see above) |
-| `assets/js/model.js` | Chest-share model (sqrt of GPU earnings × level 1/2/4, 5% cap, 2.5% chest) and the scenario presets (Launch day, Hype week [default], Peak run, Cooling off, Steady state, Flop) |
+| `assets/js/model.js` | The pre-launch estimate: cut = 2.5% × (daily volume per GPU + ā) × √(your GPU) × level ÷ (√ā × average level). Default $750 volume per GPU (30% volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining) |
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic |
 | `assets/js/gpus.js` | **Generated** GPU list (91 cards) from `data/hashrate-no-gpus-2026-10-03.json` |
 | `scripts/gen_gpus.py` | Regenerates `gpus.js`: `python3 apps/web/scripts/gen_gpus.py data/<file>.json` (from the repo root) |
@@ -56,7 +56,7 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 
 From `CLAUDE.md` and `docs/DESIGN-BRIEF.md`:
 - Never promise returns. Avoid "pays for itself", "free", "guaranteed" and rising price charts.
-- Label every scenario figure as a scenario. The home page defaults to the "Hype week" preset ($300K 24h volume, 400 GPUs mining) and always shows the other scenarios next to it, including the low ones.
+- Show one estimate, based on daily volume per GPU mining ($750 by default), labeled "Estimate, not a promise". The math is on the home page (`#math`).
 - Say "tax" rather than "fee" on the site; that's the word traders use.
 - Keep "we will never ask for your seed phrase" and the risk disclaimer in the footer.
 
