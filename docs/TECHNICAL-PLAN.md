@@ -9,7 +9,7 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 ## 0. Where things stand
 | Area | State | Location |
 |---|---|---|
-| Payout engine (levels, weights, cap, epoch, hybrid payout, settlement, token split) | ✅ 15 tests | `packages/engine` |
+| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 21 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
@@ -38,7 +38,7 @@ These block real mining. Each one is research plus a decision from the user.
      - Regions.
    - Output: fill in `services/api/config/coins.json`.
    - Fallback if no pool fits: run our own pool for that coin (more work, see Phase 6).
-3. **Launchpad.** Raydium LaunchLab "reward launch" (verify: 3% option, who holds the Token-2022 fee authorities, where fees go) vs our own Token-2022 token + Raydium CPMM pool. 🔑 decision.
+3. **Launchpad.** The tax is now 5%, which LaunchLab's reward launch probably can't do (it appeared to allow 1% or 3%), so the likely route is our own Token-2022 token + Raydium CPMM pool. Verify LaunchLab anyway. 🔑 decision.
 4. **Accounts** 🔑:
    - .com domain.
    - Hosting:
@@ -55,11 +55,11 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 
 1. `packages/chain` (TypeScript, `@solana/web3.js` + `@solana/spl-token`):
    - `createHashMint()`: Token-2022 mint with the transfer-fee extension at 300 bps, a high max fee, and both fee authorities set to a multisig. Devnet: a throwaway keypair from env, never committed.
-   - `harvestFees()`: collect withheld fees from token accounts (`harvestWithheldTokensToMint` + `withdrawWithheldTokensFromMint`), then split 2.5 : 0.5 into chest and dev wallets.
-   - `indexTransfers(fromSlot)`: stream every $HASH transfer, then call `applyBalanceChange` per wallet (any outflow sets `everSold`). Webhook or polling.
+   - `harvestFees()`: collect withheld fees from token accounts (`harvestWithheldTokensToMint` + `withdrawWithheldTokensFromMint`), then split with `splitTax` into dev, chest and holder-pot wallets.
+   - `indexTransfers(fromSlot)`: stream every $HASH transfer, then call `applyBalanceChange` per wallet (any outflow shrinks the hold clock in proportion). Webhook or polling.
    - `sendBatch(transfers)`: pack about 20 transfers per transaction (Token-2022 `transferChecked` with fee), with priority fees and retry. Create associated token accounts for new miners (budget ~0.002 SOL each).
    - `buyHash(usd)`: Jupiter swap quote and execute from the treasury, with a max-slippage guard.
-   - Gross-up: a payout of N tokens needs N / (1 − 0.03) sent so the miner nets N. The withheld 3% returns via harvest.
+   - Gross-up: a payout of N tokens needs N / (1 − 0.05) sent so the recipient nets N. The withheld 5% returns via harvest.
 2. **Devnet end-to-end script:**
    - Mint the token and seed a devnet pool.
    - A bot trades to generate fees.
@@ -67,7 +67,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
    - Check the balances and the ledger.
 3. **Engine changes:**
    - Exclude dev and treasury wallets from the chest (config list).
-   - Switch the defaults to the 3% fee (2.5 / 0.5, no burn). The engine already takes `chestUsd` as an input, so this is mostly config and docs.
+   - Done: 5% tax with `splitTax` (5× miner target, 3.5% chest cap, 1% holder minimum), holder and miner levels, `runHolderPayout`. Remaining: wire `splitTax` → `runEpoch` / `runHolderPayout` in the backend.
 
 ## Phase 3: Backend service
 `services/backend` (Node + Postgres), deployed on the VPS. Jobs:
@@ -76,7 +76,8 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 |---|---|---|
 | collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet |
 | chain-watch | live | Transfer indexer, then `WalletState` per wallet, plus the 1h average price |
-| fee-watch | 10 min | Harvests the Token-2022 fee, then the chest / dev buckets |
+| fee-watch | 10 min | Harvests the Token-2022 tax, then `splitTax` → dev / chest / holder-pot buckets |
+| holders | 1 h or 1 day | `runHolderPayout` over all wallets (excluding dev, treasury, pools, exchanges) → `sendBatch` |
 | epoch | 10 min | `runEpoch` → buy $HASH → `splitTokens` → `sendBatch` → write the ledger |
 | settler | 15 min | Confirmed and sold mined coins → `settle` true-ups |
 | prices | 15 min | Per-card revenue per coin (hashrate.no API or our own calculation from network difficulty), feeding the switcher's quotes |
@@ -106,7 +107,7 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README). Nex
 2. **Pages:**
    - `/`: landing (done as a draft)
    - `/dashboard`: live totals, chest, burn of fees, recent payouts with Solscan links, coin mix, GPUs online
-   - `/wallet/[address]`: level, progress ("$12 to Level 2", "4 days to Level 3"), paid / pending, payout history
+   - `/wallet/[address]`: miner and holder level, progress ("$12 to H1", "18h to H2", "3 more days to M3"), paid / pending, payout history
    - `/download`: signed installer, SHA-256, VirusTotal link, antivirus FAQ
    - `/calculator`: the full calculator (`calculator/index.html`), fed live inputs at launch
 3. **Waitlist backend:** a `waitlist` table, a POST endpoint, and a live counter. Store an X handle or email, the GPU model, and an optional public wallet. Rate-limit and validate.

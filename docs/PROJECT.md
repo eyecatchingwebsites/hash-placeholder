@@ -18,54 +18,62 @@ Last updated: October 3, 2026. Stage: design, simulation, and early build. Numbe
 ---
 
 ## 1. Summary
-A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gaming PCs** (pre-existing miners will find it anyway if it pays). Users mine through the platform. What they mine is sold to buy $HASH, which is paid back to them. A trading fee funds a chest that's shared among miners, weighted by GPU earnings (square-root balanced) and the miner's **level**. Pitch: "The memecoin your GPU mines." Goal: a lasting coin. The creator prefers a stable $500K–1M market cap for 6 months over a few-day $10M runner, though both are fine outcomes.
+A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gaming PCs** (pre-existing miners will find it anyway if it pays). Users mine through the platform. What they mine is sold to buy $HASH, which is paid back to them. A 5% tax on every $HASH trade pays miners (up to 3.5%, targeted at 5× what their GPUs mine) and holders (at least 1%), with two level ladders: miner levels M1–M3 and holder levels H1–H3. Pitch: "The memecoin your GPU mines." Goal: a lasting coin. The creator prefers a stable $500K–1M market cap for 6 months over a few-day $10M runner, though both are fine outcomes.
 
 ## 2. Token and fee (decided, pending launchpad verification)
 - **Solana, Token-2022 with the transfer-fee extension.** The fee is enforced by the token program on every transfer, in every pool, aggregator and wallet. Nobody can trade around it.
   - Lesson from **$UPLIFT**: it crashed because people bought on other exchanges and avoided its fee. Its chest (paying wallets that lost money) dried up. Token-2022 prevents this.
-- **3% total fee:**
-  - **2.5% to the miner chest**
-  - **0.5% to development** (disclosed: "3% fee: 2.5% to miners, 0.5% funds development")
-  - **No burn** (dropped in favor of a simpler split)
-- Why 3% over 5%:
-  - A round trip costs 6% instead of 10%, so more flippers and more volume.
-  - It's what Raydium LaunchLab "reward launches" appear to allow (1% or 3%, unverified).
-  - It sounds cleaner on a chart page.
-  - A chest at 3% equals one at 5% if volume is ≥ 1.67× higher.
+- **5% tax, split automatically (decided Oct 3, replaces the earlier 3% fee):**
+  - **0.5% to development**, fixed.
+  - **Miner chest: 0% to 3.5%.** Each epoch the chest takes exactly what lifts miners' total pay to **5× what their GPUs mined** (mining + a chest cut worth 4× mining, averaged over all miners), capped at 3.5%.
+  - **Holders: 1% to 4.5%.** Everything the chest doesn't take. Holders always get at least 1%.
+  - **No burn** (decided). The tax is collected in $HASH, so a "buyback" would just be a burn; all of the holder side is paid out instead.
+  - The formula is public and mechanical, and the site shows the current split live. Engine: `splitTax` in `packages/engine`.
+  - Reaching 5× needs about **$283 of daily volume per mining GPU** (4 × $2.50 ÷ 3.5% − $2.50). Above that miners get exactly 5× and holders get more; below it miners get the full 3.5% and holders get 1%.
+- **Why 5% now:** with a dynamic split, the higher tax pays miners and holders more instead of looking like extraction. Trade-offs: a round trip costs 10% instead of 6% (fewer flippers, less volume), and Raydium LaunchLab's reward launch (1% or 3%, unverified) probably can't do 5%, so the likely route is our own Token-2022 token with a Raydium CPMM or Orca pool. The sim: if 5% cuts volume 30%, miner income falls ~20%.
 - **Fee authorities:** fee config and withdraw authorities in a multisig. Publicly commit to never raising the fee, and ideally renounce the config authority after launch. Set the max fee per transfer high.
 - **Our own transfers are taxed too** (payouts to miners, etc.). The fee is held in the recipient account and collected back into the treasury, so it recirculates. Send a little extra so miners receive the full amount.
 - **Launchpad:**
   - **pump.fun can't do this.** Its creator fee is fixed (0.30% on the curve, then 0.95% → 0.05% on PumpSwap), only charged in its own pools, and can be avoided elsewhere, which is the $UPLIFT problem.
   - **Options:**
-    - (a) Raydium LaunchLab reward launch at 3%. Needs verifying: fee options, who controls the authorities, and where fees go.
+    - (a) Raydium LaunchLab reward launch. Needs verifying: whether 5% is possible (it appeared to allow 1% or 3%), who controls the authorities, and where fees go.
     - (b) Our own Token-2022 token plus a Raydium CPMM or Orca pool (both support transfer-fee tokens). We'd bring our own traffic.
   - **"Fomo"** (a trading app): unknown. If it routes to any exchange, the Token-2022 fee still applies.
 - **Dev holding: 1% of supply.**
   - Bought openly as a dev buy at launch, in one public wallet.
   - Locked or vested publicly, e.g. no sells for 90 days, then at most 0.25% of supply per month.
-  - **The dev wallet is excluded from the chest** (no self-dealing).
+  - **The dev wallet is excluded from the chest and the holder pot** (no self-dealing).
   - Dev holdings, the dev-fee wallet, and the treasury/float multisig are kept separate.
 
-## 3. Levels (decided)
-| Level | Requirement | Chest weight |
-|---|---|---|
-| 1 | Mining (default) | 1× |
-| 2 | $HASH position ≥ $50 | 2× |
-| 3 | Position ≥ $500 **and** ≥ 14 days since $HASH first landed in the wallet **and** never sold | 4× |
+## 3. Levels: two ladders (decided Oct 3, replaces the earlier L1–L3)
+**Holder levels** (anyone holding $HASH, mining or not):
 
-- **Weight** = (GPU USD earnings)^0.5 × level multiplier. Each wallet is capped at 5% of the chest. The excess is shared out to the other wallets, and anything left carries to the next epoch.
-- **The 14-day clock** starts the first time $HASH lands in the wallet (a mining payout or a buy). It keeps running through dips. Side effect: people can "pre-age" wallets with dust, but L3 still needs $500 and never having sold.
-- **Downgrades:**
-  - L2 → L1 when the position is below $50.
-  - L3 → L2 when the position is below $500. Back above $500 restores L3 immediately, with no new 14-day wait.
-- **Selling at any time permanently disqualifies the wallet from L3.** It can still be L1 or L2.
-- **Transfers out count as selling,** including wallet-to-wallet moves, LP deposits and CEX deposits. Buying never counts.
-- **Mined $HASH counts toward thresholds.**
-- **Position value** uses a ~1-hour average price, checked at each payout.
-- **The website shows "paid in the last 24h" per level,** never promised percentages. Only the 1:2:4 ratio is fixed.
-- **Possible L3 perks:** 100% instant payout, a vote on auto-switch coins, a badge or role.
-- **Consequence:** L3 holders can't take partial profits, so exits tend to be all at once.
-- **Sqrt balancing:** small GPUs get the biggest multiplier, which makes good marketing. Splitting one rig across wallets only pays at L1, because each wallet needs its own $50 or $500.
+| Level | Bag | Hold clock | Holder-pot weight |
+|---|---|---|---|
+| H1 | ≥ $50 | none | 1× |
+| H2 | ≥ $500 | ≥ 24 hours | 2× |
+| H3 | ≥ $2,500 | ≥ 72 hours | 4× |
+
+- **Holder pot share** = bag × holder multiplier, each wallet capped at 5% of the pot (excess shared out, rest carries). Linear in the bag, not √, so splitting one bag across wallets gains nothing.
+- **Hold clock:** starts when $HASH first lands in the wallet and keeps running through dips. **Selling shrinks it in proportion** (sell 25% of the bag → the clock drops 25%; sell everything → it resets). Buying never moves it. Short clocks because tokens move fast (user decision). Transfers out count as selling, including wallet-to-wallet moves, LP and CEX deposits.
+- **Dips:** falling below a bag threshold drops the level; recovering restores it immediately, no new wait.
+- **Excluded from the holder pot:** dev, treasury, payout, liquidity-pool and exchange wallets.
+- **Payout cadence:** hourly or daily (paying every holder every 10 minutes costs too much in transactions). Draft.
+
+**Miner levels** (chest weight = √(GPU USD earnings) × miner multiplier, 5% cap per wallet):
+
+| Level | Days mined (last 7) | Needs | Chest weight |
+|---|---|---|---|
+| M1 | any | – | 1× |
+| M2 | ≥ 2 | H1 | 2× |
+| M3 | ≥ 5 | H2 | 4× |
+
+- Gating M2/M3 on holder levels keeps the reason for miners to buy and hold (user decision); the sim found buying-in to level up is what lifts price most.
+- Miners who hold also earn from the holder pot on their own bag: doing both pays from both pots.
+- **Mined $HASH counts** toward holder thresholds. **Position value** uses a ~1-hour average price, checked at each payout.
+- **The website shows "paid in the last 24h" per level** after launch, never promised percentages. Only the 1:2:4 ratios, the 5× target, the 3.5% cap and the 1% holder minimum are fixed.
+- **Sqrt balancing** for miners: small GPUs get the biggest multiplier relative to what they mine.
+- Engine: `computeHolderLevel`, `computeMinerLevel`, `applyBalanceChange` (hold clock), `runEpoch` (miners), `runHolderPayout` (holders) in `packages/engine`.
 
 ## 4. Payouts and trust (decided)
 - **Credit by shares.** Shares are proof of work, checked by the pool instantly, and can't be faked. "Flash" fake crypto doesn't apply, since miners never send us crypto.
@@ -99,7 +107,7 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
   - Live stats: GPUs online, $HASH bought by miners, chest paid.
   - Why it has buy pressure, and why holders stay (levels).
   - Proof: Solscan payout feed, the pool's public page, the open-source repo.
-  - Tokenomics box (3% = 2.5% miners / 0.5% development, 1% dev holding locked, contract address only at launch).
+  - Tokenomics box (5% tax: 0.5% development, up to 3.5% miners, at least 1% holders; 1% dev holding locked; contract address only at launch).
 - **For miners:** "Mine with your gaming PC. Get paid in $HASH every 10 minutes."
   - A calculator showing what a GPU like yours earned yesterday, per level.
   - 3-step setup, the level explainer, safety.
@@ -123,6 +131,8 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 - **No token promises to early users.** A launch-day head start is fine. Don't make the contract address easy to snipe.
 
 ## 8. Findings
+*The first tables in this section use earlier designs (5% fixed split, then 3%) and the old sim accounting; the current design's results are in the "5× target, holders ≥ 1%" table further down.*
+
 **Simulation (90 days, Python, `sim/`):**
 
 | Design | Typical miner extra d7 / d30 / d90 | Renters' chest share | Price at d90 |
@@ -165,7 +175,7 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 
 Miner "extra" includes holder rewards that home miners earn on their own bags. Yields are % of the bag paid per day.
 
-**Calculator presets (4070, L2, old 3% chest rate):**
+**Calculator presets (4070, L2, old 3% chest rate; outdated):**
 
 | Stage | Per day |
 |---|---|
@@ -222,7 +232,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 ## 10. Build status
 | Piece | Status |
 |---|---|
-| Payout engine (`packages/engine`): levels, weights, cap, epoch, hybrid payout, settlement, token split | Done, 15 tests |
+| Payout engine (`packages/engine`): tax split (5× target, 3.5% cap, 1% holder minimum), holder levels with hold clock, miner levels, chest and holder-pot weights with caps, epoch, hybrid payout, settlement, token split | Done, 21 tests (updated Oct 3 for the two ladders) |
 | Coin switcher (`packages/switcher`): per-card scoring (benchmarks or hashrate.no catalog, slippage and confirmation-delay penalties), hysteresis, Ed25519-signed assignments, wallet validation | Done, 11 tests |
 | Assignment API (`services/api`): `POST /v1/assignments`, signed miner list `GET /v1/miners`, `/v1/keys`, `/v1/health` | Done, 4 tests. Placeholder pools and miners in `config/` |
 | Desktop app (`apps/desktop`): Rust core (GPU detection, signature checks, hash-verified downloads, safe unzip, flag-injection guard, crash-restart supervisor) + Tauri 2 shell (wallet entry, Start/Stop, tray, background check-ins) | Core: 13 tests. App compiles. End-to-end test passes (API + app + stand-in miner). Not yet run on Windows |
@@ -232,8 +242,9 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | Website (`apps/web`) | Static front end built Oct 3 from the questionnaire answers: home, calculator, FAQ/docs pages. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js` |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
-| Engine: exclude dev/treasury wallets from the chest | To do |
-| Update the simulation and calculator defaults to 3% (2.5/0.5), $150/month lean costs, a SOL fee line | To do |
+| Engine: exclude dev/treasury wallets from the chest | Done (`excluded` in `runEpoch` and `runHolderPayout`) |
+| Simulation: correct token accounting, two ladders, 5× target (`dual_target5x_hmin1`) | Done |
+| Calculators in `calculator/` (old 5%/3% fixed-split models) | Outdated; the website calculator uses the new design |
 
 ## Install and antivirus plan (decided)
 - **One signed Windows installer** (Tauri, ~10 MB). The user pastes a public Solana address and clicks Start. The app detects GPUs, the server picks a coin per card, and the app downloads a hash-verified miner and runs it. Tray icon, Start/Stop, Quit.
@@ -248,9 +259,10 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
   - Some antivirus will still label any miner as "potentially unwanted": the FAQ explains, and users only ever allow the Hashcoin folder.
 
 ## 11. Open decisions
-- **Proposed (Oct 3): 5% tax with a dynamic split and two ladders.** Dev fixed at 0.5%. The other 4.5% is split between the miner chest and a holder side (holder rewards + burn), set automatically to hold miners at a **target of 5× their mining** (total pay; decided Oct 3), chest capped at 4.5%. **No burn** (decided): all of the rest goes to holder rewards. **Holders always get at least 1%** (decided), so the chest is capped at 3.5%. Published formula, rate-limited changes, live on the site. Holder rewards are in (user decision; many large tokens do it). **Holder levels H1–H3:** bag $50 / $500 / $2,500 and a hold clock (draft 0 / 24h / 72h; user wants it fast because tokens move fast) that selling shrinks in proportion; holder pot split by bag × 1/2/4, 5% cap per wallet. **Miner levels M1–M3:** by days mined (draft 0 / 2 / 5), weight √(GPU $) × 1/2/4; **M2 requires H1, M3 requires H2** (user decision). Notes: 5% probably rules out the LaunchLab 1%/3% option. Sim results in §8; open: exact clocks; whether to make it the official design (then update engine and website).
-- Launchpad: LaunchLab 3% reward launch vs our own Token-2022 token and pool (verify LaunchLab details).
-- L2 threshold or minimum wallet age, to reduce renter capture.
+- Exact hold clocks (24h / 72h) and holder payout cadence (hourly vs daily).
+- Whether the website estimate should show launch-week conditions ($750 volume per GPU) or later ones (the sim sees ~$40–100 per GPU by day 30).
+- Launchpad: our own Token-2022 token and pool (likely, since LaunchLab appears limited to 1%/3%) vs LaunchLab if it allows 5%.
+- Renter capture (~8% of the chest in the sim): a longer M2 window would cut it, at the cost of slower leveling.
 - Payout cadence (10 min vs hourly) vs transaction cost.
 - Coins to support for switching, and which pools have per-worker APIs.
 - Legal review (payouts funded by other people's fees, custody, marketing language).

@@ -12,7 +12,7 @@ Status: draft. Chain assumed to be **Solana** (Solscan links, ~13s finality, che
  │ collector   polls pool API every minute → earnings estimates per wallet  │
  │ chain-watch indexes $HASH transfers → balances, first-$HASH time, sold   │
  │ fee-watch   tracks creator-fee inflows → chest / burn / creator buckets  │
- │ engine      every 10 min: levels → weights → epoch payout (packages/engine)│
+ │ engine      every 10 min: tax split → levels → weights → epoch payout      │
  │ treasury    buys $HASH (Jupiter), keeps the float, sends batch transfers │
  │ settler     when mined coin confirms + sells → true-up pending balances  │
  │ switcher    per-card coin choice on each app check-in (signed, 5 min)    │
@@ -25,8 +25,8 @@ Status: draft. Chain assumed to be **Solana** (Solscan links, ~13s finality, che
 
 ## Payout cycle (every 10 minutes)
 1. **Collector:** sums each wallet's accepted shares × revenue per share = `earnings` (USD).
-2. **Chain-watch:** gives the current `WalletState` per wallet (balance, `firstHashAt`, `everSold`) and the 1h average price.
-3. **Engine** (`runEpoch`): computes levels, sqrt × level weights, the 5% cap and water-filling, then the immediate 75% of mining (scaled to the float), the pending 25%, the chest split, and the carry.
+2. **Chain-watch:** gives the current `WalletState` per wallet (balance and hold clock `clockStartAt`, which selling shrinks in proportion) and the 1h average price.
+3. **Engine:** `splitTax` divides the epoch's 5% tax into dev (0.5%), miner chest (what reaches 5× mining, max 3.5%) and holder pot (the rest, min 1%). `runEpoch` computes holder and miner levels, √ × miner-level weights, the 5% cap and water-filling, then the immediate 75% of mining (scaled to the float), the pending 25%, the chest split and the carry. `runHolderPayout` splits the holder pot by bag × holder level (hourly or daily).
 4. **Treasury:** buys $HASH for `payNowUsd`, then `splitTokens` produces the transfers. Dust is deferred. Transfers are sent in batches of about 20 per transaction.
 5. **Ledger:** writes everything. The dashboard shows Paid / Pending.
 6. **Settler** (hours later): when the epoch's mined coin is confirmed and sold, `settle` trues up the pending balances to actual proceeds. The platform absorbs any overpayment.
@@ -42,7 +42,7 @@ Status: draft. Chain assumed to be **Solana** (Solscan links, ~13s finality, che
 ## Repo layout (planned)
 | Path | What | Status |
 |---|---|---|
-| `packages/engine` | Pure payout logic: levels, weights, epoch, settlement, token split | **done, tested** |
+| `packages/engine` | Pure payout logic: tax split, holder and miner levels, weights, epoch, holder payout, settlement, token split | **done, tested** |
 | `packages/switcher` | Per-card coin scoring, hysteresis, signed assignments | **done, tested** |
 | `services/api` | Assignment API + signed miner list | **done, tested** (placeholder pools/miners) |
 | `apps/desktop` | Windows miner app (Rust core + Tauri 2) | **core tested, e2e passing**, not yet run on Windows |
