@@ -704,37 +704,46 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 }
 @media (max-width: 560px) {
   .lv-cards, .dev-cards { grid-template-columns: minmax(0, 1fr); }
-  .lv-card { grid-template-columns: auto 1fr; column-gap: 12px; }
-  .lv-card .lv-name, .lv-card .lv-x { grid-column: span 1; }
-  .lv-card .lv-req { grid-column: 1 / -1; }
 }
 .xpanels { min-height: 72vh; }
 .bar-row:nth-child(1) .track i.chest { background: var(--l1); }
 .bar-row:nth-child(2) .track i.chest { background: var(--l2); }
 .bar-row:nth-child(3) .track i.chest { background: var(--l3); }
 
-/* Earnings: mine and hold together */
-.both { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 16px; padding: 18px 20px; border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--lv) 45%, var(--line-2)); background: color-mix(in srgb, var(--lv) 7%, var(--panel)); }
-.both h3 { font-size: 1.25rem; }
-.both h3 b { color: var(--lv); }
-.both p { margin-top: 6px; color: var(--muted); font-size: .92rem; max-width: 560px; }
-.both-sum { display: flex; align-items: center; gap: 10px; font: 600 1rem/1 var(--font-mono); color: var(--text); }
-.both-sum i { font-style: normal; color: var(--dim); }
-.both-sum span small { display: block; margin-top: 4px; font: 500 .74rem/1 var(--font-body); color: var(--dim); }
-
 /* How it works: the self-balancing split */
 .balance { margin-bottom: 16px; }
-.bal-lede { color: var(--muted); max-width: 720px; }
-.bal-lede b { color: var(--text); }
-.bal-ends { display: flex; justify-content: space-between; font-size: .8rem; color: var(--dim); }
+.bal-ends { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .8rem; color: var(--dim); }
+.bal-ends output { font: 600 .9rem/1 var(--font-mono); color: var(--text); }
 .bal-bar { display: flex; height: 46px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); }
 .bal-bar i { display: flex; align-items: center; min-width: 0; overflow: hidden; white-space: nowrap; font: 700 .86rem/1 var(--font-display); color: var(--gold-ink); padding: 0 12px; transition: width .35s var(--ease); }
 .bal-bar .m { background: var(--gold); }
 .bal-bar .h { background: var(--gold-2); justify-content: flex-end; }
-.bal-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.bal-out div { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
-.bal-out span { display: block; font-size: .84rem; color: var(--muted); }
-.bal-out b { display: inline-block; margin-top: 6px; font: 800 1.7rem/1 var(--font-display); color: var(--gold); letter-spacing: -.02em; }
-.bal-out div + div b { color: var(--gold-2); }
-.bal-out small { margin-left: 6px; color: var(--dim); font-size: .84rem; }
-.bal-note { font-size: .9rem; color: var(--text); min-height: 1.5em; }
+.bal-note { font-size: 1rem; color: var(--muted); min-height: 1.5em; }
+.bal-note b { color: var(--gold); font-family: var(--font-display); font-weight: 800; }
+
+/* Earnings, compact (round 4) */
+.xhead-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px 20px; flex-wrap: wrap; max-width: none; margin-bottom: 20px; }
+.lv-auto { margin: 0; font-size: .86rem; }
+.lv-card { gap: 10px; padding: 14px 16px; }
+.lv-top { display: flex; justify-content: space-between; align-items: baseline; }
+.lv-card .lv-name { font-size: 1rem; }
+.lv-card .lv-x { font-size: 1.6rem; color: var(--c); }
+.lv-req { font-size: .9rem; color: var(--text); }
+.lv-req i { min-width: 46px; font-family: var(--font-display); font-size: .74rem; }
+.earn-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+.ecard { gap: 12px; }
+.ecard h3 { font-size: 1rem; color: var(--muted); font-weight: 700; }
+.ecard .earn-big b { font-size: clamp(2.4rem, 3.6vw, 3.2rem); }
+.ecard .earn-big span { font-size: .95rem; }
+.sum-line { display: flex; gap: 16px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); }
+.sum-line b { color: var(--text); font-family: var(--font-mono); font-weight: 600; }
+.bag-row { grid-template-columns: minmax(0, 1fr); }
+.bag-quick button { flex: 1; min-height: 34px; }
+.ecard.both { background: color-mix(in srgb, var(--lv) 9%, var(--panel)); border-color: color-mix(in srgb, var(--lv) 40%, var(--line-2)); align-content: start; }
+.ecard.both h3 { color: var(--text); }
+.both-note { font-size: .9rem; color: var(--muted); }
+.flow3 > div { padding: 16px 18px; gap: 4px; }
+.flow3 h3 { font-size: .95rem; color: var(--muted); font-weight: 600; }
+@media (max-width: 960px) {
+  .earn-grid { grid-template-columns: minmax(0, 1fr); }
+}

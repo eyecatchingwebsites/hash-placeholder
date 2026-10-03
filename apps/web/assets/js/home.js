@@ -151,23 +151,18 @@
     tween($("#earn-cut"), r.chestShare, (v) => "+" + money(v));
     $("#sb-mined").style.width = (100 * r.mining) / top + "%";
     $("#sb-tax").style.width = (100 * r.chestShare) / top + "%";
-    $("[data-pill=M]").textContent = "M" + L;
-    $("#earn-sub").innerHTML = `<b>${F.mult(r.mult)}</b> what the ${g.name} mines on its own. Paid in $HASH every 10 minutes.${g.est ? " Laptop figure estimated from desktop data." : ""}`;
 
     // If you hold
     const maxH = M.holderLevelFor(S.bag);
     const hl = Math.min(L, maxH);
     const h = M.holder(S.bag, hl);
     tween($("#hold-day"), h.perDay, money);
-    $("[data-pill=H]").textContent = hl ? "H" + hl : "H–";
-    $("#hold-sub").innerHTML = hl ? `<b>${h.yieldPct.toFixed(2)}%</b> of your bag a day. Paid in $HASH.` : "Hold $50 or more to earn.";
+    $("#hold-sub").innerHTML = hl ? `<b>${h.yieldPct.toFixed(2)}%</b> of your bag a day` : "Hold $50+ to earn";
     $("#hold-flag").innerHTML = maxH && L > maxH
-      ? `<p class="flag">Level ${L} needs a ${whole(M.HOLDER.usd[L - 1])} bag. Yours counts as Level ${maxH}.</p>` : "";
+      ? `<p class="flag">Level ${L} needs ${whole(M.HOLDER.usd[L - 1])}+. Shown at Level ${maxH}.</p>` : "";
 
     // Mine and hold: mined $HASH is part of the bag, so both payouts add up.
     tween($("#both-day"), r.total + h.perDay, money);
-    $("#both-mine").innerHTML = `${money(r.total)}<small>mining at M${L}</small>`;
-    $("#both-hold").innerHTML = `${money(h.perDay)}<small>holder rewards${hl ? " at H" + hl : ""}</small>`;
 
     // Level tables
     [1, 2, 3].forEach((l) => {
@@ -210,16 +205,15 @@
       const mk = M.market({ volPerGpu: v });
       const pool = M.TAX - M.DEV;
       const m = mk.chestRate, ho = mk.holderRate;
-      $("#bal-vol-o").textContent = `${whole(v)} a day per GPU mining`;
+      $("#bal-vol-o").textContent = `${whole(v)} traded per GPU a day`;
       $("#bal-m").style.width = (100 * m) / pool + "%";
       $("#bal-h").style.width = (100 * ho) / pool + "%";
       $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(1)}%`;
       $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(1)}%`;
-      $("#bal-mult").textContent = F.mult(1 + mk.chestPerGpu / mk.avgRev);
-      $("#bal-hold").textContent = (100 * ho).toFixed(1) + "%";
-      $("#bal-note").textContent = mk.targetMet
-        ? "Busy: miners are already at 5×, so everything above that goes to holders."
-        : "Quiet: miners get the most they can (3.5%) to get as close to 5× as possible. Holders keep their 1% floor.";
+      const mult = F.mult(1 + mk.chestPerGpu / mk.avgRev);
+      $("#bal-note").innerHTML = mk.targetMet
+        ? `Miners are at <b>5×</b> their mining. The extra goes to holders.`
+        : `Miners are at <b>${mult}</b>, under 5×, so they get the max.`;
     };
     bal.value = toP(E.volPerGpu);
     paintBal();

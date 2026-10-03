@@ -721,40 +721,49 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 }
 @media (max-width: 560px) {
   .lv-cards, .dev-cards { grid-template-columns: minmax(0, 1fr); }
-  .lv-card { grid-template-columns: auto 1fr; column-gap: 12px; }
-  .lv-card .lv-name, .lv-card .lv-x { grid-column: span 1; }
-  .lv-card .lv-req { grid-column: 1 / -1; }
 }
 .xpanels { min-height: 72vh; }
 .bar-row:nth-child(1) .track i.chest { background: var(--l1); }
 .bar-row:nth-child(2) .track i.chest { background: var(--l2); }
 .bar-row:nth-child(3) .track i.chest { background: var(--l3); }
 
-/* Earnings: mine and hold together */
-.both { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 16px; padding: 18px 20px; border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--lv) 45%, var(--line-2)); background: color-mix(in srgb, var(--lv) 7%, var(--panel)); }
-.both h3 { font-size: 1.25rem; }
-.both h3 b { color: var(--lv); }
-.both p { margin-top: 6px; color: var(--muted); font-size: .92rem; max-width: 560px; }
-.both-sum { display: flex; align-items: center; gap: 10px; font: 600 1rem/1 var(--font-mono); color: var(--text); }
-.both-sum i { font-style: normal; color: var(--dim); }
-.both-sum span small { display: block; margin-top: 4px; font: 500 .74rem/1 var(--font-body); color: var(--dim); }
-
 /* How it works: the self-balancing split */
 .balance { margin-bottom: 16px; }
-.bal-lede { color: var(--muted); max-width: 720px; }
-.bal-lede b { color: var(--text); }
-.bal-ends { display: flex; justify-content: space-between; font-size: .8rem; color: var(--dim); }
+.bal-ends { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .8rem; color: var(--dim); }
+.bal-ends output { font: 600 .9rem/1 var(--font-mono); color: var(--text); }
 .bal-bar { display: flex; height: 46px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); }
 .bal-bar i { display: flex; align-items: center; min-width: 0; overflow: hidden; white-space: nowrap; font: 700 .86rem/1 var(--font-display); color: var(--gold-ink); padding: 0 12px; transition: width .35s var(--ease); }
 .bal-bar .m { background: var(--gold); }
 .bal-bar .h { background: var(--gold-2); justify-content: flex-end; }
-.bal-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.bal-out div { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
-.bal-out span { display: block; font-size: .84rem; color: var(--muted); }
-.bal-out b { display: inline-block; margin-top: 6px; font: 800 1.7rem/1 var(--font-display); color: var(--gold); letter-spacing: -.02em; }
-.bal-out div + div b { color: var(--gold-2); }
-.bal-out small { margin-left: 6px; color: var(--dim); font-size: .84rem; }
-.bal-note { font-size: .9rem; color: var(--text); min-height: 1.5em; }
+.bal-note { font-size: 1rem; color: var(--muted); min-height: 1.5em; }
+.bal-note b { color: var(--gold); font-family: var(--font-display); font-weight: 800; }
+
+/* Earnings, compact (round 4) */
+.xhead-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px 20px; flex-wrap: wrap; max-width: none; margin-bottom: 20px; }
+.lv-auto { margin: 0; font-size: .86rem; }
+.lv-card { gap: 10px; padding: 14px 16px; }
+.lv-top { display: flex; justify-content: space-between; align-items: baseline; }
+.lv-card .lv-name { font-size: 1rem; }
+.lv-card .lv-x { font-size: 1.6rem; color: var(--c); }
+.lv-req { font-size: .9rem; color: var(--text); }
+.lv-req i { min-width: 46px; font-family: var(--font-display); font-size: .74rem; }
+.earn-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+.ecard { gap: 12px; }
+.ecard h3 { font-size: 1rem; color: var(--muted); font-weight: 700; }
+.ecard .earn-big b { font-size: clamp(2.4rem, 3.6vw, 3.2rem); }
+.ecard .earn-big span { font-size: .95rem; }
+.sum-line { display: flex; gap: 16px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); }
+.sum-line b { color: var(--text); font-family: var(--font-mono); font-weight: 600; }
+.bag-row { grid-template-columns: minmax(0, 1fr); }
+.bag-quick button { flex: 1; min-height: 34px; }
+.ecard.both { background: color-mix(in srgb, var(--lv) 9%, var(--panel)); border-color: color-mix(in srgb, var(--lv) 40%, var(--line-2)); align-content: start; }
+.ecard.both h3 { color: var(--text); }
+.both-note { font-size: .9rem; color: var(--muted); }
+.flow3 > div { padding: 16px 18px; gap: 4px; }
+.flow3 h3 { font-size: .95rem; color: var(--muted); font-weight: 600; }
+@media (max-width: 960px) {
+  .earn-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 </style>
 </head>
@@ -946,65 +955,58 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
       <!-- EARNINGS -->
       <div class="xpanel" id="earn" role="tabpanel" aria-labelledby="t-earn" tabindex="0">
         <div class="lvl-scope" id="earn-scope" data-level="1">
-          <div class="xhead">
+          <div class="xhead xhead-row">
             <h2>What would your GPU make?</h2>
-            <p class="lede">Two ways to earn: mine, hold, or both. Your level sets how big your share is.</p>
+            <span class="lv-auto" id="lv-auto">Showing each level · tap one to pick</span>
           </div>
 
           <div class="lv-cards" id="lv-cards" role="radiogroup" aria-label="Level">
             <button type="button" class="lv-card" role="radio" data-lv="1" aria-checked="true">
-              <span class="lv-name">Level 1</span>
-              <b class="lv-x">1× share</b>
-              <span class="lv-req"><i>M1</i>Mine</span>
-              <span class="lv-req"><i>H1</i>Hold $50+</span>
+              <span class="lv-top"><span class="lv-name">Level 1</span><b class="lv-x">1×</b></span>
+              <span class="lv-req"><i>Mine</i>Any day</span>
+              <span class="lv-req"><i>Hold</i>$50+</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="2" aria-checked="false">
-              <span class="lv-name">Level 2</span>
-              <b class="lv-x">2× share</b>
-              <span class="lv-req"><i>M2</i>Mine 2 of 7 days, hold $50+</span>
-              <span class="lv-req"><i>H2</i>Hold $500+ for a day</span>
+              <span class="lv-top"><span class="lv-name">Level 2</span><b class="lv-x">2×</b></span>
+              <span class="lv-req"><i>Mine</i>2 days a week</span>
+              <span class="lv-req"><i>Hold</i>$500+ for a day</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="3" aria-checked="false">
-              <span class="lv-name">Level 3</span>
-              <b class="lv-x">4× share</b>
-              <span class="lv-req"><i>M3</i>Mine 5 of 7 days, hold $500+</span>
-              <span class="lv-req"><i>H3</i>Hold $2,500+ for 3 days</span>
+              <span class="lv-top"><span class="lv-name">Level 3</span><b class="lv-x">4×</b></span>
+              <span class="lv-req"><i>Mine</i>5 days a week</span>
+              <span class="lv-req"><i>Hold</i>$2,500+ for 3 days</span>
             </button>
           </div>
-          <p class="lv-key"><b>M</b> is your miner level: how often you mine. <b>H</b> is your holder level: how much you hold, and how long. <span class="lv-auto" id="lv-auto">Showing each level. Tap one to pick.</span></p>
 
           <div class="earn-grid">
             <div class="ecard">
-              <div class="ecard-head"><h3>If you mine</h3><span class="lv-pill" data-pill="M">M1</span></div>
+              <h3>Mining</h3>
               <label class="sr-only" for="earn-gpu">Your GPU</label>
               <select class="select" id="earn-gpu"></select>
-              <div class="earn-big"><b id="earn-day">—</b><span>a day</span></div>
+              <div class="earn-big"><b id="earn-day">—</b><span>/day</span></div>
               <div class="stack-bar" aria-hidden="true"><i class="mined" id="sb-mined"></i><i class="tax" id="sb-tax"></i></div>
-              <dl class="sum">
-                <div><dt><i class="sw mined"></i>Your GPU mines</dt><dd id="earn-mine">—</dd></div>
-                <div><dt><i class="sw tax"></i>Plus your miner bonus</dt><dd id="earn-cut">—</dd></div>
-              </dl>
-              <p class="esub" id="earn-sub"></p>
+              <p class="sum-line"><span><i class="sw mined"></i><b id="earn-mine">—</b> mined</span><span><i class="sw tax"></i><b id="earn-cut">—</b> bonus</span></p>
             </div>
             <div class="ecard">
-              <div class="ecard-head"><h3>If you hold</h3><span class="lv-pill" data-pill="H">H1</span></div>
+              <h3>Holding</h3>
               <div class="bag-row">
                 <label class="sr-only" for="bag">Your bag in USD</label>
                 <span class="bag-input"><span>$</span><input class="input mono" id="bag" type="number" min="0" step="50" value="2500" inputmode="decimal"></span>
                 <div class="bag-quick" id="bag-quick">
-                  <button type="button" data-bag="50">$50</button><button type="button" data-bag="500">$500</button><button type="button" data-bag="2500">$2.5K</button><button type="button" data-bag="10000">$10K</button>
+                  <button type="button" data-bag="500">$500</button><button type="button" data-bag="2500">$2.5K</button><button type="button" data-bag="10000">$10K</button>
                 </div>
               </div>
-              <div class="earn-big"><b id="hold-day">—</b><span>a day</span></div>
-              <p class="esub" id="hold-sub"></p>
+              <div class="earn-big"><b id="hold-day">—</b><span>/day</span></div>
+              <p class="sum-line" id="hold-sub"></p>
               <div id="hold-flag"></div>
             </div>
+            <div class="ecard both">
+              <h3>Both</h3>
+              <div class="earn-big"><b id="both-day">—</b><span>/day</span></div>
+              <p class="both-note">The $HASH you mine counts as your bag, so it earns holder rewards too.</p>
+            </div>
           </div>
-          <div class="both">
-            <div><h3>Mine and hold: <b id="both-day">—</b> a day</h3><p>The $HASH you mine lands in your wallet and counts as your bag, so it earns holder rewards while you keep mining.</p></div>
-            <div class="both-sum"><span id="both-mine">—</span><i>+</i><span id="both-hold">—</span></div>
-          </div>
-          <p class="xfoot">Estimate at launch-week trading. Not a promise. <a href="#math">See the math</a> · <a href="calculator.html">Full calculator</a></p>
+          <p class="xfoot">Estimate at launch-week trading, not a promise. <a href="#math">The math</a> · <a href="calculator.html">Full calculator</a></p>
         </div>
       </div>
 
@@ -1012,57 +1014,57 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
       <div class="xpanel" id="how" role="tabpanel" aria-labelledby="t-how" tabindex="0" hidden>
         <div class="xhead">
           <h2>Where the extra pay comes from.</h2>
-          <p class="lede">Every $HASH trade pays a 5% tax. It's built into the token, so it can't be dodged.</p>
+          <p class="lede">5% of every trade, built into the token.</p>
         </div>
         <div class="flow3">
-          <div><span class="n">5%</span><h3>Every trade</h3><p>Buys, sells and transfers, on every DEX.</p></div>
-          <div><span class="n gold">up to 3.5%</span><h3>Miner bonus</h3><p>Paid on top of what your GPU mines.</p></div>
-          <div><span class="n gold2">at least 1%</span><h3>Holder rewards</h3><p>Paid on your bag, mined $HASH included.</p></div>
+          <div><span class="n">5%</span><h3>tax on every trade</h3></div>
+          <div><span class="n gold">up to 3.5%</span><h3>Miner bonus</h3></div>
+          <div><span class="n gold2">1%+</span><h3>Holder rewards</h3></div>
         </div>
 
         <div class="panel balance" id="balance">
-          <div class="panel-head"><span>The split balances itself</span><span class="tag">Same formula on-chain</span></div>
+          <div class="panel-head"><span>The split balances itself</span><span class="tag">Miners are topped up to 5×. Holders get the rest.</span></div>
           <div class="panel-body">
-            <p class="bal-lede">Miners are topped up until they earn <b>5× what their GPU mines</b>. Past that, every extra dollar goes to holders. Holders never get less than 1%.</p>
             <div class="range-row">
-              <div class="range-top"><label for="bal-vol">Trading volume</label><output id="bal-vol-o"></output></div>
+              <label class="sr-only" for="bal-vol">Trading volume</label>
               <input type="range" id="bal-vol" min="0" max="1000" step="1">
-              <div class="bal-ends"><span>Quiet day</span><span>Busy day</span></div>
+              <div class="bal-ends"><span>Quiet day</span><output id="bal-vol-o"></output><span>Busy day</span></div>
             </div>
             <div class="bal-bar" aria-hidden="true"><i class="m" id="bal-m"><span id="bal-m-t"></span></i><i class="h" id="bal-h"><span id="bal-h-t"></span></i></div>
-            <div class="bal-out">
-              <div><span>Miners earn</span><b id="bal-mult">—</b><small>their mining</small></div>
-              <div><span>Holders get</span><b id="bal-hold">—</b><small>of all volume</small></div>
-            </div>
             <p class="bal-note" id="bal-note"></p>
           </div>
         </div>
 
-        <div class="panel" aria-describedby="sim-note">
-          <div class="panel-head">
-            <span class="live-dot">Tax pot</span>
-            <span class="sim-controls"><span class="tag gold">Simulation · sped up</span><button type="button" id="sim-toggle">Pause</button></span>
-          </div>
-          <div class="sim-grid">
-            <div class="sim-col">
-              <h3><span>Trades</span><span>4.5% to the pot</span></h3>
-              <ol class="feed" id="sim-trades" aria-hidden="true"></ol>
-            </div>
-            <div class="sim-chest" id="sim-chest">
-              <span class="label">In the pot</span>
-              <b id="sim-amount">$0.00</b>
-              <div>
-                <div class="sim-bar"><i id="sim-prog"></i></div>
-                <small id="sim-next">Next split soon</small>
+        <details class="more">
+          <summary>Watch the tax pot (simulation)</summary>
+          <div class="more-body">
+            <div class="panel" aria-describedby="sim-note">
+              <div class="panel-head">
+                <span class="live-dot">Tax pot</span>
+                <span class="sim-controls"><span class="tag gold">Sped up</span><button type="button" id="sim-toggle">Pause</button></span>
               </div>
-            </div>
-            <div class="sim-col">
-              <h3><span>Payouts</span><span>Cut</span></h3>
-              <ol class="feed pay" id="sim-pay" aria-hidden="true"></ol>
+              <div class="sim-grid">
+                <div class="sim-col">
+                  <h3><span>Trades</span><span>To the pot</span></h3>
+                  <ol class="feed" id="sim-trades" aria-hidden="true"></ol>
+                </div>
+                <div class="sim-chest" id="sim-chest">
+                  <span class="label">In the pot</span>
+                  <b id="sim-amount">$0.00</b>
+                  <div>
+                    <div class="sim-bar"><i id="sim-prog"></i></div>
+                    <small id="sim-next">Next split soon</small>
+                  </div>
+                </div>
+                <div class="sim-col">
+                  <h3><span>Payouts</span><span>Cut</span></h3>
+                  <ol class="feed pay" id="sim-pay" aria-hidden="true"></ol>
+                </div>
+              </div>
+              <p class="panel-foot" id="sim-note">Simulated. The real feed with Solscan links starts at launch.</p>
             </div>
           </div>
-          <p class="panel-foot" id="sim-note">Simulated trades. The real feed with Solscan links starts at launch. 0.5% of each trade funds development.</p>
-        </div>
+        </details>
 
         <details class="more" id="math">
           <summary>Show the math behind the estimate</summary>
@@ -2158,23 +2160,18 @@ window.HashModel = (function () {
     tween($("#earn-cut"), r.chestShare, (v) => "+" + money(v));
     $("#sb-mined").style.width = (100 * r.mining) / top + "%";
     $("#sb-tax").style.width = (100 * r.chestShare) / top + "%";
-    $("[data-pill=M]").textContent = "M" + L;
-    $("#earn-sub").innerHTML = `<b>${F.mult(r.mult)}</b> what the ${g.name} mines on its own. Paid in $HASH every 10 minutes.${g.est ? " Laptop figure estimated from desktop data." : ""}`;
 
     // If you hold
     const maxH = M.holderLevelFor(S.bag);
     const hl = Math.min(L, maxH);
     const h = M.holder(S.bag, hl);
     tween($("#hold-day"), h.perDay, money);
-    $("[data-pill=H]").textContent = hl ? "H" + hl : "H–";
-    $("#hold-sub").innerHTML = hl ? `<b>${h.yieldPct.toFixed(2)}%</b> of your bag a day. Paid in $HASH.` : "Hold $50 or more to earn.";
+    $("#hold-sub").innerHTML = hl ? `<b>${h.yieldPct.toFixed(2)}%</b> of your bag a day` : "Hold $50+ to earn";
     $("#hold-flag").innerHTML = maxH && L > maxH
-      ? `<p class="flag">Level ${L} needs a ${whole(M.HOLDER.usd[L - 1])} bag. Yours counts as Level ${maxH}.</p>` : "";
+      ? `<p class="flag">Level ${L} needs ${whole(M.HOLDER.usd[L - 1])}+. Shown at Level ${maxH}.</p>` : "";
 
     // Mine and hold: mined $HASH is part of the bag, so both payouts add up.
     tween($("#both-day"), r.total + h.perDay, money);
-    $("#both-mine").innerHTML = `${money(r.total)}<small>mining at M${L}</small>`;
-    $("#both-hold").innerHTML = `${money(h.perDay)}<small>holder rewards${hl ? " at H" + hl : ""}</small>`;
 
     // Level tables
     [1, 2, 3].forEach((l) => {
@@ -2217,16 +2214,15 @@ window.HashModel = (function () {
       const mk = M.market({ volPerGpu: v });
       const pool = M.TAX - M.DEV;
       const m = mk.chestRate, ho = mk.holderRate;
-      $("#bal-vol-o").textContent = `${whole(v)} a day per GPU mining`;
+      $("#bal-vol-o").textContent = `${whole(v)} traded per GPU a day`;
       $("#bal-m").style.width = (100 * m) / pool + "%";
       $("#bal-h").style.width = (100 * ho) / pool + "%";
       $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(1)}%`;
       $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(1)}%`;
-      $("#bal-mult").textContent = F.mult(1 + mk.chestPerGpu / mk.avgRev);
-      $("#bal-hold").textContent = (100 * ho).toFixed(1) + "%";
-      $("#bal-note").textContent = mk.targetMet
-        ? "Busy: miners are already at 5×, so everything above that goes to holders."
-        : "Quiet: miners get the most they can (3.5%) to get as close to 5× as possible. Holders keep their 1% floor.";
+      const mult = F.mult(1 + mk.chestPerGpu / mk.avgRev);
+      $("#bal-note").innerHTML = mk.targetMet
+        ? `Miners are at <b>5×</b> their mining. The extra goes to holders.`
+        : `Miners are at <b>${mult}</b>, under 5×, so they get the max.`;
     };
     bal.value = toP(E.volPerGpu);
     paintBal();

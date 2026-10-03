@@ -204,65 +204,58 @@
       <!-- EARNINGS -->
       <div class="xpanel" id="earn" role="tabpanel" aria-labelledby="t-earn" tabindex="0">
         <div class="lvl-scope" id="earn-scope" data-level="1">
-          <div class="xhead">
+          <div class="xhead xhead-row">
             <h2>What would your GPU make?</h2>
-            <p class="lede">Two ways to earn: mine, hold, or both. Your level sets how big your share is.</p>
+            <span class="lv-auto" id="lv-auto">Showing each level · tap one to pick</span>
           </div>
 
           <div class="lv-cards" id="lv-cards" role="radiogroup" aria-label="Level">
             <button type="button" class="lv-card" role="radio" data-lv="1" aria-checked="true">
-              <span class="lv-name">Level 1</span>
-              <b class="lv-x">1× share</b>
-              <span class="lv-req"><i>M1</i>Mine</span>
-              <span class="lv-req"><i>H1</i>Hold $50+</span>
+              <span class="lv-top"><span class="lv-name">Level 1</span><b class="lv-x">1×</b></span>
+              <span class="lv-req"><i>Mine</i>Any day</span>
+              <span class="lv-req"><i>Hold</i>$50+</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="2" aria-checked="false">
-              <span class="lv-name">Level 2</span>
-              <b class="lv-x">2× share</b>
-              <span class="lv-req"><i>M2</i>Mine 2 of 7 days, hold $50+</span>
-              <span class="lv-req"><i>H2</i>Hold $500+ for a day</span>
+              <span class="lv-top"><span class="lv-name">Level 2</span><b class="lv-x">2×</b></span>
+              <span class="lv-req"><i>Mine</i>2 days a week</span>
+              <span class="lv-req"><i>Hold</i>$500+ for a day</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="3" aria-checked="false">
-              <span class="lv-name">Level 3</span>
-              <b class="lv-x">4× share</b>
-              <span class="lv-req"><i>M3</i>Mine 5 of 7 days, hold $500+</span>
-              <span class="lv-req"><i>H3</i>Hold $2,500+ for 3 days</span>
+              <span class="lv-top"><span class="lv-name">Level 3</span><b class="lv-x">4×</b></span>
+              <span class="lv-req"><i>Mine</i>5 days a week</span>
+              <span class="lv-req"><i>Hold</i>$2,500+ for 3 days</span>
             </button>
           </div>
-          <p class="lv-key"><b>M</b> is your miner level: how often you mine. <b>H</b> is your holder level: how much you hold, and how long. <span class="lv-auto" id="lv-auto">Showing each level. Tap one to pick.</span></p>
 
           <div class="earn-grid">
             <div class="ecard">
-              <div class="ecard-head"><h3>If you mine</h3><span class="lv-pill" data-pill="M">M1</span></div>
+              <h3>Mining</h3>
               <label class="sr-only" for="earn-gpu">Your GPU</label>
               <select class="select" id="earn-gpu"></select>
-              <div class="earn-big"><b id="earn-day">—</b><span>a day</span></div>
+              <div class="earn-big"><b id="earn-day">—</b><span>/day</span></div>
               <div class="stack-bar" aria-hidden="true"><i class="mined" id="sb-mined"></i><i class="tax" id="sb-tax"></i></div>
-              <dl class="sum">
-                <div><dt><i class="sw mined"></i>Your GPU mines</dt><dd id="earn-mine">—</dd></div>
-                <div><dt><i class="sw tax"></i>Plus your miner bonus</dt><dd id="earn-cut">—</dd></div>
-              </dl>
-              <p class="esub" id="earn-sub"></p>
+              <p class="sum-line"><span><i class="sw mined"></i><b id="earn-mine">—</b> mined</span><span><i class="sw tax"></i><b id="earn-cut">—</b> bonus</span></p>
             </div>
             <div class="ecard">
-              <div class="ecard-head"><h3>If you hold</h3><span class="lv-pill" data-pill="H">H1</span></div>
+              <h3>Holding</h3>
               <div class="bag-row">
                 <label class="sr-only" for="bag">Your bag in USD</label>
                 <span class="bag-input"><span>$</span><input class="input mono" id="bag" type="number" min="0" step="50" value="2500" inputmode="decimal"></span>
                 <div class="bag-quick" id="bag-quick">
-                  <button type="button" data-bag="50">$50</button><button type="button" data-bag="500">$500</button><button type="button" data-bag="2500">$2.5K</button><button type="button" data-bag="10000">$10K</button>
+                  <button type="button" data-bag="500">$500</button><button type="button" data-bag="2500">$2.5K</button><button type="button" data-bag="10000">$10K</button>
                 </div>
               </div>
-              <div class="earn-big"><b id="hold-day">—</b><span>a day</span></div>
-              <p class="esub" id="hold-sub"></p>
+              <div class="earn-big"><b id="hold-day">—</b><span>/day</span></div>
+              <p class="sum-line" id="hold-sub"></p>
               <div id="hold-flag"></div>
             </div>
+            <div class="ecard both">
+              <h3>Both</h3>
+              <div class="earn-big"><b id="both-day">—</b><span>/day</span></div>
+              <p class="both-note">The $HASH you mine counts as your bag, so it earns holder rewards too.</p>
+            </div>
           </div>
-          <div class="both">
-            <div><h3>Mine and hold: <b id="both-day">—</b> a day</h3><p>The $HASH you mine lands in your wallet and counts as your bag, so it earns holder rewards while you keep mining.</p></div>
-            <div class="both-sum"><span id="both-mine">—</span><i>+</i><span id="both-hold">—</span></div>
-          </div>
-          <p class="xfoot">Estimate at launch-week trading. Not a promise. <a href="#math">See the math</a> · <a href="calculator.html">Full calculator</a></p>
+          <p class="xfoot">Estimate at launch-week trading, not a promise. <a href="#math">The math</a> · <a href="calculator.html">Full calculator</a></p>
         </div>
       </div>
 
@@ -270,57 +263,57 @@
       <div class="xpanel" id="how" role="tabpanel" aria-labelledby="t-how" tabindex="0" hidden>
         <div class="xhead">
           <h2>Where the extra pay comes from.</h2>
-          <p class="lede">Every $HASH trade pays a 5% tax. It's built into the token, so it can't be dodged.</p>
+          <p class="lede">5% of every trade, built into the token.</p>
         </div>
         <div class="flow3">
-          <div><span class="n">5%</span><h3>Every trade</h3><p>Buys, sells and transfers, on every DEX.</p></div>
-          <div><span class="n gold">up to 3.5%</span><h3>Miner bonus</h3><p>Paid on top of what your GPU mines.</p></div>
-          <div><span class="n gold2">at least 1%</span><h3>Holder rewards</h3><p>Paid on your bag, mined $HASH included.</p></div>
+          <div><span class="n">5%</span><h3>tax on every trade</h3></div>
+          <div><span class="n gold">up to 3.5%</span><h3>Miner bonus</h3></div>
+          <div><span class="n gold2">1%+</span><h3>Holder rewards</h3></div>
         </div>
 
         <div class="panel balance" id="balance">
-          <div class="panel-head"><span>The split balances itself</span><span class="tag">Same formula on-chain</span></div>
+          <div class="panel-head"><span>The split balances itself</span><span class="tag">Miners are topped up to 5×. Holders get the rest.</span></div>
           <div class="panel-body">
-            <p class="bal-lede">Miners are topped up until they earn <b>5× what their GPU mines</b>. Past that, every extra dollar goes to holders. Holders never get less than 1%.</p>
             <div class="range-row">
-              <div class="range-top"><label for="bal-vol">Trading volume</label><output id="bal-vol-o"></output></div>
+              <label class="sr-only" for="bal-vol">Trading volume</label>
               <input type="range" id="bal-vol" min="0" max="1000" step="1">
-              <div class="bal-ends"><span>Quiet day</span><span>Busy day</span></div>
+              <div class="bal-ends"><span>Quiet day</span><output id="bal-vol-o"></output><span>Busy day</span></div>
             </div>
             <div class="bal-bar" aria-hidden="true"><i class="m" id="bal-m"><span id="bal-m-t"></span></i><i class="h" id="bal-h"><span id="bal-h-t"></span></i></div>
-            <div class="bal-out">
-              <div><span>Miners earn</span><b id="bal-mult">—</b><small>their mining</small></div>
-              <div><span>Holders get</span><b id="bal-hold">—</b><small>of all volume</small></div>
-            </div>
             <p class="bal-note" id="bal-note"></p>
           </div>
         </div>
 
-        <div class="panel" aria-describedby="sim-note">
-          <div class="panel-head">
-            <span class="live-dot">Tax pot</span>
-            <span class="sim-controls"><span class="tag gold">Simulation · sped up</span><button type="button" id="sim-toggle">Pause</button></span>
-          </div>
-          <div class="sim-grid">
-            <div class="sim-col">
-              <h3><span>Trades</span><span>4.5% to the pot</span></h3>
-              <ol class="feed" id="sim-trades" aria-hidden="true"></ol>
-            </div>
-            <div class="sim-chest" id="sim-chest">
-              <span class="label">In the pot</span>
-              <b id="sim-amount">$0.00</b>
-              <div>
-                <div class="sim-bar"><i id="sim-prog"></i></div>
-                <small id="sim-next">Next split soon</small>
+        <details class="more">
+          <summary>Watch the tax pot (simulation)</summary>
+          <div class="more-body">
+            <div class="panel" aria-describedby="sim-note">
+              <div class="panel-head">
+                <span class="live-dot">Tax pot</span>
+                <span class="sim-controls"><span class="tag gold">Sped up</span><button type="button" id="sim-toggle">Pause</button></span>
               </div>
-            </div>
-            <div class="sim-col">
-              <h3><span>Payouts</span><span>Cut</span></h3>
-              <ol class="feed pay" id="sim-pay" aria-hidden="true"></ol>
+              <div class="sim-grid">
+                <div class="sim-col">
+                  <h3><span>Trades</span><span>To the pot</span></h3>
+                  <ol class="feed" id="sim-trades" aria-hidden="true"></ol>
+                </div>
+                <div class="sim-chest" id="sim-chest">
+                  <span class="label">In the pot</span>
+                  <b id="sim-amount">$0.00</b>
+                  <div>
+                    <div class="sim-bar"><i id="sim-prog"></i></div>
+                    <small id="sim-next">Next split soon</small>
+                  </div>
+                </div>
+                <div class="sim-col">
+                  <h3><span>Payouts</span><span>Cut</span></h3>
+                  <ol class="feed pay" id="sim-pay" aria-hidden="true"></ol>
+                </div>
+              </div>
+              <p class="panel-foot" id="sim-note">Simulated. The real feed with Solscan links starts at launch.</p>
             </div>
           </div>
-          <p class="panel-foot" id="sim-note">Simulated trades. The real feed with Solscan links starts at launch. 0.5% of each trade funds development.</p>
-        </div>
+        </details>
 
         <details class="more" id="math">
           <summary>Show the math behind the estimate</summary>
