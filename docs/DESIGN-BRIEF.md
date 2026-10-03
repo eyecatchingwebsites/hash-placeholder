@@ -57,7 +57,7 @@ Tone: calm, precise, a little dry, like a premium hardware launch. Humor sits in
 Next.js (or Astro) on Vercel, Three.js via react-three-fiber, GSAP ScrollTrigger + Lenis for scroll, drei helpers. Models as compressed `.glb` (Draco/meshopt) with a load budget of about 3 MB on desktop and about 1.2 MB on mobile. Track Lighthouse performance from the start.
 
 ## Copy rules
-- No return promises, no rising price charts, no "number go up" imagery. The cycle shows the **mechanism**: the buying and the chest filling.
+- No return promises ("pays for itself", "free", "guaranteed"). Price charts are fine (user, Oct 3); the cycle shows the **mechanism**: the buying and the chest filling.
 - Live numbers only from real data. Before launch, show "—" or label things clearly as a preview.
 - The contract address appears only on the site, at launch.
 

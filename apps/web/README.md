@@ -56,7 +56,7 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 ## Copy rules
 
 From `CLAUDE.md` and `docs/DESIGN-BRIEF.md`:
-- Never promise returns. Avoid "pays for itself", "free", "guaranteed" and rising price charts.
+- Never promise returns. Avoid "pays for itself", "free" and "guaranteed". Price charts are fine (the user never ruled them out).
 - Show one estimate, based on daily volume per GPU mining ($750 by default, launch-week trading), labeled "Estimate, not a promise". The math is on the home page (`#math`, inside How it works).
 - Tax wording: 5% tax; 0.5% development; up to 3.5% to miners (what reaches 5× their mining); at least 1% to holders. Levels are M1–M3 and H1–H3; always explain them in plain words before using the codes. Level colors: 1 mint, 2 violet, 3 gold.
 - Audience wording: "your GPU" / "any PC with a graphics card" (gaming PCs, laptops, AI rigs, editing and render workstations), not just "gaming PC". Keep copy to a line or two per block.
