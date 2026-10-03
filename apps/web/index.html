@@ -93,11 +93,86 @@
       </div>
 
       <div class="hero-ring">
-        <div class="cycle" id="cycle" role="img" aria-label="The Hashcoin loop: 1, press Start on any PC with a graphics card. 2, your GPU mines. 3, what it mines buys $HASH on the market, a steady buy inflow into the coin. 4, the $HASH is paid to your wallet every 10 minutes, where it also earns holder rewards. 5, every $HASH trade pays a 5% tax, paid out on top as a miner bonus and holder rewards. Then it repeats.">
+        <div class="fly-switch" role="tablist" aria-label="Two flywheels">
+          <button type="button" role="tab" id="fw-coin-tab" aria-controls="fw-coin" aria-selected="true"><span class="fw-n">1</span>The coin flywheel</button>
+          <button type="button" role="tab" id="fw-bag-tab" aria-controls="fw-bag" aria-selected="false" tabindex="-1"><span class="fw-n">2</span>Your bag flywheel</button>
+        </div>
+
+        <!-- Flywheel 1: how miners and the tax drive the coin -->
+        <div class="cycle" id="fw-coin" role="tabpanel" aria-labelledby="fw-coin-tab">
+          <p class="sr-only">The coin flywheel: 1, miners' earnings are market buys of $HASH. 2, holders hold to level up, so less is sold. 3, every trade pays a 5% tax. 4, the split balances itself: miners are topped up to 5 times their mining, holders get the rest. 5, bigger rewards bring more miners and holders, which means more buying. Then it repeats.</p>
           <svg class="cycle-svg" aria-hidden="true" focusable="false"></svg>
 
-          <article class="st" data-st="0">
-            <div class="art art-pc" aria-hidden="true">
+          <article class="st" data-st="0" aria-hidden="true">
+            <div class="art art-minebuy">
+              <div class="gpu mini"><svg class="fan" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 20c0-8 6-14 10-12-3 2-5 7-10 12zM20 20c8 0 14 6 12 10-2-3-7-5-12-10zM20 20c0 8-6 14-10 12 3-2 5-7 10-12zM20 20c-8 0-14-6-12-10 2 3 7 5 12 10z" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="#0B0C0D"/></svg></div>
+              <span class="arrow">→</span>
+              <div class="buys"><span>BUY</span><span>BUY</span><span>BUY</span></div>
+            </div>
+            <div class="st-text"><span class="st-n">1</span><h3>Miners buy in</h3><p>Every miner's earnings are market buys of $HASH.</p></div>
+          </article>
+
+          <article class="st" data-st="1" aria-hidden="true">
+            <div class="art art-hold">
+              <div class="wallet">
+                <span class="w-label">Hold clock <span class="w-levels"><span class="l1">H1</span><span class="l2">H2</span><span class="l3">H3</span></span></span>
+                <div class="w-clock"><i></i></div>
+                <small>Selling shrinks it</small>
+              </div>
+            </div>
+            <div class="st-text"><span class="st-n">2</span><h3>Holders hold</h3><p>Levels reward holding, so less gets sold.</p></div>
+          </article>
+
+          <article class="st" data-st="2" aria-hidden="true">
+            <div class="art art-trades">
+              <div class="tape-win">
+                <ul class="tape">
+                    <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
+                    <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
+                    <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
+                </ul>
+              </div>
+            </div>
+            <div class="st-text"><span class="st-n">3</span><h3>Every trade pays 5%</h3><p>Buys, sells and transfers, on every DEX.</p></div>
+          </article>
+
+          <article class="st" data-st="3" aria-hidden="true">
+            <div class="art art-split">
+              <div class="sp-labels"><span>Miners</span><span>Holders</span></div>
+              <div class="sp-bar"><i class="m"></i><i class="h"></i></div>
+              <div class="sp-labels dim"><span>Topped up to 5×</span><span>The rest, 1%+</span></div>
+            </div>
+            <div class="st-text"><span class="st-n">4</span><h3>The split balances</h3><p>Miners topped up to 5×, holders get the rest.</p></div>
+          </article>
+
+          <article class="st" data-st="4" aria-hidden="true">
+            <div class="art art-join">
+              <div class="j-row"><span>GPUs mining</span><b data-count="1240,1318">1,240</b></div>
+              <div class="j-row"><span>Holders</span><b data-count="3410,3566">3,410</b></div>
+            </div>
+            <div class="st-text"><span class="st-n">5</span><h3>More people join</h3><p>Bigger rewards bring more miners and holders.</p></div>
+          </article>
+
+          <div class="cycle-core" aria-hidden="true">
+            <img src="brand/logo/hashcoin-mark.svg" alt="" width="200" height="200">
+          </div>
+          <span class="spoke-tag" data-spoke="0" aria-hidden="true">Buy inflow</span>
+          <span class="spoke-tag" data-spoke="2" aria-hidden="true">5% tax</span>
+          <span class="spoke-tag" data-spoke="4" aria-hidden="true">Rewards</span>
+        </div>
+
+        <!-- Flywheel 2: your bag compounding across levels -->
+        <div class="cycle bag" id="fw-bag" role="tabpanel" aria-labelledby="fw-bag-tab" hidden>
+          <p class="sr-only">Your bag flywheel: 1, your GPU mines. 2, the $HASH lands in your wallet and your bag grows. 3, a bigger bag levels you up. 4, a higher level gets a bigger share: 1, 2 or 4 times. 5, you earn the miner bonus and holder rewards on the same bag. Then it repeats at the next level.</p>
+          <svg class="cycle-svg" aria-hidden="true" focusable="false"></svg>
+
+          <article class="st" data-st="0" aria-hidden="true">
+            <div class="art art-pc">
               <div class="mon">
                 <div class="scr">
                   <span class="scr-top"><i></i>Hashcoin</span>
@@ -108,69 +183,52 @@
               <div class="stand"></div>
               <svg class="cursor" viewBox="0 0 16 20"><path d="M1 1l13 9-6 1 3 7-3 1-3-7-4 4z" fill="#F3F1EC" stroke="#0B0C0D" stroke-width="1.2" stroke-linejoin="round"/></svg>
             </div>
-            <div class="st-text"><span class="st-n">1</span><h3>Press Start</h3><p>One click on any PC with a graphics card.</p></div>
+            <div class="st-text"><span class="st-n">1</span><h3>You mine</h3><p>Press Start on any PC with a GPU.</p></div>
           </article>
 
-          <article class="st" data-st="1">
-            <div class="art art-gpu" aria-hidden="true">
-              <div class="gpu">
-                <svg class="fan" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 20c0-8 6-14 10-12-3 2-5 7-10 12zM20 20c8 0 14 6 12 10-2-3-7-5-12-10zM20 20c0 8-6 14-10 12 3-2 5-7 10-12zM20 20c-8 0-14-6-12-10 2 3 7 5 12 10z" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="#0B0C0D"/></svg>
-                <svg class="fan" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 20c0-8 6-14 10-12-3 2-5 7-10 12zM20 20c8 0 14 6 12 10-2-3-7-5-12-10zM20 20c0 8-6 14-10 12 3-2 5-7 10-12zM20 20c-8 0-14-6-12-10 2 3 7 5 12 10z" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="#0B0C0D"/></svg>
-              </div>
-              <span class="chip c1">PRL</span><span class="chip c2">QTC</span><span class="chip c3">QUAN</span>
-            </div>
-            <div class="st-text"><span class="st-n">2</span><h3>Your GPU mines</h3><p>On spare power, whichever coin pays most.</p></div>
-          </article>
-
-          <article class="st" data-st="2">
-            <div class="art art-buy" aria-hidden="true">
-              <svg class="chart" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M2 34 L18 30 L30 32 L44 24 L58 26 L72 18 L86 20 L100 10 L118 6"/></svg>
-              <div class="ticket">
-                <div class="t-row"><span class="side">BUY</span><b class="mono gold">+203 $HASH</b></div>
-              </div>
-            </div>
-            <div class="st-text"><span class="st-n">3</span><h3>It buys $HASH</h3><p>Every miner's earnings become market buys.</p></div>
-          </article>
-
-          <article class="st" data-st="3">
-            <div class="art art-wallet" aria-hidden="true">
+          <article class="st" data-st="1" aria-hidden="true">
+            <div class="art art-wallet">
               <div class="wallet">
-                <span class="w-label">Your wallet <span class="w-levels"><span class="l1 on">H1</span><span class="l2 on">H2</span><span class="l3">H3</span></span></span>
-                <b class="w-bal mono" data-bal>12,840 $HASH</b>
-                <span class="w-in w-mine"><span>From mining</span><b>+203</b></span>
-                <span class="w-in w-hold"><span>Holder reward</span><b>+14</b></span>
+                <span class="w-label">Your bag</span>
+                <b class="w-bal mono" data-bal>4,200 $HASH</b>
+                <span class="w-in w-mine"><span>From mining</span><b data-bal-add>+203</b></span>
               </div>
             </div>
-            <div class="st-text"><span class="st-n">4</span><h3>Paid to your wallet</h3><p>Mined $HASH earns holder rewards too.</p></div>
+            <div class="st-text"><span class="st-n">2</span><h3>Your bag grows</h3><p>Every 10 minutes, straight to your wallet.</p></div>
           </article>
 
-          <article class="st" data-st="4">
-            <div class="art art-trades" aria-hidden="true">
-              <div class="tape-win">
-                <ul class="tape">
-                  <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
-                  <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
-                  <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
-                </ul>
-              </div>
-              <div class="tax-split"><span>+ Miner bonus</span><span>+ Holder rewards</span></div>
+          <article class="st" data-st="2" aria-hidden="true">
+            <div class="art art-level">
+              <div class="lv-steps"><span class="l1">Level 1</span><span class="l2">Level 2</span><span class="l3">Level 3</span></div>
+              <div class="lv-track"><i></i></div>
             </div>
-            <div class="st-text"><span class="st-n">5</span><h3>Trades pay you extra</h3><p>5% of every trade goes to miners and holders.</p></div>
+            <div class="st-text"><span class="st-n">3</span><h3>You level up</h3><p>A bigger bag, held longer, unlocks the next level.</p></div>
           </article>
 
-          <div class="cycle-core" aria-hidden="true">
+          <article class="st" data-st="3" aria-hidden="true">
+            <div class="art art-mult">
+              <b class="mult" data-mult>1×</b><span>share of the rewards</span>
+            </div>
+            <div class="st-text"><span class="st-n">4</span><h3>Bigger share</h3><p>Level 2 gets 2×, Level 3 gets 4×.</p></div>
+          </article>
+
+          <article class="st" data-st="4" aria-hidden="true">
+            <div class="art art-both">
+              <span class="b-row"><span>+ Miner bonus</span><b>on your GPU</b></span>
+              <span class="b-row"><span>+ Holder rewards</span><b>on your bag</b></span>
+            </div>
+            <div class="st-text"><span class="st-n">5</span><h3>Earn on both</h3><p>Same bag, both rewards, then around again.</p></div>
+          </article>
+
+          <div class="cycle-core bag-core" aria-hidden="true">
             <img src="brand/logo/hashcoin-mark.svg" alt="" width="200" height="200">
+            <span class="core-lvl" data-core-lvl>Level 1</span>
           </div>
-          <span class="spoke-tag" data-spoke="2">Buy inflow</span>
-          <span class="spoke-tag" data-spoke="4">5% tax</span>
-          <span class="spoke-tag" data-spoke="0">Miner bonus</span>
-          <span class="spoke-tag" data-spoke="3">Holder rewards</span>
+          <span class="spoke-tag" data-spoke="0" aria-hidden="true">Mined $HASH</span>
+          <span class="spoke-tag" data-spoke="2" aria-hidden="true">Level up</span>
+          <span class="spoke-tag" data-spoke="4" aria-hidden="true">Both rewards</span>
         </div>
+
         <div class="cycle-bar">
           <p id="cycle-caption" class="cycle-caption" aria-live="off"></p>
           <div class="cycle-controls">

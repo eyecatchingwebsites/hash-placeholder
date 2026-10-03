@@ -747,3 +747,108 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 @media (max-width: 960px) {
   .earn-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- Two flywheels (hero) ---------- */
+.fly-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+.fly-switch button { display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px 10px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel); color: var(--muted); font: 700 clamp(.92rem, calc(.25vw + .65rem), 1.1rem)/1 var(--font-display); cursor: pointer; transition: background .3s, color .3s, border-color .3s; }
+.fly-switch button:hover { color: var(--text); border-color: var(--gold-line); }
+.fly-switch .fw-n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold-line); color: var(--gold); font-size: .82rem; }
+.fly-switch button[aria-selected="true"] { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.fly-switch button[aria-selected="true"] .fw-n { background: var(--gold-ink); border-color: var(--gold-ink); color: var(--gold); }
+.st.seen .art .buys span, .st.seen .art .w-levels span, .st.seen .art .lv-track i, .st.seen .art .lv-steps span, .st.seen .art .mult, .st.seen .art .b-row { animation-play-state: running !important; }
+
+/* Coin 1: miners' earnings become buys */
+.art-minebuy { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.art-minebuy .gpu.mini { display: flex; padding: 8px 10px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; color: var(--muted); }
+.art-minebuy .fan { width: 34px; height: 34px; }
+.st.on .art-minebuy .fan, .st.seen .art-minebuy .fan { animation: spinUp 1.2s cubic-bezier(.4, 0, .8, .6) both, spin .35s linear 1.2s infinite; }
+.st.on .art-minebuy .gpu { border-color: var(--gold-line); color: var(--text); }
+.art-minebuy .arrow { color: var(--gold); font: 700 1.1rem/1 var(--font-display); }
+.art-minebuy .buys { display: grid; gap: 4px; }
+.art-minebuy .buys span { font: 800 .6rem/1 var(--font-mono); color: var(--gold-ink); background: var(--gold); padding: 3px 8px; border-radius: 3px; opacity: 0; }
+.st.on .art-minebuy .buys span, .st.seen .art-minebuy .buys span { animation: rise .4s var(--ease) .7s both; }
+.st.on .art-minebuy .buys span:nth-child(2), .st.seen .art-minebuy .buys span:nth-child(2) { animation-delay: 1.1s; }
+.st.on .art-minebuy .buys span:nth-child(3), .st.seen .art-minebuy .buys span:nth-child(3) { animation-delay: 1.5s; }
+.cycle.static .art-minebuy .buys span { opacity: 1; }
+
+/* Coin 2: hold clock fills, levels light up */
+.art-hold .wallet { width: min(184px, 90%); display: grid; gap: 7px; padding: 9px 11px; border: 1px solid var(--line-2); border-radius: 6px; background: #0E1013; }
+.art-hold .w-label { display: flex; justify-content: space-between; align-items: center; font: 600 .62rem/1 var(--font-mono); color: var(--dim); }
+.art-hold .w-levels { display: flex; gap: 3px; }
+.art-hold .w-levels span { font: 700 .56rem/1 var(--font-mono); padding: 2px 4px; border-radius: 3px; border: 1px solid var(--line-2); color: var(--dim); }
+.art-hold .w-clock { height: 5px; border-radius: 3px; background: var(--line-2); overflow: hidden; }
+.art-hold .w-clock i { display: block; height: 100%; width: 12%; background: var(--l3); }
+.art-hold small { font-size: .6rem; color: var(--dim); }
+.st.on .art-hold .w-clock i, .st.seen .art-hold .w-clock i { animation: holdClock 2.6s cubic-bezier(.4, 0, .2, 1) .3s both; }
+@keyframes holdClock { from { width: 12%; } to { width: 92%; } }
+.st.on .art-hold .w-levels span, .st.seen .art-hold .w-levels span { animation: lvOn .35s var(--ease) .4s both; }
+.st.on .art-hold .w-levels .l2, .st.seen .art-hold .w-levels .l2 { animation-delay: 1.4s; }
+.st.on .art-hold .w-levels .l3, .st.seen .art-hold .w-levels .l3 { animation-delay: 2.5s; }
+.cycle.static .art-hold .w-levels span { background: var(--c); border-color: var(--c); color: var(--gold-ink); }
+.cycle.static .art-hold .w-clock i { width: 92%; }
+@keyframes lvOn { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); background: var(--c); border-color: var(--c); color: var(--gold-ink); } }
+
+/* Coin 4: the split slides between miners and holders */
+.art-split { align-content: center; gap: 6px; padding: 0 12px; place-items: stretch; }
+.art-split .sp-labels { display: flex; justify-content: space-between; font: 700 .64rem/1 var(--font-display); color: var(--text); }
+.art-split .sp-labels.dim { font: 600 .56rem/1 var(--font-mono); color: var(--dim); }
+.art-split .sp-bar { display: flex; height: 16px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line-2); }
+.art-split .sp-bar .m { width: 70%; background: var(--gold); }
+.art-split .sp-bar .h { flex: 1; background: var(--gold-2); }
+.st.on .art-split .sp-bar .m, .st.seen .art-split .sp-bar .m { animation: slide 3.2s ease-in-out .3s infinite; }
+@keyframes slide { 0%, 100% { width: 72%; } 50% { width: 30%; } }
+
+/* Coin 5: more miners and holders */
+.art-join { align-content: center; gap: 8px; padding: 0 14px; place-items: stretch; }
+.art-join .j-row { display: flex; justify-content: space-between; align-items: baseline; font-size: .72rem; color: var(--muted); }
+.art-join .j-row b { font: 800 1.05rem/1 var(--font-display); color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* Bag 3: level steps */
+.art-level { align-content: center; gap: 10px; padding: 0 12px; place-items: stretch; }
+.art-level .lv-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.art-level .lv-steps span { text-align: center; font: 800 .62rem/1 var(--font-display); padding: 5px 0; border-radius: 4px; border: 1px solid var(--line-2); color: var(--dim); }
+.art-level .lv-track { height: 5px; border-radius: 3px; background: var(--line-2); overflow: hidden; }
+.art-level .lv-track i { display: block; height: 100%; width: var(--to, 0%); background: linear-gradient(90deg, var(--l1), var(--l2), var(--l3)); background-size: 300% 100%; }
+.st.on .art-level .lv-track i, .st.seen .art-level .lv-track i { animation: track 1.2s cubic-bezier(.4, 0, .2, 1) .2s both; }
+@keyframes track { from { width: var(--from, 0%); } to { width: var(--to, 0%); } }
+.art-level .l1 { background: var(--l1); border-color: var(--l1) !important; color: var(--gold-ink) !important; }
+.art-level[data-level="3"] .l2 { background: var(--l2); border-color: var(--l2); color: var(--gold-ink); }
+.st.on .art-level[data-level="2"] .l2, .st.seen .art-level[data-level="2"] .l2,
+.st.on .art-level[data-level="3"] .l3, .st.seen .art-level[data-level="3"] .l3 { animation: lvOn .45s var(--ease) 1.2s both; }
+.cycle.static .art-level .l2, .cycle.static .art-level .l3 { background: var(--c); border-color: var(--c); color: var(--gold-ink); }
+
+/* Bag 4: the multiplier */
+.art-mult { align-content: center; gap: 4px; }
+.art-mult .mult { font: 800 2.2rem/1 var(--font-display); letter-spacing: -.03em; color: var(--c, var(--l1)); }
+.art-mult[data-level="1"] { --c: var(--l1); } .art-mult[data-level="2"] { --c: var(--l2); } .art-mult[data-level="3"] { --c: var(--l3); }
+.art-mult span { font-size: .64rem; color: var(--muted); }
+.st.on .art-mult .mult, .st.seen .art-mult .mult { animation: multPop .6s var(--ease) .3s both; }
+@keyframes multPop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
+
+/* Bag 5: both rewards */
+.art-both { align-content: center; gap: 6px; padding: 0 12px; place-items: stretch; }
+.art-both .b-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; background: #0E1013; border: 1px solid var(--line-2); font: 700 .66rem/1 var(--font-display); color: var(--gold); opacity: 0; }
+.art-both .b-row + .b-row { color: var(--gold-2); }
+.art-both .b-row b { font: 500 .58rem/1 var(--font-body); color: var(--dim); }
+.st.on .art-both .b-row, .st.seen .art-both .b-row { animation: rise .45s var(--ease) .5s both; }
+.st.on .art-both .b-row + .b-row, .st.seen .art-both .b-row + .b-row { animation-delay: 1.1s; }
+.cycle.static .art-both .b-row { opacity: 1; }
+
+/* Bag center: coin with a level-colored ring */
+.bag-core { --lc: var(--l1); }
+.bag-core[data-level="2"] { --lc: var(--l2); }
+.bag-core[data-level="3"] { --lc: var(--l3); }
+.bag-core::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 4px solid var(--lc); box-shadow: 0 0 30px color-mix(in srgb, var(--lc) 40%, transparent); transition: border-color .8s var(--ease), box-shadow .8s var(--ease); }
+.bag-core .core-lvl { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%) scale(var(--s, 1)); padding: 5px 12px; border-radius: 999px; background: var(--lc); color: var(--gold-ink); font: 800 .8rem/1 var(--font-display); white-space: nowrap; transition: background .8s var(--ease); }
+.cycle.stack .bag-core .core-lvl { transform: translateX(-50%); }
+.art-both .b-row > span { white-space: nowrap; }
+.art-both .b-row b { white-space: nowrap; margin-left: 6px; }
+@media (max-width: 560px) {
+  .fly-switch button { padding: 8px 12px 8px 8px; font-size: .84rem; gap: 8px; text-align: left; }
+  .fly-switch .fw-n { width: 22px; height: 22px; flex: none; }
+}
+@media (min-width: 1180px) {
+  .cycle-bar { flex-wrap: nowrap; align-items: center; }
+  .cycle-caption { flex: 1 1 0; min-width: 0; }
+  .cycle-controls { flex: none; }
+}

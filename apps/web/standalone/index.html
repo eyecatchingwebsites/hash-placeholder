@@ -765,6 +765,111 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   .earn-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ---------- Two flywheels (hero) ---------- */
+.fly-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+.fly-switch button { display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px 10px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel); color: var(--muted); font: 700 clamp(.92rem, calc(.25vw + .65rem), 1.1rem)/1 var(--font-display); cursor: pointer; transition: background .3s, color .3s, border-color .3s; }
+.fly-switch button:hover { color: var(--text); border-color: var(--gold-line); }
+.fly-switch .fw-n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold-line); color: var(--gold); font-size: .82rem; }
+.fly-switch button[aria-selected="true"] { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.fly-switch button[aria-selected="true"] .fw-n { background: var(--gold-ink); border-color: var(--gold-ink); color: var(--gold); }
+.st.seen .art .buys span, .st.seen .art .w-levels span, .st.seen .art .lv-track i, .st.seen .art .lv-steps span, .st.seen .art .mult, .st.seen .art .b-row { animation-play-state: running !important; }
+
+/* Coin 1: miners' earnings become buys */
+.art-minebuy { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.art-minebuy .gpu.mini { display: flex; padding: 8px 10px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; color: var(--muted); }
+.art-minebuy .fan { width: 34px; height: 34px; }
+.st.on .art-minebuy .fan, .st.seen .art-minebuy .fan { animation: spinUp 1.2s cubic-bezier(.4, 0, .8, .6) both, spin .35s linear 1.2s infinite; }
+.st.on .art-minebuy .gpu { border-color: var(--gold-line); color: var(--text); }
+.art-minebuy .arrow { color: var(--gold); font: 700 1.1rem/1 var(--font-display); }
+.art-minebuy .buys { display: grid; gap: 4px; }
+.art-minebuy .buys span { font: 800 .6rem/1 var(--font-mono); color: var(--gold-ink); background: var(--gold); padding: 3px 8px; border-radius: 3px; opacity: 0; }
+.st.on .art-minebuy .buys span, .st.seen .art-minebuy .buys span { animation: rise .4s var(--ease) .7s both; }
+.st.on .art-minebuy .buys span:nth-child(2), .st.seen .art-minebuy .buys span:nth-child(2) { animation-delay: 1.1s; }
+.st.on .art-minebuy .buys span:nth-child(3), .st.seen .art-minebuy .buys span:nth-child(3) { animation-delay: 1.5s; }
+.cycle.static .art-minebuy .buys span { opacity: 1; }
+
+/* Coin 2: hold clock fills, levels light up */
+.art-hold .wallet { width: min(184px, 90%); display: grid; gap: 7px; padding: 9px 11px; border: 1px solid var(--line-2); border-radius: 6px; background: #0E1013; }
+.art-hold .w-label { display: flex; justify-content: space-between; align-items: center; font: 600 .62rem/1 var(--font-mono); color: var(--dim); }
+.art-hold .w-levels { display: flex; gap: 3px; }
+.art-hold .w-levels span { font: 700 .56rem/1 var(--font-mono); padding: 2px 4px; border-radius: 3px; border: 1px solid var(--line-2); color: var(--dim); }
+.art-hold .w-clock { height: 5px; border-radius: 3px; background: var(--line-2); overflow: hidden; }
+.art-hold .w-clock i { display: block; height: 100%; width: 12%; background: var(--l3); }
+.art-hold small { font-size: .6rem; color: var(--dim); }
+.st.on .art-hold .w-clock i, .st.seen .art-hold .w-clock i { animation: holdClock 2.6s cubic-bezier(.4, 0, .2, 1) .3s both; }
+@keyframes holdClock { from { width: 12%; } to { width: 92%; } }
+.st.on .art-hold .w-levels span, .st.seen .art-hold .w-levels span { animation: lvOn .35s var(--ease) .4s both; }
+.st.on .art-hold .w-levels .l2, .st.seen .art-hold .w-levels .l2 { animation-delay: 1.4s; }
+.st.on .art-hold .w-levels .l3, .st.seen .art-hold .w-levels .l3 { animation-delay: 2.5s; }
+.cycle.static .art-hold .w-levels span { background: var(--c); border-color: var(--c); color: var(--gold-ink); }
+.cycle.static .art-hold .w-clock i { width: 92%; }
+@keyframes lvOn { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); background: var(--c); border-color: var(--c); color: var(--gold-ink); } }
+
+/* Coin 4: the split slides between miners and holders */
+.art-split { align-content: center; gap: 6px; padding: 0 12px; place-items: stretch; }
+.art-split .sp-labels { display: flex; justify-content: space-between; font: 700 .64rem/1 var(--font-display); color: var(--text); }
+.art-split .sp-labels.dim { font: 600 .56rem/1 var(--font-mono); color: var(--dim); }
+.art-split .sp-bar { display: flex; height: 16px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line-2); }
+.art-split .sp-bar .m { width: 70%; background: var(--gold); }
+.art-split .sp-bar .h { flex: 1; background: var(--gold-2); }
+.st.on .art-split .sp-bar .m, .st.seen .art-split .sp-bar .m { animation: slide 3.2s ease-in-out .3s infinite; }
+@keyframes slide { 0%, 100% { width: 72%; } 50% { width: 30%; } }
+
+/* Coin 5: more miners and holders */
+.art-join { align-content: center; gap: 8px; padding: 0 14px; place-items: stretch; }
+.art-join .j-row { display: flex; justify-content: space-between; align-items: baseline; font-size: .72rem; color: var(--muted); }
+.art-join .j-row b { font: 800 1.05rem/1 var(--font-display); color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* Bag 3: level steps */
+.art-level { align-content: center; gap: 10px; padding: 0 12px; place-items: stretch; }
+.art-level .lv-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.art-level .lv-steps span { text-align: center; font: 800 .62rem/1 var(--font-display); padding: 5px 0; border-radius: 4px; border: 1px solid var(--line-2); color: var(--dim); }
+.art-level .lv-track { height: 5px; border-radius: 3px; background: var(--line-2); overflow: hidden; }
+.art-level .lv-track i { display: block; height: 100%; width: var(--to, 0%); background: linear-gradient(90deg, var(--l1), var(--l2), var(--l3)); background-size: 300% 100%; }
+.st.on .art-level .lv-track i, .st.seen .art-level .lv-track i { animation: track 1.2s cubic-bezier(.4, 0, .2, 1) .2s both; }
+@keyframes track { from { width: var(--from, 0%); } to { width: var(--to, 0%); } }
+.art-level .l1 { background: var(--l1); border-color: var(--l1) !important; color: var(--gold-ink) !important; }
+.art-level[data-level="3"] .l2 { background: var(--l2); border-color: var(--l2); color: var(--gold-ink); }
+.st.on .art-level[data-level="2"] .l2, .st.seen .art-level[data-level="2"] .l2,
+.st.on .art-level[data-level="3"] .l3, .st.seen .art-level[data-level="3"] .l3 { animation: lvOn .45s var(--ease) 1.2s both; }
+.cycle.static .art-level .l2, .cycle.static .art-level .l3 { background: var(--c); border-color: var(--c); color: var(--gold-ink); }
+
+/* Bag 4: the multiplier */
+.art-mult { align-content: center; gap: 4px; }
+.art-mult .mult { font: 800 2.2rem/1 var(--font-display); letter-spacing: -.03em; color: var(--c, var(--l1)); }
+.art-mult[data-level="1"] { --c: var(--l1); } .art-mult[data-level="2"] { --c: var(--l2); } .art-mult[data-level="3"] { --c: var(--l3); }
+.art-mult span { font-size: .64rem; color: var(--muted); }
+.st.on .art-mult .mult, .st.seen .art-mult .mult { animation: multPop .6s var(--ease) .3s both; }
+@keyframes multPop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
+
+/* Bag 5: both rewards */
+.art-both { align-content: center; gap: 6px; padding: 0 12px; place-items: stretch; }
+.art-both .b-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; background: #0E1013; border: 1px solid var(--line-2); font: 700 .66rem/1 var(--font-display); color: var(--gold); opacity: 0; }
+.art-both .b-row + .b-row { color: var(--gold-2); }
+.art-both .b-row b { font: 500 .58rem/1 var(--font-body); color: var(--dim); }
+.st.on .art-both .b-row, .st.seen .art-both .b-row { animation: rise .45s var(--ease) .5s both; }
+.st.on .art-both .b-row + .b-row, .st.seen .art-both .b-row + .b-row { animation-delay: 1.1s; }
+.cycle.static .art-both .b-row { opacity: 1; }
+
+/* Bag center: coin with a level-colored ring */
+.bag-core { --lc: var(--l1); }
+.bag-core[data-level="2"] { --lc: var(--l2); }
+.bag-core[data-level="3"] { --lc: var(--l3); }
+.bag-core::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 4px solid var(--lc); box-shadow: 0 0 30px color-mix(in srgb, var(--lc) 40%, transparent); transition: border-color .8s var(--ease), box-shadow .8s var(--ease); }
+.bag-core .core-lvl { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%) scale(var(--s, 1)); padding: 5px 12px; border-radius: 999px; background: var(--lc); color: var(--gold-ink); font: 800 .8rem/1 var(--font-display); white-space: nowrap; transition: background .8s var(--ease); }
+.cycle.stack .bag-core .core-lvl { transform: translateX(-50%); }
+.art-both .b-row > span { white-space: nowrap; }
+.art-both .b-row b { white-space: nowrap; margin-left: 6px; }
+@media (max-width: 560px) {
+  .fly-switch button { padding: 8px 12px 8px 8px; font-size: .84rem; gap: 8px; text-align: left; }
+  .fly-switch .fw-n { width: 22px; height: 22px; flex: none; }
+}
+@media (min-width: 1180px) {
+  .cycle-bar { flex-wrap: nowrap; align-items: center; }
+  .cycle-caption { flex: 1 1 0; min-width: 0; }
+  .cycle-controls { flex: none; }
+}
+
 </style>
 </head>
 <body>
@@ -844,11 +949,86 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
       </div>
 
       <div class="hero-ring">
-        <div class="cycle" id="cycle" role="img" aria-label="The Hashcoin loop: 1, press Start on any PC with a graphics card. 2, your GPU mines. 3, what it mines buys $HASH on the market, a steady buy inflow into the coin. 4, the $HASH is paid to your wallet every 10 minutes, where it also earns holder rewards. 5, every $HASH trade pays a 5% tax, paid out on top as a miner bonus and holder rewards. Then it repeats.">
+        <div class="fly-switch" role="tablist" aria-label="Two flywheels">
+          <button type="button" role="tab" id="fw-coin-tab" aria-controls="fw-coin" aria-selected="true"><span class="fw-n">1</span>The coin flywheel</button>
+          <button type="button" role="tab" id="fw-bag-tab" aria-controls="fw-bag" aria-selected="false" tabindex="-1"><span class="fw-n">2</span>Your bag flywheel</button>
+        </div>
+
+        <!-- Flywheel 1: how miners and the tax drive the coin -->
+        <div class="cycle" id="fw-coin" role="tabpanel" aria-labelledby="fw-coin-tab">
+          <p class="sr-only">The coin flywheel: 1, miners' earnings are market buys of $HASH. 2, holders hold to level up, so less is sold. 3, every trade pays a 5% tax. 4, the split balances itself: miners are topped up to 5 times their mining, holders get the rest. 5, bigger rewards bring more miners and holders, which means more buying. Then it repeats.</p>
           <svg class="cycle-svg" aria-hidden="true" focusable="false"></svg>
 
-          <article class="st" data-st="0">
-            <div class="art art-pc" aria-hidden="true">
+          <article class="st" data-st="0" aria-hidden="true">
+            <div class="art art-minebuy">
+              <div class="gpu mini"><svg class="fan" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 20c0-8 6-14 10-12-3 2-5 7-10 12zM20 20c8 0 14 6 12 10-2-3-7-5-12-10zM20 20c0 8-6 14-10 12 3-2 5-7 10-12zM20 20c-8 0-14-6-12-10 2 3 7 5 12 10z" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="#0B0C0D"/></svg></div>
+              <span class="arrow">→</span>
+              <div class="buys"><span>BUY</span><span>BUY</span><span>BUY</span></div>
+            </div>
+            <div class="st-text"><span class="st-n">1</span><h3>Miners buy in</h3><p>Every miner's earnings are market buys of $HASH.</p></div>
+          </article>
+
+          <article class="st" data-st="1" aria-hidden="true">
+            <div class="art art-hold">
+              <div class="wallet">
+                <span class="w-label">Hold clock <span class="w-levels"><span class="l1">H1</span><span class="l2">H2</span><span class="l3">H3</span></span></span>
+                <div class="w-clock"><i></i></div>
+                <small>Selling shrinks it</small>
+              </div>
+            </div>
+            <div class="st-text"><span class="st-n">2</span><h3>Holders hold</h3><p>Levels reward holding, so less gets sold.</p></div>
+          </article>
+
+          <article class="st" data-st="2" aria-hidden="true">
+            <div class="art art-trades">
+              <div class="tape-win">
+                <ul class="tape">
+                    <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
+                    <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
+                    <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
+                    <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
+                </ul>
+              </div>
+            </div>
+            <div class="st-text"><span class="st-n">3</span><h3>Every trade pays 5%</h3><p>Buys, sells and transfers, on every DEX.</p></div>
+          </article>
+
+          <article class="st" data-st="3" aria-hidden="true">
+            <div class="art art-split">
+              <div class="sp-labels"><span>Miners</span><span>Holders</span></div>
+              <div class="sp-bar"><i class="m"></i><i class="h"></i></div>
+              <div class="sp-labels dim"><span>Topped up to 5×</span><span>The rest, 1%+</span></div>
+            </div>
+            <div class="st-text"><span class="st-n">4</span><h3>The split balances</h3><p>Miners topped up to 5×, holders get the rest.</p></div>
+          </article>
+
+          <article class="st" data-st="4" aria-hidden="true">
+            <div class="art art-join">
+              <div class="j-row"><span>GPUs mining</span><b data-count="1240,1318">1,240</b></div>
+              <div class="j-row"><span>Holders</span><b data-count="3410,3566">3,410</b></div>
+            </div>
+            <div class="st-text"><span class="st-n">5</span><h3>More people join</h3><p>Bigger rewards bring more miners and holders.</p></div>
+          </article>
+
+          <div class="cycle-core" aria-hidden="true">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDgiIGZpbGw9IiNFQkI0NDciLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MCA1MCkgc2tld1goLTE2KSB0cmFuc2xhdGUoLTUwIC01MCkiIGZpbGw9IiNGRkZGRkYiPjxyZWN0IHg9IjM1IiB5PSIyNCIgd2lkdGg9IjExIiBoZWlnaHQ9IjUyIiByeD0iMiIvPjxyZWN0IHg9IjU0IiB5PSIyNCIgd2lkdGg9IjExIiBoZWlnaHQ9IjUyIiByeD0iMiIvPjxyZWN0IHg9IjI1IiB5PSIzNyIgd2lkdGg9IjUwIiBoZWlnaHQ9IjEwIiByeD0iMiIvPjxyZWN0IHg9IjI1IiB5PSI1NCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjEwIiByeD0iMiIvPjwvZz48L3N2Zz4K" alt="" width="200" height="200">
+          </div>
+          <span class="spoke-tag" data-spoke="0" aria-hidden="true">Buy inflow</span>
+          <span class="spoke-tag" data-spoke="2" aria-hidden="true">5% tax</span>
+          <span class="spoke-tag" data-spoke="4" aria-hidden="true">Rewards</span>
+        </div>
+
+        <!-- Flywheel 2: your bag compounding across levels -->
+        <div class="cycle bag" id="fw-bag" role="tabpanel" aria-labelledby="fw-bag-tab" hidden>
+          <p class="sr-only">Your bag flywheel: 1, your GPU mines. 2, the $HASH lands in your wallet and your bag grows. 3, a bigger bag levels you up. 4, a higher level gets a bigger share: 1, 2 or 4 times. 5, you earn the miner bonus and holder rewards on the same bag. Then it repeats at the next level.</p>
+          <svg class="cycle-svg" aria-hidden="true" focusable="false"></svg>
+
+          <article class="st" data-st="0" aria-hidden="true">
+            <div class="art art-pc">
               <div class="mon">
                 <div class="scr">
                   <span class="scr-top"><i></i>Hashcoin</span>
@@ -859,69 +1039,52 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
               <div class="stand"></div>
               <svg class="cursor" viewBox="0 0 16 20"><path d="M1 1l13 9-6 1 3 7-3 1-3-7-4 4z" fill="#F3F1EC" stroke="#0B0C0D" stroke-width="1.2" stroke-linejoin="round"/></svg>
             </div>
-            <div class="st-text"><span class="st-n">1</span><h3>Press Start</h3><p>One click on any PC with a graphics card.</p></div>
+            <div class="st-text"><span class="st-n">1</span><h3>You mine</h3><p>Press Start on any PC with a GPU.</p></div>
           </article>
 
-          <article class="st" data-st="1">
-            <div class="art art-gpu" aria-hidden="true">
-              <div class="gpu">
-                <svg class="fan" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 20c0-8 6-14 10-12-3 2-5 7-10 12zM20 20c8 0 14 6 12 10-2-3-7-5-12-10zM20 20c0 8-6 14-10 12 3-2 5-7 10-12zM20 20c-8 0-14-6-12-10 2 3 7 5 12 10z" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="#0B0C0D"/></svg>
-                <svg class="fan" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20 20c0-8 6-14 10-12-3 2-5 7-10 12zM20 20c8 0 14 6 12 10-2-3-7-5-12-10zM20 20c0 8-6 14-10 12 3-2 5-7 10-12zM20 20c-8 0-14-6-12-10 2 3 7 5 12 10z" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="#0B0C0D"/></svg>
-              </div>
-              <span class="chip c1">PRL</span><span class="chip c2">QTC</span><span class="chip c3">QUAN</span>
-            </div>
-            <div class="st-text"><span class="st-n">2</span><h3>Your GPU mines</h3><p>On spare power, whichever coin pays most.</p></div>
-          </article>
-
-          <article class="st" data-st="2">
-            <div class="art art-buy" aria-hidden="true">
-              <svg class="chart" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M2 34 L18 30 L30 32 L44 24 L58 26 L72 18 L86 20 L100 10 L118 6"/></svg>
-              <div class="ticket">
-                <div class="t-row"><span class="side">BUY</span><b class="mono gold">+203 $HASH</b></div>
-              </div>
-            </div>
-            <div class="st-text"><span class="st-n">3</span><h3>It buys $HASH</h3><p>Every miner's earnings become market buys.</p></div>
-          </article>
-
-          <article class="st" data-st="3">
-            <div class="art art-wallet" aria-hidden="true">
+          <article class="st" data-st="1" aria-hidden="true">
+            <div class="art art-wallet">
               <div class="wallet">
-                <span class="w-label">Your wallet <span class="w-levels"><span class="l1 on">H1</span><span class="l2 on">H2</span><span class="l3">H3</span></span></span>
-                <b class="w-bal mono" data-bal>12,840 $HASH</b>
-                <span class="w-in w-mine"><span>From mining</span><b>+203</b></span>
-                <span class="w-in w-hold"><span>Holder reward</span><b>+14</b></span>
+                <span class="w-label">Your bag</span>
+                <b class="w-bal mono" data-bal>4,200 $HASH</b>
+                <span class="w-in w-mine"><span>From mining</span><b data-bal-add>+203</b></span>
               </div>
             </div>
-            <div class="st-text"><span class="st-n">4</span><h3>Paid to your wallet</h3><p>Mined $HASH earns holder rewards too.</p></div>
+            <div class="st-text"><span class="st-n">2</span><h3>Your bag grows</h3><p>Every 10 minutes, straight to your wallet.</p></div>
           </article>
 
-          <article class="st" data-st="4">
-            <div class="art art-trades" aria-hidden="true">
-              <div class="tape-win">
-                <ul class="tape">
-                  <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
-                  <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$820</span><em>5% tax</em></li>
-                  <li><b class="sell">SELL</b><span class="mono">$240</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$1,950</span><em>5% tax</em></li>
-                  <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
-                </ul>
-              </div>
-              <div class="tax-split"><span>+ Miner bonus</span><span>+ Holder rewards</span></div>
+          <article class="st" data-st="2" aria-hidden="true">
+            <div class="art art-level">
+              <div class="lv-steps"><span class="l1">Level 1</span><span class="l2">Level 2</span><span class="l3">Level 3</span></div>
+              <div class="lv-track"><i></i></div>
             </div>
-            <div class="st-text"><span class="st-n">5</span><h3>Trades pay you extra</h3><p>5% of every trade goes to miners and holders.</p></div>
+            <div class="st-text"><span class="st-n">3</span><h3>You level up</h3><p>A bigger bag, held longer, unlocks the next level.</p></div>
           </article>
 
-          <div class="cycle-core" aria-hidden="true">
+          <article class="st" data-st="3" aria-hidden="true">
+            <div class="art art-mult">
+              <b class="mult" data-mult>1×</b><span>share of the rewards</span>
+            </div>
+            <div class="st-text"><span class="st-n">4</span><h3>Bigger share</h3><p>Level 2 gets 2×, Level 3 gets 4×.</p></div>
+          </article>
+
+          <article class="st" data-st="4" aria-hidden="true">
+            <div class="art art-both">
+              <span class="b-row"><span>+ Miner bonus</span><b>on your GPU</b></span>
+              <span class="b-row"><span>+ Holder rewards</span><b>on your bag</b></span>
+            </div>
+            <div class="st-text"><span class="st-n">5</span><h3>Earn on both</h3><p>Same bag, both rewards, then around again.</p></div>
+          </article>
+
+          <div class="cycle-core bag-core" aria-hidden="true">
             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDgiIGZpbGw9IiNFQkI0NDciLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MCA1MCkgc2tld1goLTE2KSB0cmFuc2xhdGUoLTUwIC01MCkiIGZpbGw9IiNGRkZGRkYiPjxyZWN0IHg9IjM1IiB5PSIyNCIgd2lkdGg9IjExIiBoZWlnaHQ9IjUyIiByeD0iMiIvPjxyZWN0IHg9IjU0IiB5PSIyNCIgd2lkdGg9IjExIiBoZWlnaHQ9IjUyIiByeD0iMiIvPjxyZWN0IHg9IjI1IiB5PSIzNyIgd2lkdGg9IjUwIiBoZWlnaHQ9IjEwIiByeD0iMiIvPjxyZWN0IHg9IjI1IiB5PSI1NCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjEwIiByeD0iMiIvPjwvZz48L3N2Zz4K" alt="" width="200" height="200">
+            <span class="core-lvl" data-core-lvl>Level 1</span>
           </div>
-          <span class="spoke-tag" data-spoke="2">Buy inflow</span>
-          <span class="spoke-tag" data-spoke="4">5% tax</span>
-          <span class="spoke-tag" data-spoke="0">Miner bonus</span>
-          <span class="spoke-tag" data-spoke="3">Holder rewards</span>
+          <span class="spoke-tag" data-spoke="0" aria-hidden="true">Mined $HASH</span>
+          <span class="spoke-tag" data-spoke="2" aria-hidden="true">Level up</span>
+          <span class="spoke-tag" data-spoke="4" aria-hidden="true">Both rewards</span>
         </div>
+
         <div class="cycle-bar">
           <p id="cycle-caption" class="cycle-caption" aria-live="off"></p>
           <div class="cycle-controls">
@@ -1688,321 +1851,400 @@ window.HashModel = (function () {
 
 </script>
 <script>
-// Hero loop: five stations in a ring around the Hashcoin coin, joined by chain links.
-// One step at a time: the active station plays its animation, then the link to the next
-// station draws itself and the next station takes over. Repeats forever.
-// Spokes to the coin (buy inflow, 5% tax, pays miners, pays holders) and their labels stay
-// visible the whole time; the ones that matter for the current step glow.
-// Smoothness: a station that finished keeps its last frame (class "seen") instead of snapping
-// back; it's reset only while dimmed, just before its turn. Links fade out instead of vanishing.
-// Narrow screens stack the stations in a column. Pauses off-screen and on request; click a
-// station or a number to jump; static with reduced motion.
+// Hero flywheels. Two rings of five stations around the Hashcoin coin, switched with tabs:
+//   1. The coin flywheel: miners buy in, holders hold, trades pay 5%, the split balances, more join.
+//   2. Your bag flywheel: you mine, your bag grows, you level up, bigger share, earn on both
+//      (one loop per level, Level 1 to 3).
+// One step at a time: the active station plays its animation, then the link to the next station
+// draws itself and the next station takes over. Spokes to the coin and their labels stay visible;
+// the ones that matter for the current step glow. A finished station keeps its last frame and is
+// rewound only while dimmed. Until someone picks a tab, the wheels take turns on their own.
+// Narrow screens stack the stations in a column. Pauses off-screen and on request; static with
+// reduced motion.
 (function () {
   "use strict";
-  const root = document.getElementById("cycle");
-  if (!root) return;
-  const svg = root.querySelector(".cycle-svg");
-  const stations = Array.from(root.querySelectorAll(".st"));
-  const core = root.querySelector(".cycle-core");
+  const hero = document.querySelector(".hero-ring");
+  if (!hero) return;
   const caption = document.getElementById("cycle-caption");
   const pauseBtn = document.getElementById("cycle-pause");
   const stepsBox = document.getElementById("cycle-steps");
-  const balance = root.querySelector("[data-bal]");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
-  const N = stations.length;
-  const DWELL_MS = 3600, LINK_MS = 1300, OUT_DELAY_MS = 900;
+  const DWELL_MS = 3600, LINK_MS = 1300;
   const RING_MIN_WIDTH = 560;
-  const CAPTIONS = [
-    "<b>Press Start.</b> One click on any PC with a graphics card.",
-    "<b>Your GPU mines.</b> Only on spare power, on whichever coin pays most.",
-    "<b>It buys $HASH.</b> Every miner's earnings are market buys: steady buy inflow.",
-    "<b>Paid to your wallet.</b> Every 10 minutes. Mined $HASH is also your bag, so it earns holder rewards at the same time.",
-    "<b>Trades pay you extra.</b> 5% of every trade is paid out on top: a miner bonus and holder rewards.",
-  ];
-
+  const BASE_W = 210; // cards are laid out at this width and scaled (CSS --s) to fill the space
+  const ease = (f) => (f < 0.5 ? 4 * f * f * f : 1 - Math.pow(-2 * f + 2, 3) / 2);
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
+  const reflow = (s) => void s.offsetWidth;
   const el = (tag, attrs, parent) => {
     const e = document.createElementNS(NS, tag);
     for (const k in attrs) e.setAttribute(k, attrs[k]);
     if (parent) parent.append(e);
     return e;
   };
-  // Spokes between the coin and a station. "in" flows to the coin, "out" flows to the station.
-  const SPOKES = { 2: "in", 4: "in", 0: "out", 3: "out" };
-  const spokes = {};
-  Object.keys(SPOKES).forEach((k) => (spokes[k] = el("path", { class: "cycle-spoke " + SPOKES[k] }, svg)));
-  const tags = {};
-  root.querySelectorAll(".spoke-tag").forEach((t) => (tags[t.dataset.spoke] = t));
-  // links[i] joins station i to station i+1 (the last one closes the loop)
-  const links = stations.map(() => ({
-    base: el("path", { class: "cycle-link" }, svg),
-    lit: el("path", { class: "cycle-link-lit" }, svg),
-    len: 0,
-  }));
-
-  const stepBtns = stations.map((_, i) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = String(i + 1);
-    b.setAttribute("aria-label", `Step ${i + 1}`);
-    b.addEventListener("click", () => go(i));
-    stepsBox.append(b);
-    return b;
-  });
-  stations.forEach((s, i) => s.addEventListener("click", () => go(i)));
-
-  // ---------- Layout ----------
-  function rel(elm) {
-    const box = root.getBoundingClientRect(), r = elm.getBoundingClientRect();
-    return { l: r.left - box.left, t: r.top - box.top, w: r.width, h: r.height, cx: r.left - box.left + r.width / 2, cy: r.top - box.top + r.height / 2 };
-  }
-  // Cards are laid out at a base width and scaled (CSS --s) so the ring fills big screens.
-  const BASE_W = 210;
-  function layoutRing(W) {
-    root.classList.add("ring");
-    root.classList.remove("stack");
-    stations.forEach((s) => (s.style.width = BASE_W + "px"));
-    const baseH = Math.max(...stations.map((s) => s.offsetHeight));
-    const sinA = Math.sin(Math.PI / N), cosB = Math.cos(Math.PI / 10), tall = 1 + Math.cos(Math.PI / 5);
-    // Beside the title (wide screens) the ring also has to fit the window height.
-    const bar = root.parentElement.querySelector(".cycle-bar");
-    const Hav = window.innerWidth >= 1180 ? window.innerHeight - 64 - 48 - (bar ? bar.offsetHeight + 18 : 70) : Infinity;
-    const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
-    const fit = (k) => {
-      const cw = BASE_W * k, ch = baseH * k;
-      return Math.min((W - cw - 12) / (2 * cosB), (Hav - ch - 20) / tall);
+  // Count a number up on screen while its station is active.
+  function countTo(node, from, to, station, suffix = "", delay = 500, dur = 1500) {
+    const start = performance.now();
+    const tick = (now) => {
+      const f = Math.min(1, Math.max(0, (now - start - delay) / dur));
+      node.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - f, 3))) + suffix;
+      if (f < 1 && station.classList.contains("on")) requestAnimationFrame(tick);
+      else if (f < 1) node.textContent = fmt(to) + suffix;
     };
-    // Largest scale that still leaves comfortable room between neighbors.
-    let sc = 0.9;
-    for (let k = sMax; k >= 0.9; k -= 0.01) {
-      if (fit(k) >= (BASE_W * k + 110 * k) / (2 * sinA)) { sc = k; break; }
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- One flywheel ----------
+  function makeWheel(root, cfg) {
+    const svg = root.querySelector(".cycle-svg");
+    const stations = Array.from(root.querySelectorAll(".st"));
+    const core = root.querySelector(".cycle-core");
+    const N = stations.length;
+    const spokes = {}, tags = {};
+    Object.keys(cfg.spokes).forEach((k) => (spokes[k] = el("path", { class: "cycle-spoke " + cfg.spokes[k] }, svg)));
+    root.querySelectorAll(".spoke-tag").forEach((t) => (tags[t.dataset.spoke] = t));
+    // links[i] joins station i to station i+1 (the last one closes the loop)
+    const links = stations.map(() => ({ base: el("path", { class: "cycle-link" }, svg), lit: el("path", { class: "cycle-link-lit" }, svg), len: 0 }));
+    const lit = links.map(() => false);
+    let step = 0, phase = "dwell", t = 0, last = 0, raf = 0, running = false, hotTimer = 0;
+    const W = { root, N, step: () => step, caption: (i) => (cfg.caption && cfg.caption(i)) || cfg.captions[i] };
+
+    // Layout
+    const rel = (elm) => {
+      const box = root.getBoundingClientRect(), r = elm.getBoundingClientRect();
+      return { l: r.left - box.left, t: r.top - box.top, w: r.width, h: r.height, cx: r.left - box.left + r.width / 2, cy: r.top - box.top + r.height / 2 };
+    };
+    function layoutRing(Wd) {
+      root.classList.add("ring");
+      root.classList.remove("stack");
+      stations.forEach((s) => (s.style.width = BASE_W + "px"));
+      const baseH = Math.max(...stations.map((s) => s.offsetHeight));
+      const sinA = Math.sin(Math.PI / N), cosB = Math.cos(Math.PI / 10), tall = 1 + Math.cos(Math.PI / 5);
+      // Beside the title (wide screens) the ring also has to fit the window height.
+      const extra = [".fly-switch", ".cycle-bar"].reduce((a, q) => { const n = hero.querySelector(q); return a + (n ? n.offsetHeight + 18 : 0); }, 0);
+      const Hav = window.innerWidth >= 1180 ? window.innerHeight - 64 - 64 - extra : Infinity;
+      const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
+      const fit = (k) => Math.min((Wd - BASE_W * k - 12) / (2 * cosB), (Hav - baseH * k - 20) / tall);
+      // Largest scale that still leaves comfortable room between neighbors.
+      let sc = 0.9;
+      for (let k = sMax; k >= 0.9; k -= 0.01) if (fit(k) >= (BASE_W * k + 110 * k) / (2 * sinA)) { sc = k; break; }
+      const cardW = BASE_W * sc, cardH = baseH * sc;
+      root.style.setProperty("--s", sc.toFixed(3));
+      const R = Math.max((cardW + 26) / (2 * sinA), fit(sc));
+      const cx = Wd / 2, cy = cardH / 2 + R + 10;
+      const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
+      stations.forEach((s, i) => { s.style.left = cx + R * Math.cos(angle(i)) + "px"; s.style.top = cy + R * Math.sin(angle(i)) + "px"; });
+      // Distance from the center to where the ray toward station i enters its card.
+      const edge = (i) => {
+        const a = angle(i), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
+        return R - Math.min(c > 1e-6 ? cardW / 2 / c : Infinity, s > 1e-6 ? cardH / 2 / s : Infinity);
+      };
+      // Each label sits on its spoke just outside the card; the coin takes the room that's left.
+      const ext = (k) => {
+        const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), tg = tags[k];
+        return Math.min(c > 1e-6 ? tg.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? tg.offsetHeight * sc / 2 / s : Infinity);
+      };
+      const tagAt = {};
+      Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3 * sc));
+      const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6 * sc));
+      const coinD = Math.round(Math.min(230 * sc, Math.max(120, 2 * room)));
+      core.style.left = cx + "px";
+      core.style.top = cy + "px";
+      core.style.width = core.style.height = coinD + "px";
+      Object.keys(spokes).forEach((k) => {
+        const a = angle(+k), r0 = coinD / 2 + 4;
+        spokes[k].setAttribute("d", `M ${cx + r0 * Math.cos(a)} ${cy + r0 * Math.sin(a)} L ${cx + R * Math.cos(a)} ${cy + R * Math.sin(a)}`);
+        tags[k].style.left = cx + tagAt[k] * Math.cos(a) + "px";
+        tags[k].style.top = cy + tagAt[k] * Math.sin(a) + "px";
+      });
+      const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10 * sc;
+      root.style.height = H + "px";
+      svg.setAttribute("viewBox", `0 0 ${Wd} ${H}`);
+      links.forEach((lk, i) => {
+        const a1 = angle(i), a2 = angle(i + 1);
+        const d = `M ${cx + R * Math.cos(a1)} ${cy + R * Math.sin(a1)} A ${R} ${R} 0 0 1 ${cx + R * Math.cos(a2)} ${cy + R * Math.sin(a2)}`;
+        lk.base.setAttribute("d", d);
+        lk.lit.setAttribute("d", d);
+      });
     }
-    const cardW = BASE_W * sc, cardH = baseH * sc;
-    root.style.setProperty("--s", sc.toFixed(3));
-    const R = Math.max((cardW + 26) / (2 * sinA), fit(sc));
-    const cx = W / 2;
-    const cy = cardH / 2 + R + 10;
-    const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
-    stations.forEach((s, i) => {
-      s.style.left = cx + R * Math.cos(angle(i)) + "px";
-      s.style.top = cy + R * Math.sin(angle(i)) + "px";
-    });
-    // Distance from the center to where the ray toward station i enters its card.
-    const edge = (i) => {
-      const a = angle(i), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
-      return R - Math.min(c > 1e-6 ? cardW / 2 / c : Infinity, s > 1e-6 ? cardH / 2 / s : Infinity);
+    function layoutStack(Wd) {
+      root.classList.add("stack");
+      root.classList.remove("ring");
+      root.style.removeProperty("--s");
+      root.style.height = "";
+      stations.forEach((s) => { s.style.width = s.style.left = s.style.top = ""; });
+      core.style.left = core.style.top = core.style.width = core.style.height = "";
+      Object.values(spokes).forEach((sp) => sp.setAttribute("d", ""));
+      svg.setAttribute("viewBox", `0 0 ${Wd} ${root.offsetHeight}`);
+      const r = stations.map(rel), lane = Wd - 8;
+      links.forEach((lk, i) => {
+        const a = r[i], b = r[(i + 1) % N];
+        let d;
+        if (i < N - 1) d = `M ${a.cx} ${a.t + a.h} L ${b.cx} ${b.t}`;
+        else {
+          // back to the top along the right edge
+          const y1 = a.cy, y2 = b.cy, x0 = a.l + a.w, rr = 12;
+          d = `M ${x0} ${y1} L ${lane - rr} ${y1} Q ${lane} ${y1} ${lane} ${y1 - rr} L ${lane} ${y2 + rr} Q ${lane} ${y2} ${lane - rr} ${y2} L ${b.l + b.w} ${y2}`;
+        }
+        lk.base.setAttribute("d", d);
+        lk.lit.setAttribute("d", d);
+      });
+    }
+    W.layout = function () {
+      const Wd = root.clientWidth;
+      if (!Wd) return;
+      if (Wd >= RING_MIN_WIDTH) layoutRing(Wd); else layoutStack(Wd);
+      links.forEach((lk) => { lk.len = lk.lit.getTotalLength(); lk.lit.setAttribute("stroke-dasharray", `${lk.len} ${lk.len}`); });
+      paintLinks();
     };
-    // Each label sits on its spoke just outside the card; the coin takes the room that's left.
-    const ext = (k) => {
-      const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), t = tags[k];
-      return Math.min(c > 1e-6 ? t.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? t.offsetHeight * sc / 2 / s : Infinity);
-    };
-    const tagAt = {};
-    Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3 * sc));
-    const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6 * sc));
-    const coinD = Math.round(Math.min(230 * sc, Math.max(120, 2 * room)));
-    core.style.left = cx + "px";
-    core.style.top = cy + "px";
-    core.style.width = core.style.height = coinD + "px";
-    Object.keys(spokes).forEach((k) => {
-      const a = angle(+k), r0 = coinD / 2 + 4;
-      spokes[k].setAttribute("d", `M ${cx + r0 * Math.cos(a)} ${cy + r0 * Math.sin(a)} L ${cx + R * Math.cos(a)} ${cy + R * Math.sin(a)}`);
-      tags[k].style.left = cx + tagAt[k] * Math.cos(a) + "px";
-      tags[k].style.top = cy + tagAt[k] * Math.sin(a) + "px";
-    });
-    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10 * sc;
-    root.style.height = H + "px";
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    links.forEach((lk, i) => {
-      const a1 = angle(i), a2 = angle(i + 1);
-      const d = `M ${cx + R * Math.cos(a1)} ${cy + R * Math.sin(a1)} A ${R} ${R} 0 0 1 ${cx + R * Math.cos(a2)} ${cy + R * Math.sin(a2)}`;
-      lk.base.setAttribute("d", d);
-      lk.lit.setAttribute("d", d);
-    });
-  }
-  function layoutStack(W) {
-    root.classList.add("stack");
-    root.classList.remove("ring");
-    root.style.removeProperty("--s");
-    root.style.height = "";
-    stations.forEach((s) => { s.style.width = s.style.left = s.style.top = ""; });
-    core.style.left = core.style.top = core.style.width = core.style.height = "";
-    Object.values(spokes).forEach((sp) => sp.setAttribute("d", ""));
-    const H = root.offsetHeight;
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    const r = stations.map(rel);
-    const lane = W - 8;
-    links.forEach((lk, i) => {
-      const a = r[i], b = r[(i + 1) % N];
-      let d;
-      if (i < N - 1) {
-        d = `M ${a.cx} ${a.t + a.h} L ${b.cx} ${b.t}`;
-      } else {
-        // back to the top along the right edge
-        const y1 = a.cy, y2 = b.cy, x0 = a.l + a.w, rr = 12;
-        d = `M ${x0} ${y1} L ${lane - rr} ${y1} Q ${lane} ${y1} ${lane} ${y1 - rr} L ${lane} ${y2 + rr} Q ${lane} ${y2} ${lane - rr} ${y2} L ${b.l + b.w} ${y2}`;
+
+    // Step machine
+    function reset(s) { s.classList.remove("seen", "on", "prep"); reflow(s); }
+    function hot(keys) {
+      Object.keys(spokes).forEach((k) => {
+        const on = keys.includes(k);
+        spokes[k].classList.toggle("hot", on);
+        if (tags[k]) tags[k].classList.toggle("hot", on);
+      });
+    }
+    function activate(i, jumped) {
+      stations.forEach((s, k) => {
+        if (k === i) { if (jumped || s.classList.contains("seen")) reset(s); s.classList.add("on"); }
+        else if (s.classList.contains("on")) { s.classList.remove("on"); s.classList.add("seen"); }
+      });
+      clearTimeout(hotTimer);
+      const h = cfg.hot[i] || [[], 0];
+      hot([]);
+      if (h[0].length) hotTimer = setTimeout(() => hot(h[0]), h[1]);
+      core.classList.toggle("pulse", !!cfg.pulse && cfg.pulse.includes(i));
+      if (cfg.onStep) cfg.onStep(i, stations[i]);
+      W.onStep(i);
+    }
+    function paintLinks() {
+      links.forEach((lk, i) => {
+        let fill = -1;
+        if (phase === "link" && i === step) fill = ease(Math.min(1, t / LINK_MS));
+        else if (phase === "dwell" && i === (step - 1 + N) % N && lit[i]) fill = 1;
+        if (fill >= 0) { lk.lit.setAttribute("stroke-dashoffset", String(lk.len * (1 - fill))); lk.lit.classList.add("on"); }
+        else lk.lit.classList.remove("on");
+      });
+    }
+    function frame(now) {
+      raf = 0;
+      if (!running || !W.canRun()) { last = 0; return; }
+      if (last) t += Math.min(64, now - last);
+      last = now;
+      if (phase === "dwell" && t >= DWELL_MS) {
+        phase = "link"; t = 0;
+        lit.fill(false);
+        // Rewind the next station while it's still dim; fade its picture out first.
+        const nx = stations[(step + 1) % N];
+        if (nx.classList.contains("seen")) {
+          nx.classList.add("prep");
+          setTimeout(() => { if (!nx.classList.contains("on")) reset(nx); nx.classList.remove("prep"); }, 320);
+        }
+      } else if (phase === "link" && t >= LINK_MS) {
+        lit[step] = true;
+        step = (step + 1) % N;
+        phase = "dwell"; t = 0;
+        if (step === 0 && W.onLoop() === false) return; // the controller switched wheels
+        activate(step, false);
       }
-      lk.base.setAttribute("d", d);
-      lk.lit.setAttribute("d", d);
-    });
-  }
-  function layout() {
-    const W = root.clientWidth;
-    if (!W) return;
-    if (W >= RING_MIN_WIDTH) layoutRing(W);
-    else layoutStack(W);
-    links.forEach((lk) => {
-      lk.len = lk.lit.getTotalLength();
-      lk.lit.setAttribute("stroke-dasharray", `${lk.len} ${lk.len}`);
-    });
-    paintLinks();
+      paintLinks();
+      raf = requestAnimationFrame(frame);
+    }
+    W.go = function (i) {
+      step = i; phase = "dwell"; t = 0;
+      lit.fill(false);
+      activate(i, true);
+      paintLinks();
+      W.kick();
+    };
+    W.kick = function () { if (running && W.canRun() && !raf) { last = 0; raf = requestAnimationFrame(frame); } };
+    W.start = function () { running = true; W.go(0); };
+    W.stop = function () {
+      running = false;
+      cancelAnimationFrame(raf); raf = 0;
+      clearTimeout(hotTimer);
+      stations.forEach((s) => s.classList.remove("on", "seen", "prep"));
+    };
+    W.static = function () {
+      root.classList.add("static");
+      stations.forEach((s) => s.classList.add("seen"));
+      links.forEach((lk) => { lk.lit.classList.add("on"); lk.lit.setAttribute("stroke-dashoffset", "0"); });
+      hot(Object.keys(spokes));
+      if (cfg.onStatic) cfg.onStatic(stations);
+    };
+    stations.forEach((s, i) => s.addEventListener("click", () => { W.onPick(); W.go(i); }));
+    return W;
   }
 
-  // ---------- Step machine ----------
-  let step = 0, phase = "dwell", t = 0, last = 0, raf = 0, visible = true, paused = false;
-  let outTimer = 0, capTimer = 0;
-  const reflow = (s) => void s.offsetWidth;
+  // ---------- Flywheel 1: the coin ----------
+  const coin = makeWheel(document.getElementById("fw-coin"), {
+    captions: [
+      "<b>Miners buy in.</b> Every miner's earnings are swapped into $HASH on the market: steady buy inflow.",
+      "<b>Holders hold.</b> Holding levels you up and selling shrinks your clock, so less gets sold.",
+      "<b>Every trade pays 5%.</b> Built into the token, on every buy, sell and transfer.",
+      "<b>The split balances itself.</b> Miners are topped up to 5× their mining. Holders get the rest, never under 1%.",
+      "<b>More people join.</b> Bigger rewards bring more GPUs and holders, which means more buying. Around it goes.",
+    ],
+    spokes: { 0: "in", 2: "in", 4: "out" },
+    hot: { 0: [["0"], 900], 2: [["2"], 300], 3: [["2", "4"], 600], 4: [["4"], 200] },
+    pulse: [0, 3],
+    onStep(i, st) {
+      if (i === 4) st.querySelectorAll("[data-count]").forEach((b) => { const [a, z] = b.dataset.count.split(",").map(Number); countTo(b, a, z, st, "", 400, 1800); });
+    },
+    onStatic(sts) { sts[4].querySelectorAll("[data-count]").forEach((b) => (b.textContent = fmt(+b.dataset.count.split(",")[1]))); },
+  });
 
-  // Put a station back to its first frame. Only done while it's dimmed.
-  function reset(s) {
-    s.classList.remove("seen", "on", "prep");
-    reflow(s);
+  // ---------- Flywheel 2: your bag, one loop per level ----------
+  const bagRoot = document.getElementById("fw-bag");
+  const bagCore = bagRoot.querySelector("[data-core-lvl]").parentElement;
+  const BAG = [ // per level: bag before, mined this loop
+    { from: 4200, add: 203 },
+    { from: 18600, add: 410 },
+    { from: 61000, add: 830 },
+  ];
+  let bagLevel = 1, bagLoop = 0, bagTop = false;
+  function setBagLevel(l) {
+    bagLevel = l;
+    bagCore.dataset.level = l;
+    bagCore.querySelector("[data-core-lvl]").textContent = "Level " + l;
   }
-  function activate(i, jumped) {
-    stations.forEach((s, k) => {
-      if (k === i) {
-        if (jumped || s.classList.contains("seen")) reset(s);
-        s.classList.add("on");
-      } else if (s.classList.contains("on")) {
-        s.classList.remove("on");
-        s.classList.add("seen");
+  const bag = makeWheel(bagRoot, {
+    captions: [
+      "<b>You mine.</b> Press Start and your GPU mines on spare power.",
+      "<b>Your bag grows.</b> What you mine lands in your wallet as $HASH, every 10 minutes.",
+      "<b>You level up.</b> A bigger bag, held longer, unlocks the next level.",
+      "<b>Bigger share.</b> Level 2 gets twice the share of Level 1. Level 3 gets four times.",
+      "<b>Earn on both.</b> The miner bonus and holder rewards land on the same bag. Then around again, one level up.",
+    ],
+    caption: (i) => (i === 2 && bagTop ? "<b>Top level.</b> Keep holding to keep Level 3 and its 4× share." : null),
+    spokes: { 0: "in", 2: "out", 4: "in" },
+    hot: { 0: [["0"], 1700], 1: [["0"], 300], 2: [["2"], 300], 4: [["4"], 900] },
+    pulse: [1, 4],
+    onStep(i, st) {
+      const b = BAG[Math.min(bagLoop, 2)];
+      if (i === 0 && bagLoop === 0) setBagLevel(1);
+      if (i === 1) {
+        st.querySelector("[data-bal-add]").textContent = "+" + fmt(b.add);
+        countTo(st.querySelector("[data-bal]"), b.from, b.from + b.add, st, " $HASH");
       }
+      if (i === 2) {
+        const prev = bagLevel, next = Math.min(3, prev + 1);
+        const art = st.querySelector(".art-level");
+        art.style.setProperty("--from", ((prev - 1) / 2) * 100 + "%");
+        art.style.setProperty("--to", ((next - 1) / 2) * 100 + "%");
+        art.dataset.level = next;
+        bagTop = prev === 3;
+        if (next !== prev) setTimeout(() => { setBagLevel(next); }, 1300);
+      }
+      if (i === 3) {
+        const m = st.querySelector("[data-mult]");
+        m.textContent = ["1×", "2×", "4×"][bagLevel - 1];
+        st.querySelector(".art-mult").dataset.level = bagLevel;
+      }
+    },
+    onStatic(sts) {
+      setBagLevel(3);
+      sts[2].querySelector(".art-level").dataset.level = 3;
+      sts[3].querySelector("[data-mult]").textContent = "4×";
+      sts[3].querySelector(".art-mult").dataset.level = 3;
+    },
+  });
+
+  // ---------- Controller: tabs, shared caption, steps and pause ----------
+  const wheels = [coin, bag];
+  const tabs = Array.from(hero.querySelectorAll(".fly-switch [role=tab]"));
+  let active = 0, auto = !reduce, paused = false, visible = true, capTimer = 0;
+  let stepBtns = [];
+  function buildSteps(w) {
+    stepsBox.textContent = "";
+    stepBtns = Array.from({ length: w.N }, (_, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = String(i + 1);
+      b.setAttribute("aria-label", `Step ${i + 1}`);
+      b.addEventListener("click", () => { pick(); w.go(i); });
+      stepsBox.append(b);
+      return b;
     });
-    stepBtns.forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
-    setCaption(CAPTIONS[i]);
-    if (i === 3 && balance) countUp();
-    paintSpokes(i);
   }
   function setCaption(html) {
     clearTimeout(capTimer);
     caption.classList.add("swap");
     capTimer = setTimeout(() => { caption.innerHTML = html; caption.classList.remove("swap"); }, 220);
   }
-  // Glow the spokes that matter now: inflow on step 3; on step 5 the tax flows in, then out to both sides.
-  function paintSpokes(i) {
-    clearTimeout(outTimer);
-    const hot = (keys) => Object.keys(spokes).forEach((k) => {
-      const on = keys.includes(k);
-      spokes[k].classList.toggle("hot", on);
-      if (tags[k]) tags[k].classList.toggle("hot", on);
-    });
-    if (i === 2) hot(["2"]);
-    else if (i === 3) { hot([]); outTimer = setTimeout(() => hot(["3"]), 1500); }
-    else if (i === 4) { hot(["4"]); outTimer = setTimeout(() => hot(["4", "0", "3"]), OUT_DELAY_MS); }
-    else if (i !== 3) hot([]);
-    core.classList.toggle("pulse", i === 2 || i === 4);
-  }
-  function countUp() {
-    const from = 12840, to = 13057, start = performance.now();
-    const tick = (now) => {
-      const f = Math.min(1, Math.max(0, (now - start - 500) / 1600));
-      const e = 1 - Math.pow(1 - f, 3);
-      balance.textContent = Math.round(from + (to - from) * e).toLocaleString("en-US") + " $HASH";
-      if (f < 1 && stations[3].classList.contains("on")) requestAnimationFrame(tick);
+  const pick = () => { auto = false; hero.classList.remove("auto"); };
+  wheels.forEach((w, wi) => {
+    w.canRun = () => visible && !paused && !document.hidden && !reduce && active === wi;
+    w.onPick = pick;
+    w.onStep = (i) => {
+      stepBtns.forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
+      setCaption(w.caption(i));
     };
-    requestAnimationFrame(tick);
+  });
+  // The coin wheel plays once, the bag wheel once per level; then they swap (until someone picks).
+  coin.onLoop = () => { if (auto) { show(1); return false; } return true; };
+  bag.onLoop = () => {
+    bagLoop++;
+    if (bagLoop < 3) return true;
+    bagLoop = 0;
+    if (auto) { show(0); return false; }
+    setBagLevel(1);
+    return true;
+  };
+  function show(i) {
+    wheels[active].stop();
+    active = i;
+    wheels.forEach((w, k) => (w.root.hidden = k !== i));
+    tabs.forEach((tb, k) => { tb.setAttribute("aria-selected", String(k === i)); tb.tabIndex = k === i ? 0 : -1; });
+    if (i === 1) { bagLoop = 0; setBagLevel(1); }
+    buildSteps(wheels[i]);
+    wheels[i].layout();
+    if (reduce) {
+      wheels[i].static();
+      stepBtns.forEach((b) => (b.hidden = true));
+      caption.innerHTML = i === 0
+        ? "Miners buy in → holders hold → every trade pays 5% → the split balances itself → more people join."
+        : "You mine → your bag grows → you level up → bigger share → earn on both, then around again one level up.";
+    } else wheels[i].start();
   }
-  // The link into the active station stays lit while it plays; the outgoing link draws during the
-  // transition. Links that are done fade out through CSS instead of disappearing.
-  const ease = (f) => (f < 0.5 ? 4 * f * f * f : 1 - Math.pow(-2 * f + 2, 3) / 2);
-  function paintLinks() {
-    links.forEach((lk, i) => {
-      let fill = -1;
-      if (phase === "link" && i === step) fill = ease(Math.min(1, t / LINK_MS));
-      else if (phase === "dwell" && i === (step - 1 + N) % N && lit[i]) fill = 1;
-      if (fill >= 0) {
-        lk.lit.setAttribute("stroke-dashoffset", String(lk.len * (1 - fill)));
-        lk.lit.classList.add("on");
-      } else {
-        lk.lit.classList.remove("on");
-      }
+  tabs.forEach((tb, i) => {
+    tb.addEventListener("click", () => { pick(); if (i !== active) show(i); });
+    tb.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const n = (active + 1) % 2;
+      pick(); show(n); tabs[n].focus();
     });
-  }
-  // lit[i]: link i finished drawing on the way into the current station (not set after a jump).
-  const lit = links.map(() => false);
-  function go(i) {
-    step = i;
-    phase = "dwell";
-    t = 0;
-    lit.fill(false);
-    activate(i, true);
-    paintLinks();
-    if (!reduce) kick();
-  }
-  function frame(now) {
-    raf = 0;
-    if (!running()) { last = 0; return; }
-    if (last) t += Math.min(64, now - last);
-    last = now;
-    if (phase === "dwell" && t >= DWELL_MS) {
-      phase = "link"; t = 0;
-      lit.fill(false);
-      // Rewind the next station while it's still dim, so it starts clean when the link arrives.
-      // Fade its picture out first so the rewind isn't visible.
-      const nx = stations[(step + 1) % N];
-      if (nx.classList.contains("seen")) {
-        nx.classList.add("prep");
-        setTimeout(() => { if (!nx.classList.contains("on")) reset(nx); nx.classList.remove("prep"); }, 320);
-      }
-    } else if (phase === "link" && t >= LINK_MS) {
-      lit[step] = true;
-      step = (step + 1) % N;
-      phase = "dwell"; t = 0;
-      activate(step, false);
-    }
-    paintLinks();
-    raf = requestAnimationFrame(frame);
-  }
-  const running = () => visible && !paused && !document.hidden && !reduce;
-  function kick() { if (running() && !raf) { last = 0; raf = requestAnimationFrame(frame); } }
+  });
 
   // ---------- Wire up ----------
+  const relayout = () => wheels[active].layout();
   if ("ResizeObserver" in window) {
     let lastW = 0;
-    new ResizeObserver(() => { if (root.clientWidth !== lastW) { lastW = root.clientWidth; layout(); } }).observe(root);
+    new ResizeObserver(() => { if (hero.clientWidth !== lastW) { lastW = hero.clientWidth; relayout(); } }).observe(hero);
     let lastH = window.innerHeight, rq = 0;
     window.addEventListener("resize", () => {
       if (window.innerHeight === lastH) return;
       lastH = window.innerHeight;
       cancelAnimationFrame(rq);
-      rq = requestAnimationFrame(layout);
+      rq = requestAnimationFrame(relayout);
     });
-  } else {
-    window.addEventListener("resize", layout);
-  }
+  } else window.addEventListener("resize", relayout);
   if ("IntersectionObserver" in window) {
-    new IntersectionObserver((en) => { visible = en[0].isIntersecting; kick(); }, { threshold: 0.05 }).observe(root);
+    new IntersectionObserver((en) => { visible = en[0].isIntersecting; wheels[active].kick(); }, { threshold: 0.05 }).observe(hero);
   }
-  document.addEventListener("visibilitychange", kick);
+  document.addEventListener("visibilitychange", () => wheels[active].kick());
+  if (reduce) pauseBtn.hidden = true;
   pauseBtn.addEventListener("click", () => {
     paused = !paused;
     pauseBtn.textContent = paused ? "Play" : "Pause";
-    root.classList.toggle("paused", paused);
-    kick();
+    wheels.forEach((w) => w.root.classList.toggle("paused", paused));
+    wheels[active].kick();
   });
-
-  layout();
-  if (reduce) {
-    root.classList.add("static");
-    stations.forEach((s) => s.classList.add("seen"));
-    pauseBtn.hidden = true;
-    stepBtns.forEach((b) => (b.hidden = true));
-    links.forEach((lk) => { lk.lit.classList.add("on"); lk.lit.setAttribute("stroke-dashoffset", "0"); });
-    Object.keys(spokes).forEach((k) => { spokes[k].classList.add("hot"); if (tags[k]) tags[k].classList.add("hot"); });
-    caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet, where it earns holder rewards → 5% of every trade pays miners and holders extra.";
-    return;
-  }
-  go(0);
+  if (auto) hero.classList.add("auto");
+  show(0);
 })();
 
 </script>

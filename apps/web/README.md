@@ -40,7 +40,7 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 | `standalone/` | Generated single-file copies of the pages (see above) |
 | `assets/js/model.js` | The pre-launch estimate for the decided design: 5% tax, 0.5% dev, miner chest = min(4 × a, 3.5% × (V/N + a)) per GPU (5× target), holders get the rest of 4.5% (at least 1%). Miner cut = chest per GPU × √(your GPU) × M-level ÷ (√a × average level); holder reward = bag × daily yield for the H-level. Default $750 volume per GPU (30% volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining) |
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic. Home: topic tabs (one section shown at a time, `#hash` links open tabs), earnings with auto-cycling levels, GPU meter, tax-pot simulation |
-| `assets/js/cycle.js` | Hero ring animation |
+| `assets/js/cycle.js` | Hero flywheels: two rings (the coin, your bag) built from one `makeWheel` engine, with a controller for the tabs, shared caption, step buttons and pause |
 | `assets/js/gpus.js` | **Generated** GPU list (133 cards: 91 from `data/hashrate-no-gpus-2026-10-03.json`, plus 42 laptop GPUs estimated from desktop siblings and marked `est`) |
 | `scripts/gen_gpus.py` | Regenerates `gpus.js`: `python3 apps/web/scripts/gen_gpus.py data/<file>.json` (from the repo root) |
 | `brand/` | Logo files, logo explorations and the website questionnaire |
