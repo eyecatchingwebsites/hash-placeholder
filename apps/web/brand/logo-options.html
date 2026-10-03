@@ -1,0 +1,112 @@
+<title>Hashcoin Logo Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one row per mark: big on light, big on dark, small-size checks, wordmark lockup. Color switcher on top. */
+:root {
+  --bg: #f4f4f2; --card: #ffffff; --ink: #18191a; --muted: #6b6e70; --line: #e2e2de; --dark: #111314;
+  --coin: #e9a51c; --coin-deep: #c9850a; --mark: #ffffff;
+  --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f1112; --card: #181a1c; --ink: #ecedee; --muted: #9a9ea2; --line: #2a2d30; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0f1112; --card: #181a1c; --ink: #ecedee; --muted: #9a9ea2; --line: #2a2d30; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 64px; display: grid; gap: 28px; }
+h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.swatches span { color: var(--muted); font-size: .85rem; margin-right: 4px; }
+.sw { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: 600 .85rem var(--sans); cursor: pointer; }
+.sw i { width: 18px; height: 18px; border-radius: 50%; display: block; }
+.sw[aria-pressed="true"] { border-color: var(--ink); }
+.sw:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.row { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: 220px 220px minmax(0, 1fr); }
+@media (max-width: 860px) { .row { grid-template-columns: 1fr 1fr; } .row .meta { grid-column: 1 / -1; } }
+.tile { display: grid; place-items: center; padding: 24px; aspect-ratio: 1; }
+.tile.light { background: #ffffff; }
+.tile.darkbg { background: var(--dark); }
+.tile svg { width: 100%; max-width: 168px; height: auto; }
+.meta { padding: 22px 24px; display: grid; gap: 14px; align-content: start; min-width: 0; border-left: 1px solid var(--line); }
+.meta h2 { margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; gap: 10px; align-items: baseline; }
+.meta h2 b { font: 500 .78rem var(--mono); color: var(--muted); }
+.meta p { margin: 0; color: var(--muted); font-size: .92rem; max-width: 56ch; }
+.sizes { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.sizes figure { margin: 0; display: grid; gap: 4px; justify-items: center; font: 500 .7rem var(--mono); color: var(--muted); }
+.lockup { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px; background: var(--bg); flex-wrap: wrap; }
+.lockup .word { font: 800 1.7rem var(--sans); letter-spacing: -.02em; }
+.lockup .tick { font: 500 .85rem var(--mono); color: var(--muted); }
+.note { color: var(--muted); font-size: .85rem; max-width: 80ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hashcoin logo options</h1>
+    <p class="sub">Six directions for the coin mark, drawn as clean vector shapes so they stay sharp at any size. Each one is shown on white, on black, at icon sizes down to 16 px, and next to the wordmark. Switch the coin color to compare.</p>
+  </header>
+
+  <div class="swatches" role="group" aria-label="Coin color">
+    <span>Coin color</span>
+    <button class="sw" data-c="#e9a51c" data-d="#c9850a" aria-pressed="true"><i style="background:#e9a51c"></i>Gold</button>
+    <button class="sw" data-c="#f08a3c" data-d="#cf6a1e"><i style="background:#f08a3c"></i>Amber</button>
+    <button class="sw" data-c="#2f6bff" data-d="#1d4fd1"><i style="background:#2f6bff"></i>Electric blue</button>
+    <button class="sw" data-c="#18191a" data-d="#000000"><i style="background:#18191a"></i>Black</button>
+    <button class="sw" data-c="#2fc4ad" data-d="#17977f"><i style="background:#2fc4ad"></i>Teal</button>
+  </div>
+
+  <div id="rows"></div>
+
+  <p class="note">The version from ChatGPT looked off for three reasons. It had three horizontal bars, so it read as a ladder rather than a hash. The bars were slanted while the uprights were straight, so the geometry fought itself. And the mark nearly touched the coin edge, so nothing had room to breathe. Every option here uses a true two-bar hash, one consistent angle, and a safe margin inside the coin.</p>
+</div>
+
+<script>
+const marks = [
+  { id: "A", name: "Classic tilt", desc: "A bold two-bar hash, tilted like the Bitcoin B. The most iconic and the most readable at small sizes. Closest to the BTC/LTC family.",
+    svg: (c, d) => `<circle cx="50" cy="50" r="48" fill="${c}"/>
+      <g transform="rotate(-14 50 50)" fill="#fff"><rect x="36" y="23" width="9.5" height="54" rx="1.5"/><rect x="54.5" y="23" width="9.5" height="54" rx="1.5"/><rect x="24" y="36" width="52" height="9.5" rx="1.5"/><rect x="24" y="54.5" width="52" height="9.5" rx="1.5"/></g>` },
+  { id: "B", name: "Currency sign", desc: "Long thin uprights that stick out past the bars, like the strokes on $ and ₿. Reads as money first and hash second.",
+    svg: (c, d) => `<circle cx="50" cy="50" r="48" fill="${c}"/>
+      <g transform="rotate(12 50 50)" fill="#fff"><rect x="38.5" y="15" width="7" height="70" rx="3.5"/><rect x="54.5" y="15" width="7" height="70" rx="3.5"/><rect x="25" y="37.5" width="50" height="8" rx="2"/><rect x="25" y="54.5" width="50" height="8" rx="2"/></g>` },
+  { id: "C", name: "Italic hash", desc: "A slanted, typeset-style hash with heavy strokes. Feels fast and modern, closer to a tech or fintech brand.",
+    svg: (c, d) => `<circle cx="50" cy="50" r="48" fill="${c}"/>
+      <g transform="translate(50 50) skewX(-16) translate(-50 -50)" fill="#fff"><rect x="35" y="24" width="11" height="52" rx="2"/><rect x="54" y="24" width="11" height="52" rx="2"/><rect x="25" y="37" width="50" height="10" rx="2"/><rect x="25" y="54" width="50" height="10" rx="2"/></g>` },
+  { id: "D", name: "Reeded coin", desc: "A real coin edge with fine notches, a nod to minted money and to GPU fan blades. The inner hash stays simple.",
+    svg: (c, d) => { let notches = ""; for (let i = 0; i < 48; i++) notches += `<rect x="49" y="2.5" width="2" height="6" rx="1" fill="${d}" transform="rotate(${i * 7.5} 50 50)"/>`;
+      return `<circle cx="50" cy="50" r="48" fill="${c}"/>${notches}<circle cx="50" cy="50" r="38" fill="none" stroke="${d}" stroke-width="2"/>
+      <g transform="rotate(-12 50 50)" fill="#fff"><rect x="39" y="29" width="7.5" height="42" rx="1.5"/><rect x="53.5" y="29" width="7.5" height="42" rx="1.5"/><rect x="29" y="39.5" width="42" height="7.5" rx="1.5"/><rect x="29" y="53" width="42" height="7.5" rx="1.5"/></g>`; } },
+  { id: "E", name: "Ring", desc: "An outlined coin with a colored hash. Lighter and more premium. It works best large, on the website and in 3D.",
+    svg: (c, d) => `<circle cx="50" cy="50" r="45.5" fill="#fff" stroke="${c}" stroke-width="5"/>
+      <g transform="rotate(-14 50 50)" fill="${c}"><rect x="37" y="25" width="8.5" height="50" rx="1.5"/><rect x="54.5" y="25" width="8.5" height="50" rx="1.5"/><rect x="25" y="37.5" width="50" height="8.5" rx="1.5"/><rect x="25" y="54" width="50" height="8.5" rx="1.5"/></g>` },
+  { id: "F", name: "Chip", desc: "The hash cut out of a processor chip with pins on each side. Says hardware and mining most directly. Busier at small sizes.",
+    svg: (c, d) => { let pins = ""; for (const p of [38, 50, 62]) pins += `<rect x="${p - 2.5}" y="18" width="5" height="9" rx="1.5" fill="#fff"/><rect x="${p - 2.5}" y="73" width="5" height="9" rx="1.5" fill="#fff"/><rect x="18" y="${p - 2.5}" width="9" height="5" rx="1.5" fill="#fff"/><rect x="73" y="${p - 2.5}" width="9" height="5" rx="1.5" fill="#fff"/>`;
+      return `<circle cx="50" cy="50" r="48" fill="${c}"/>${pins}<rect x="25" y="25" width="50" height="50" rx="8" fill="#fff"/>
+      <g transform="rotate(-12 50 50)" fill="${c}"><rect x="40" y="31" width="6.5" height="38" rx="1"/><rect x="53.5" y="31" width="6.5" height="38" rx="1"/><rect x="31" y="40" width="38" height="6.5" rx="1"/><rect x="31" y="53.5" width="38" height="6.5" rx="1"/></g>`; } },
+];
+
+const svgEl = (inner, size, label) => `<svg viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="${label}">${inner}</svg>`;
+
+function render(c, d) {
+  document.getElementById("rows").innerHTML = marks.map((m) => {
+    const inner = m.svg(c, d);
+    return `<article class="row">
+      <div class="tile light">${svgEl(inner, 168, `Option ${m.id} on white`)}</div>
+      <div class="tile darkbg">${svgEl(inner, 168, `Option ${m.id} on black`)}</div>
+      <div class="meta">
+        <h2>${m.name} <b>Option ${m.id}</b></h2>
+        <p>${m.desc}</p>
+        <div class="sizes">
+          ${[64, 48, 32, 24, 16].map((s) => `<figure>${svgEl(inner, s, `${s} pixels`)}<figcaption>${s}px</figcaption></figure>`).join("")}
+        </div>
+        <div class="lockup">${svgEl(inner, 40, "icon")}<span class="word">Hashcoin</span><span class="tick">$HASH</span></div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+document.querySelectorAll(".sw").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll(".sw").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  render(b.dataset.c, b.dataset.d);
+}));
+render("#e9a51c", "#c9850a");
+</script>
