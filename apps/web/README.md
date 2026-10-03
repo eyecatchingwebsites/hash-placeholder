@@ -12,6 +12,12 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
+`index.html` needs the `assets/` and `brand/` folders beside it. If you open or share the HTML file on its own (a preview pane, a download, a chat attachment), it shows up unstyled. For that, use the single-file copies in `standalone/`. They have the CSS, JS and logo built in. Rebuild them after any change:
+
+```sh
+python3 apps/web/scripts/build_standalone.py
+```
+
 Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site falls back to system fonts and still works.
 
 ## Pages
