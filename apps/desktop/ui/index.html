@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hashcoin Miner</title>
+<style>
+  :root { --bg: #121514; --panel: #1a1e1c; --ink: #e8ebe8; --muted: #9aa39f; --line: #2c3330; --accent: #f08a3c; --good: #5ccf7f; --bad: #ff7a6e; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { padding: 20px 16px; display: grid; gap: 16px; }
+  h1 { margin: 0; font-size: 1.4rem; } h1 b { color: var(--accent); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+  label { font-weight: 600; }
+  input { width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 13px ui-monospace, Menlo, Consolas, monospace; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .row { display: flex; gap: 8px; }
+  button { flex: 1; padding: 11px; border: 0; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #1b1f1d; }
+  button.secondary { background: var(--line); color: var(--ink); }
+  button:disabled { opacity: .5; cursor: default; }
+  .gpu { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .gpu:first-of-type { border-top: 0; }
+  .state { font-weight: 700; } .state.mining { color: var(--good); }
+  .err { color: var(--bad); }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<main>
+  <h1><b>$HASH</b> Miner</h1>
+
+  <section class="card">
+    <label for="wallet">Your Solana wallet address</label>
+    <input id="wallet" placeholder="e.g. 4Nd1mYwSzKj7…" autocomplete="off" spellcheck="false">
+    <span class="hint">Payouts go here. Only paste your public address. Hashcoin never asks for a seed phrase or private key.</span>
+    <div class="row"><button class="secondary" id="save">Save address</button></div>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <button class="primary" id="start">Start mining</button>
+      <button class="secondary" id="stop">Stop</button>
+    </div>
+    <span class="hint" id="summary"></span>
+    <span class="err" id="error" hidden></span>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content: space-between; align-items: baseline;">
+      <label>Graphics cards</label>
+      <button class="secondary" id="detect" style="flex: 0 0 auto; padding: 6px 10px; font-size: 12px;">Rescan</button>
+    </div>
+    <div id="gpus"></div>
+  </section>
+
+  <span class="hint">Hashcoin picks the best-paying coin for each card and pays you in $HASH. Earnings vary with mining revenue, trading volume and the $HASH price.</span>
+</main>
+<script>
+  const { invoke } = window.__TAURI__.core;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let editing = false;
+
+  function render(s) {
+    if (!editing) $("wallet").value = s.settings.wallet || "";
+    $("start").disabled = s.mining; $("stop").disabled = !s.mining;
+    const total = s.gpus.reduce((a, g) => a + (g.expectedUsdPerDay || 0), 0);
+    $("summary").textContent = s.mining
+      ? `Mining on ${s.gpus.filter((g) => g.state === "mining").length} of ${s.gpus.length} cards · est. $${total.toFixed(2)}/day before the chest bonus · rig "${s.settings.rigId}"`
+      : `Stopped · rig "${s.settings.rigId}"`;
+    $("error").hidden = !s.error; $("error").textContent = s.error || "";
+    $("gpus").innerHTML = s.gpus.length ? s.gpus.map((g) => `
+      <div class="gpu">
+        <span>${esc(g.gpu.name)}</span><span class="state ${g.state === "mining" ? "mining" : ""}">${esc(g.state)}</span>
+        <span class="hint">${g.coin ? `${esc(g.coin)} · est. $${g.expectedUsdPerDay.toFixed(2)}/day` : ""}</span><span class="hint">${esc(g.reason)}</span>
+      </div>`).join("") : `<span class="hint">No supported card found. Hashcoin needs an NVIDIA, AMD or Intel Arc GPU with current drivers.</span>`;
+  }
+  const run = (cmd, args) => invoke(cmd, args).then(render).catch((e) => { $("error").hidden = false; $("error").textContent = e; });
+
+  $("wallet").addEventListener("focus", () => (editing = true));
+  $("wallet").addEventListener("blur", () => (editing = false));
+  $("save").onclick = () => run("save_wallet", { address: $("wallet").value });
+  $("start").onclick = () => run("start");
+  $("stop").onclick = () => run("stop");
+  $("detect").onclick = () => run("detect");
+  run("status");
+  setInterval(() => run("status"), 3000);
+</script>
+</body>
+</html>

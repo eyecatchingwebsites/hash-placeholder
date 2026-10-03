@@ -1,0 +1,29 @@
+name: Desktop release (Windows)
+on:
+  workflow_dispatch:
+  push:
+    tags: ["desktop-v*"]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Check the production public key is set
+        shell: bash
+        run: |
+          if grep -q REPLACE_WITH_PRODUCTION_PUBLIC_KEY apps/desktop/src-tauri/src/main.rs; then
+            echo "::error::Set TRUSTED_KEYS in apps/desktop/src-tauri/src/main.rs to the production public key before releasing."; exit 1
+          fi
+      - name: Build installer
+        working-directory: apps/desktop/src-tauri
+        run: npx --yes @tauri-apps/cli@2 build
+      # Code signing: add a signing step here (e.g. Azure Trusted Signing or an OV/EV certificate) using
+      # repository secrets, then upload the signed installer. Unsigned builds trigger SmartScreen warnings.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hashcoin-miner-windows
+          path: apps/desktop/target/release/bundle/nsis/*.exe

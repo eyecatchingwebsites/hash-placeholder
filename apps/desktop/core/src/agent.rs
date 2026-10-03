@@ -3,8 +3,8 @@ use crate::signed::Assignment;
 /// What the app should do for one GPU after a check-in.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
-    /// Same coin and pool as now: keep the miner running.
-    Keep,
+    /// Same coin and pool as now: keep the miner running, but store the refreshed assignment (new expiry).
+    Keep(Assignment),
     /// Start (or restart with) this assignment.
     Run(Assignment),
     /// Nothing valid to mine: stop this GPU.
@@ -16,7 +16,7 @@ pub enum Action {
 pub fn plan(current: Option<&Assignment>, next: Result<Assignment, String>) -> Action {
     match (current, next) {
         (_, Err(why)) => Action::Stop(why),
-        (Some(cur), Ok(n)) if cur.coin == n.coin && cur.algo == n.algo && cur.miner_id == n.miner_id && cur.pool == n.pool => Action::Keep,
+        (Some(cur), Ok(n)) if cur.coin == n.coin && cur.algo == n.algo && cur.miner_id == n.miner_id && cur.pool == n.pool => Action::Keep(n),
         (_, Ok(n)) => Action::Run(n),
     }
 }
@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn keeps_running_on_refresh_and_restarts_on_switch() {
-        assert_eq!(plan(Some(&a("PRL", 1)), Ok(a("PRL", 2))), Action::Keep);
+        assert_eq!(plan(Some(&a("PRL", 1)), Ok(a("PRL", 2))), Action::Keep(a("PRL", 2)));
         assert_eq!(plan(Some(&a("PRL", 1)), Ok(a("QTC", 2))), Action::Run(a("QTC", 2)));
         assert_eq!(plan(None, Ok(a("PRL", 1))), Action::Run(a("PRL", 1)));
         assert!(matches!(plan(Some(&a("PRL", 1)), Err("bad signature".into())), Action::Stop(_)));

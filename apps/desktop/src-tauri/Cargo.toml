@@ -1,0 +1,19 @@
+[package]
+name = "hashcoin-miner"
+version = "0.1.0"
+edition = "2021"
+description = "Hashcoin Miner desktop app"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+hashcoin-core = { path = "../core" }
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ureq = { version = "2", features = ["json"] }
+
+[features]
+# Lets a debug build trust the local dev API's throwaway key via HASHCOIN_DEV_PUBKEY.
+dev-key = []

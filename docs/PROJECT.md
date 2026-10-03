@@ -190,13 +190,29 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | Piece | Status |
 |---|---|
 | Payout engine (`packages/engine`): levels, weights, cap, epoch, hybrid payout, settlement, token split | Done, 15 tests |
-| Architecture doc | Done |
-| Simulation, calculator, creator page | Done |
+| Coin switcher (`packages/switcher`): per-card scoring (benchmarks or hashrate.no catalog, slippage and confirmation-delay penalties), hysteresis, Ed25519-signed assignments, wallet validation | Done, 11 tests |
+| Assignment API (`services/api`): `POST /v1/assignments`, signed miner list `GET /v1/miners`, `/v1/keys`, `/v1/health` | Done, 4 tests. Placeholder pools and miners in `config/` |
+| Desktop app (`apps/desktop`): Rust core (GPU detection, signature checks, hash-verified downloads, safe unzip, flag-injection guard, crash-restart supervisor) + Tauri 2 shell (wallet entry, Start/Stop, tray, background check-ins) | Core: 13 tests. App compiles. End-to-end test passes (API + app + stand-in miner). Not yet run on Windows |
+| CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
+| Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 3% token, fee collection, mock pool feed, batch payouts | Next |
 | Website at the .com: landing, dashboard, wallet page, waitlist | Next |
-| Real pool + one real GPU (proof video) | Later (needs the user's hardware) |
+| Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
+| Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | To do |
 | Update the simulation and calculator defaults to 3% (2.5/0.5), $150/month lean costs, a SOL fee line | To do |
+
+## Install and antivirus plan (decided)
+- **One signed Windows installer** (Tauri, ~10 MB). The user pastes a public Solana address and clicks Start. The app detects GPUs, the server picks a coin per card, and the app downloads a hash-verified miner and runs it. Tray icon, Start/Stop, Quit.
+- **Per-card coin choice on the server** (e.g. PRL for NVIDIA, QTC for AMD and Intel), signed so a hijacked connection can't redirect mining.
+- **Antivirus:** be clearly legitimate, never evade.
+  - Code-sign everything.
+  - Mine only after the user clicks Start; auto-start is opt-in.
+  - Visible tray icon, clean uninstall.
+  - No packing or obfuscation, never touch Defender.
+  - Submit each release to Microsoft and VirusTotal vendors.
+  - Open source with published checksums.
+  - Some antivirus will still label any miner as "potentially unwanted": the FAQ explains, and users only ever allow the Hashcoin folder.
 
 ## 11. Open decisions
 - Launchpad: LaunchLab 3% reward launch vs our own Token-2022 token and pool (verify LaunchLab details).

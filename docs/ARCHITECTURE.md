@@ -15,7 +15,7 @@ Status: draft. Chain assumed to be **Solana** (Solscan links, ~13s finality, che
  │ engine      every 10 min: levels → weights → epoch payout (packages/engine)│
  │ treasury    buys $HASH (Jupiter), keeps the float, sends batch transfers │
  │ settler     when mined coin confirms + sells → true-up pending balances  │
- │ switcher    scores coins every few hours, flips the pool target          │
+ │ switcher    per-card coin choice on each app check-in (signed, 5 min)    │
  │ api         public read API for website + dashboard                      │
  └──────────────────────────────────────────────────────────────────────────┘
           │ Postgres (ledger: epochs, lines, pending, settlements, transfers)
@@ -43,6 +43,9 @@ Status: draft. Chain assumed to be **Solana** (Solscan links, ~13s finality, che
 | Path | What | Status |
 |---|---|---|
 | `packages/engine` | Pure payout logic: levels, weights, epoch, settlement, token split | **done, tested** |
+| `packages/switcher` | Per-card coin scoring, hysteresis, signed assignments | **done, tested** |
+| `services/api` | Assignment API + signed miner list | **done, tested** (placeholder pools/miners) |
+| `apps/desktop` | Windows miner app (Rust core + Tauri 2) | **core tested, e2e passing**, not yet run on Windows |
 | `packages/chain` | Solana helpers: transfer indexer, batch sender, Jupiter swap | next |
 | `services/backend` | Collector, scheduler, treasury, settler, API (Node + Postgres) | next |
 | `apps/web` | hashcoin.com: landing, calculator, dashboard, wallet page | next |
