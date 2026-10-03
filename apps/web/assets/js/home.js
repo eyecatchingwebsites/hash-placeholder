@@ -1,122 +1,156 @@
-// Home page: the two loops, levels, simple calculator, GPU list.
+// Home page: earnings panel, levels table, chest simulation.
 (function () {
   "use strict";
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const M = window.HashModel, F = window.hcFmt, GPUS = window.GPUS || [];
-  const EX = M.EXAMPLE;
-  const EX_GPU = GPUS.find((g) => g.name === "RTX 4070") || GPUS[0];
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const money = (v) => (v > 0 && v < 0.01 ? "<$0.01" : F.usd(v));
 
-  // ---------- Loops ----------
-  const hero = $("#hero-loop");
-  if (hero) HashLoop(hero, { caption: $("#hero-caption"), controls: $("#hero-controls") });
-
-  const howRoot = $("#how-loop");
-  const steps = $$("#how-steps .step");
-  if (howRoot) {
-    const how = HashLoop(howRoot, {
-      onStep: (i) => steps.forEach((s, k) => s.classList.toggle("lit", k === i)),
-    });
-    steps.forEach((s, i) => {
-      s.addEventListener("click", () => how.jumpTo(i, true));
-      s.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); how.jumpTo(i, true); }
-      });
-    });
-  }
-
-  const exampleText =
-    `Example only. ${EX_GPU.name} mining $${EX_GPU.rev.toFixed(2)}/day (hashrate.no, Oct 3, 2026). ` +
-    `Example market: ${F.usd(EX.vol)} of $HASH traded per day and ${EX.miners} miners averaging $${EX.avgRev.toFixed(2)}/day, ` +
-    `${EX.p2}% at Level 2 and ${EX.p3}% at Level 3. Real payouts depend on live volume and miner count and can be much lower. Only the 1 : 2 : 4 ratio is fixed.`;
-
-  // ---------- Levels ----------
-  const stops = $$(".ladder-stop");
-  const cards = $$(".level");
-  const fill = $("#ladder-fill");
-  function selectLevel(l) {
-    stops.forEach((b) => {
-      const n = +b.dataset.level;
-      b.setAttribute("aria-pressed", String(n === l));
-      b.classList.toggle("on", n <= l);
-    });
-    cards.forEach((c) => c.setAttribute("aria-current", String(+c.dataset.level === l)));
-    if (fill) fill.style.width = [100 / 6, 50, 500 / 6][l - 1] + "%";
-  }
-  stops.forEach((b) => b.addEventListener("click", () => selectLevel(+b.dataset.level)));
-  cards.forEach((c) => c.addEventListener("mouseenter", () => selectLevel(+c.dataset.level)));
-  selectLevel(2);
-
-  const base = M.run({ ...EX, myRev: EX_GPU.rev, level: 1 });
-  $$("[data-example]").forEach((box) => {
-    const l = +box.dataset.example;
-    const r = M.run({ ...EX, myRev: EX_GPU.rev, level: l });
-    box.innerHTML = `
-      <span class="label-example">Example · ${EX_GPU.name}</span>
-      <table>
-        <tr><td>Mining</td><td>${F.usd(r.mining)}/day</td></tr>
-        <tr><td>Chest share</td><td>+${F.usd(r.chestShare)}/day</td></tr>
-        <tr class="total"><td>Total</td><td>${F.usd(r.total)}/day</td></tr>
-        <tr><td>vs mining alone</td><td>${F.mult(r.mult)}</td></tr>
-        <tr><td>vs Level 1</td><td>${l > 1 ? "+" + F.usd(r.total - base.total) + "/day" : "—"}</td></tr>
-      </table>`;
+  // ---------- Earnings panel ----------
+  const HERO_SCENS = ["launch", "hype", "peak", "steady"];
+  const S = { gpu: "RTX 4070", level: 2, scen: M.DEFAULT_SCEN };
+  const sel = $("#earn-gpu");
+  hcFillGpuSelect(sel, S.gpu);
+  [...sel.options].forEach((o) => {
+    const g = GPUS.find((x) => x.name === o.value);
+    if (g) o.textContent = `${g.name} · mines $${g.rev.toFixed(2)}/day`;
   });
-  const ln = $("#levels-note");
-  if (ln) ln.textContent = exampleText;
 
-  // ---------- Simple calculator ----------
-  const sel = $("#calc-gpu");
-  if (sel) {
-    let level = 2;
-    hcFillGpuSelect(sel, EX_GPU.name);
-    const segBtns = $$("#calc-level button");
-    const out = (k, v) => { const e = $(`[data-out="${k}"]`); if (e) e.textContent = v; };
-    const fmt = (v) => (v > 0 && v < 0.01 ? "<$0.01" : F.usd(v));
-    function update() {
-      const g = GPUS.find((x) => x.name === sel.value) || EX_GPU;
-      const r = M.run({ ...EX, myRev: g.rev, level });
-      out("mh", fmt(r.mining / 24)); out("md", fmt(r.mining)); out("mw", fmt(r.mining * 7));
-      out("ch", fmt(r.chestShare / 24)); out("cd", fmt(r.chestShare)); out("cw", fmt(r.chestShare * 7));
-      out("th", fmt(r.total / 24)); out("td", fmt(r.total)); out("tw", fmt(r.total * 7));
-      $("#calc-coin").textContent = g.coin;
-      $("#calc-share").textContent = F.pct(r.share * 100) + (r.capped ? " (cap)" : "");
-      segBtns.forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.l === level)));
-    }
-    sel.addEventListener("change", update);
-    segBtns.forEach((b) => b.addEventListener("click", () => { level = +b.dataset.l; update(); }));
-    $("#calc-assume").textContent =
-      `Mining: hashrate.no 24h revenue for your card, Oct 3, 2026. Chest share: example market of ${F.usd(EX.vol)} traded per day, ` +
-      `${EX.miners} miners averaging $${EX.avgRev.toFixed(2)}/day, ${EX.p2}% at Level 2 and ${EX.p3}% at Level 3. Real numbers will differ. ` +
-      `About 75% of mining is paid right away and the rest after the mined coin confirms.`;
-    update();
+  const scenBox = $("#earn-scen");
+  HERO_SCENS.forEach((id) => {
+    const sc = M.scenario(id);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.dataset.s = id;
+    b.innerHTML = `${sc.name}<span class="wk">${sc.wk}</span>`;
+    b.addEventListener("click", () => { S.scen = id; update(); });
+    scenBox.append(b);
+  });
+  sel.addEventListener("change", () => { S.gpu = sel.value; update(); });
+  $$("#earn-level button").forEach((b) => b.addEventListener("click", () => { S.level = +b.dataset.l; update(); }));
+  $$(".lv-table tbody tr").forEach((tr) => tr.addEventListener("click", () => { S.level = +tr.dataset.l; update(); }));
+
+  function update() {
+    const g = GPUS.find((x) => x.name === S.gpu) || GPUS[0];
+    const sc = M.scenario(S.scen);
+    const r = M.run({ ...sc.v, myRev: g.rev, level: S.level });
+
+    $("#earn-day").textContent = money(r.total);
+    $("#earn-sub").innerHTML = `About <b>${money(r.total / 144)}</b> every 10-minute payout.`;
+    $("#earn-cut").textContent = money(r.chestShare) + "/day";
+    $("#earn-mine").textContent = money(r.mining) + "/day";
+    $("#earn-share").textContent = F.pct(r.share * 100) + (r.capped ? " (5% cap)" : "");
+    $("#earn-assume").innerHTML = `<b>${sc.name}:</b> ${F.usd(sc.v.vol)} 24h volume, ${sc.v.miners.toLocaleString("en-US")} GPUs mining → ${F.usd(r.chest)}/day to miners.`;
+    $("#earn-flag").innerHTML = S.level === 3 && !sc.l3
+      ? `<p class="flag">Level 3 needs 14 days of holding, so nobody has it yet in this scenario. Shown for comparison.</p>` : "";
+    $$("#earn-scen .chip").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.s === S.scen)));
+    $$("#earn-level button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.l === S.level)));
+    sel.value = g.name;
+
+    // Levels table follows the same GPU and scenario.
+    const base = M.run({ ...sc.v, myRev: g.rev, level: 1 });
+    [1, 2, 3].forEach((l) => {
+      const x = M.run({ ...sc.v, myRev: g.rev, level: l });
+      const cell = $(`[data-lv="${l}"]`);
+      cell.innerHTML = `${money(x.total)}/day<small>${l === 1 ? "mining + 1× cut" : "+" + money(x.total - base.total) + " vs Level 1"}</small>`;
+      cell.parentElement.classList.toggle("on", l === S.level);
+    });
+    $("#lv-col").textContent = `Per day`;
+    $("#levels-lede").textContent = `Same GPU, same chest. Your level multiplies your share. Numbers below: ${g.name}, ${sc.name} scenario (${F.usd(sc.v.vol)} volume, ${sc.v.miners} GPUs).`;
+  }
+  update();
+
+  // ---------- Chest simulation ----------
+  const trades = $("#sim-trades"), pays = $("#sim-pay");
+  if (!trades) return;
+  const amountEl = $("#sim-amount"), prog = $("#sim-prog"), next = $("#sim-next"), chestBox = $("#sim-chest");
+  const toggle = $("#sim-toggle");
+  const SPLIT_MS = 12000, MAX_ROWS = 9, GPUS_MINING = 400;
+  const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const addr = () => Array.from({ length: 4 }, () => pick(B58)).join("") + "…" + Array.from({ length: 4 }, () => pick(B58)).join("");
+  const SAMPLE = ["RTX 4070", "RTX 3060", "RTX 5090", "RX 7900 XTX", "RTX 3080", "RTX 4060", "RTX 4090 24GB", "RX 6700 XT", "RTX 5070 Ti", "Arc A770"]
+    .map((n) => GPUS.find((g) => g.name === n)).filter(Boolean);
+  // Approximate total weight of 400 GPUs averaging $2.50/day with a typical level mix (avg multiplier ~1.6).
+  const TOTAL_W = GPUS_MINING * Math.sqrt(2.5) * 1.6;
+
+  let chest = 0, elapsed = 0, last = 0, raf = 0, tradeTimer = 0, visible = true, paused = false;
+
+  function row(list, html) {
+    const li = document.createElement("li");
+    li.innerHTML = html;
+    list.prepend(li);
+    while (list.children.length > MAX_ROWS) list.lastElementChild.remove();
+  }
+  function trade(amount, side, label) {
+    const toChest = amount * 0.025;
+    chest += toChest;
+    row(trades, `<span class="side${side === "Sell" ? " sell" : ""}">${side}</span><span class="amt">${label || F.usd(amount)}</span><span class="to">+${money(toChest)}</span>`);
+    amountEl.textContent = money(chest);
+  }
+  function randomTrade() {
+    const big = Math.random() < 0.12;
+    const amount = Math.round(big ? rnd(1500, 6000) : Math.exp(rnd(Math.log(30), Math.log(1200))));
+    trade(amount, Math.random() < 0.58 ? "Buy" : "Sell");
+  }
+  function split() {
+    const paid = chest;
+    const picks = [...SAMPLE].sort(() => Math.random() - 0.5).slice(0, 5);
+    picks.reverse().forEach((g) => {
+      const level = pick([1, 2, 2, 3]);
+      const cut = (paid * Math.sqrt(g.rev) * M.MULT[level - 1]) / TOTAL_W;
+      row(pays, `<span class="who">${addr()} <small>${g.name} · L${level}</small></span><span class="to">+${money(cut)}</span>`);
+    });
+    chest = 0;
+    amountEl.textContent = "$0.00";
+    chestBox.classList.add("split");
+    setTimeout(() => chestBox.classList.remove("split"), 300);
+    next.textContent = `Split between ${GPUS_MINING} GPUs`;
+    // Miner payouts are market buys of $HASH, so they pay the tax too.
+    setTimeout(() => trade((GPUS_MINING * 2.5) / 144, "Buy", "miner payouts"), 900);
   }
 
-  // ---------- GPU table ----------
-  const body = $("#gpu-body");
-  if (body) {
-    const search = $("#gpu-search"), more = $("#gpu-more"), count = $("#gpu-count");
-    const brandBtns = $$("#gpu-brands .chip");
-    let brand = "", showAll = false;
-    const LIMIT = 12;
-    function render() {
-      const q = search.value.trim().toLowerCase();
-      const rows = GPUS.filter((g) => (!brand || g.brand === brand) && (!q || g.name.toLowerCase().includes(q)));
-      const shown = showAll || q ? rows : rows.slice(0, LIMIT);
-      body.innerHTML = shown.length
-        ? shown.map((g) => `<tr><td>${g.name}</td><td>${g.brand}</td><td><span class="coin ${g.coin}">${g.coin}</span></td><td class="num">$${g.rev.toFixed(2)}</td></tr>`).join("")
-        : `<tr><td colspan="4" style="color: var(--muted)">No match. Try a model number like 3060.</td></tr>`;
-      count.textContent = `Showing ${shown.length} of ${rows.length} ${brand || ""} cards`.replace("  ", " ");
-      more.hidden = !!q || rows.length <= LIMIT;
-      more.textContent = showAll ? "Show fewer" : `Show all ${rows.length}`;
-      more.setAttribute("aria-expanded", String(showAll));
-    }
-    search.addEventListener("input", render);
-    brandBtns.forEach((b) => b.addEventListener("click", () => {
-      brand = b.dataset.brand;
-      brandBtns.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      render();
-    }));
-    more.addEventListener("click", () => { showAll = !showAll; render(); });
-    render();
+  function frame(t) {
+    raf = 0;
+    if (!running()) { last = 0; return; }
+    if (last) elapsed += t - last;
+    last = t;
+    if (elapsed >= SPLIT_MS) { elapsed = 0; split(); }
+    prog.style.width = (elapsed / SPLIT_MS) * 100 + "%";
+    if (elapsed > 1500) next.textContent = `Next split in ${Math.ceil((SPLIT_MS - elapsed) / 1000)}s`;
+    raf = requestAnimationFrame(frame);
   }
+  function scheduleTrade() {
+    clearTimeout(tradeTimer);
+    if (!running()) return;
+    tradeTimer = setTimeout(() => { if (running()) randomTrade(); scheduleTrade(); }, rnd(550, 1300));
+  }
+  const running = () => visible && !paused && !document.hidden && !reduce;
+  function kick() {
+    if (running()) { if (!raf) raf = requestAnimationFrame(frame); scheduleTrade(); }
+    else clearTimeout(tradeTimer);
+  }
+
+  // Start with some history so the panel never looks empty.
+  for (let i = 0; i < 7; i++) randomTrade();
+  split();
+  for (let i = 0; i < 4; i++) randomTrade();
+  next.textContent = reduce ? "Splits every 10 minutes" : "Next split soon";
+
+  if (reduce) {
+    toggle.hidden = true;
+    prog.style.width = "40%";
+    return;
+  }
+  toggle.addEventListener("click", () => {
+    paused = !paused;
+    toggle.textContent = paused ? "Play" : "Pause";
+    kick();
+  });
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((en) => { visible = en[0].isIntersecting; kick(); }).observe($("#sim-chest"));
+  }
+  document.addEventListener("visibilitychange", kick);
+  kick();
 })();

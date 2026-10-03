@@ -24,7 +24,7 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 
 | File | What it is |
 |---|---|
-| `index.html` | Home: hero with the animated loop, launch countdown, how it works, app preview, levels, simple earnings example, supported GPUs, payout feed preview, tokenomics, dev wallets, works with, safety, roadmap, FAQ, waitlist |
+| `index.html` | Home, written for traders: hero with a "what your GPU makes" panel, a simulated chest (trades → tax → split to miners), why the tax pays out, levels table, the miner app, tokenomics, status, waitlist with countdown, FAQ |
 | `calculator.html` | Full earnings calculator: GPU, power, electricity, level, and market scenarios |
 | `faq.html` | FAQ and docs: getting started, mining, payouts, levels, token, safety, risks |
 
@@ -35,8 +35,8 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 | `assets/css/site.css` | All styles. Design tokens are at the top (`--bg #0B0C0D`, `--gold #EBB447`, 8px radius) |
 | `assets/js/config.js` | **Launch settings:** `launchAt`, `ca` (contract address), `x`, `discord`, `github`. All `null` until launch |
 | `assets/js/site.js` | Shared behavior: header, mobile menu, placeholder toasts, countdown, contract-address button, scroll reveal |
-| `assets/js/loop.js` | The animated GPU → $HASH loop (SVG plus HTML labels). Pauses off-screen and has a Pause button. Static with reduced motion |
-| `assets/js/model.js` | Chest-share model (sqrt of GPU earnings × level 1/2/4, 5% cap, 2.5% chest), the home-page example market, and calculator scenarios |
+| `standalone/` | Generated single-file copies of the pages (see above) |
+| `assets/js/model.js` | Chest-share model (sqrt of GPU earnings × level 1/2/4, 5% cap, 2.5% chest) and the scenario presets (Launch day, Hype week [default], Peak run, Cooling off, Steady state, Flop) |
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic |
 | `assets/js/gpus.js` | **Generated** GPU list (91 cards) from `data/hashrate-no-gpus-2026-10-03.json` |
 | `scripts/gen_gpus.py` | Regenerates `gpus.js`: `python3 apps/web/scripts/gen_gpus.py data/<file>.json` (from the repo root) |
@@ -54,7 +54,8 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 
 From `CLAUDE.md` and `docs/DESIGN-BRIEF.md`:
 - Never promise returns. Avoid "pays for itself", "free", "guaranteed" and rising price charts.
-- Label every example figure as an example.
+- Label every scenario figure as a scenario. The home page defaults to the "Hype week" preset ($300K 24h volume, 400 GPUs mining) and always shows the other scenarios next to it, including the low ones.
+- Say "tax" rather than "fee" on the site; that's the word traders use.
 - Keep "we will never ask for your seed phrase" and the risk disclaimer in the footer.
 
 "Works with" uses plain-text names rather than logos. Check each brand's trademark rules before swapping in official logos.

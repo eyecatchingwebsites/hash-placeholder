@@ -38,7 +38,6 @@ def build(name: str) -> str:
         return f'{attr}="{data_uri(WEB / path)}"'
 
     html = re.sub(r'(src|data-logo|href)="(brand/logo/[^"]+\.(?:svg|ico))"', inline_asset, html)
-    # loop.js builds the core logo from data-logo, defaulting to the relative path.
     return html
 
 

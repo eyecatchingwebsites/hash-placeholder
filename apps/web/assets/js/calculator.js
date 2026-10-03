@@ -11,7 +11,7 @@
   const nice = (v) => { const m = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / m) * m; };
 
   const g0 = GPUS.find((g) => g.name === "RTX 4070") || GPUS[0];
-  const DEFAULTS = { gpu: g0.name, myRev: g0.rev, watts: g0.w, elec: 0.15, level: 2, scen: "example", ...M.EXAMPLE };
+  const DEFAULTS = { gpu: g0.name, myRev: g0.rev, watts: g0.w, elec: 0.15, level: 2, scen: M.DEFAULT_SCEN, ...M.scenario(M.DEFAULT_SCEN).v };
   let S = { ...DEFAULTS };
 
   const sel = $("#fc-gpu");
@@ -91,7 +91,7 @@
     $("#fc-mult").textContent = F.mult(r.mult);
 
     const flags = [];
-    if (S.level === 3 && (S.scen === "launch" || S.scen === "hype")) flags.push("Level 3 isn't possible in the first 14 days after launch. Pick Level 1 or 2 for this scenario.");
+    if (S.level === 3 && sc && !sc.l3) flags.push("Level 3 isn't possible in the first 14 days after launch. Pick Level 1 or 2 for this scenario.");
     if (r.capped) flags.push("You've hit the 5% cap. The excess is shared out to other miners.");
     if (r.net < 0) flags.push("At this electricity price, power costs more than this card earns in this scenario.");
     $("#fc-flags").innerHTML = flags.map((f) => `<p class="flag">${f}</p>`).join("");

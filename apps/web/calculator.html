@@ -22,15 +22,15 @@
 <header class="site-header">
   <div class="wrap nav">
     <a class="brand" href="index.html" aria-label="Hashcoin home">
-      <img src="brand/logo/hashcoin-mark.svg" alt="" width="30" height="30">
+      <img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28">
       <span>Hashcoin</span><span class="tick">$HASH</span>
     </a>
     <nav aria-label="Main">
       <ul class="nav-links">
         <li><a href="index.html#how">How it works</a></li>
-        <li><a href="index.html#levels">Levels</a></li>
         <li><a href="calculator.html" aria-current="page">Calculator</a></li>
-        <li><a href="index.html#token">Token</a></li>
+        <li><a href="index.html#levels">Levels</a></li>
+        <li><a href="index.html#token">Tokenomics</a></li>
         <li><a href="faq.html">FAQ</a></li>
       </ul>
     </nav>
@@ -53,9 +53,9 @@
   <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
     <ul>
       <li><a href="index.html#how">How it works</a></li>
-      <li><a href="index.html#levels">Levels</a></li>
       <li><a href="calculator.html" aria-current="page">Calculator</a></li>
-      <li><a href="index.html#token">Token</a></li>
+      <li><a href="index.html#levels">Levels</a></li>
+      <li><a href="index.html#token">Tokenomics</a></li>
       <li><a href="faq.html">FAQ</a></li>
     </ul>
     <div class="mobile-extra">
@@ -64,17 +64,27 @@
     </div>
   </nav>
 </header>
-
+<div class="ticker" aria-label="Token summary">
+  <ul>
+    <li>$HASH <b>Solana</b></li>
+    <li>Tax <b class="gold">3%</b></li>
+    <li>To miners <b class="gold">2.5%</b></li>
+    <li>Dev <b>0.5%</b></li>
+    <li>Payouts <b>every 10 min</b></li>
+    <li>Dev bag <b>1%, locked 90d</b></li>
+    <li>Launch <b>TBA</b></li>
+    <li>CA <b>posted here at launch</b></li>
+  </ul>
+</div>
 <main id="main">
   <section class="page-head">
     <div class="wrap">
-      <p class="eyebrow">Calculator</p>
-      <h1 style="font-size: clamp(2.2rem, 5vw, 3.6rem); margin-top: 16px;">Earnings calculator</h1>
-      <p class="lede">Mining revenue is real, from hashrate.no on Oct 3, 2026. The chest depends on how much $HASH is traded and how many people mine, which nobody knows before launch. Pick a scenario or set your own assumptions.</p>
+      <h1>What would your GPU make?</h1>
+      <p class="lede">Your cut comes down to two numbers: <b>24h volume</b> and <b>how many GPUs are mining.</b> Pick a scenario or set them yourself. Mining revenue per card is real (hashrate.no, Oct 3, 2026).</p>
     </div>
   </section>
 
-  <section class="section" style="padding-top: clamp(32px, 4vw, 48px);">
+  <section class="section" style="padding-top: clamp(28px, 4vw, 40px); border-top: 0;">
     <div class="wrap calc-full">
       <form class="calc-form" id="fc" onsubmit="return false;">
         <fieldset class="fieldset">
@@ -109,28 +119,28 @@
         </fieldset>
 
         <fieldset class="fieldset">
-          <legend>Market assumptions</legend>
+          <legend>Market</legend>
           <div class="chips" id="fc-scen" role="group" aria-label="Scenario"></div>
           <p class="scenario-desc" id="fc-scen-desc"></p>
           <div class="range-row">
-            <div class="range-top"><label for="fc-vol">$HASH traded per day</label><output id="fc-vol-o" for="fc-vol"></output></div>
+            <div class="range-top"><label for="fc-vol">24h volume</label><output id="fc-vol-o" for="fc-vol"></output></div>
             <input type="range" id="fc-vol" min="0" max="1000" step="1">
           </div>
           <div class="range-row">
-            <div class="range-top"><label for="fc-miners">Miners</label><output id="fc-miners-o" for="fc-miners"></output></div>
+            <div class="range-top"><label for="fc-miners">GPUs mining</label><output id="fc-miners-o" for="fc-miners"></output></div>
             <input type="range" id="fc-miners" min="0" max="1000" step="1">
           </div>
           <div class="range-row">
-            <div class="range-top"><label for="fc-avg">Average miner earns, $/day</label><output id="fc-avg-o" for="fc-avg"></output></div>
+            <div class="range-top"><label for="fc-avg">Average GPU mines, $/day</label><output id="fc-avg-o" for="fc-avg"></output></div>
             <input type="range" id="fc-avg" min="0.25" max="8" step="0.05">
           </div>
           <div class="two">
             <div class="range-row">
-              <div class="range-top"><label for="fc-p2">At Level 2</label><output id="fc-p2-o" for="fc-p2"></output></div>
+              <div class="range-top"><label for="fc-p2">Miners at Level 2</label><output id="fc-p2-o" for="fc-p2"></output></div>
               <input type="range" id="fc-p2" min="0" max="100" step="5">
             </div>
             <div class="range-row">
-              <div class="range-top"><label for="fc-p3">At Level 3</label><output id="fc-p3-o" for="fc-p3"></output></div>
+              <div class="range-top"><label for="fc-p3">Miners at Level 3</label><output id="fc-p3-o" for="fc-p3"></output></div>
               <input type="range" id="fc-p3" min="0" max="100" step="5">
             </div>
           </div>
@@ -141,31 +151,31 @@
       <div class="card calc-out" aria-live="polite" aria-atomic="false">
         <div class="calc-out-head">
           <h2 style="font-size: 1.3rem;">Your estimate</h2>
-          <span class="label-example">Example, not a forecast</span>
+          <span class="label-example">Scenario, not a promise</span>
         </div>
         <div class="results-wrap">
           <table class="results five">
-            <thead><tr><th scope="col">Source</th><th scope="col">Hour</th><th scope="col">Day</th><th scope="col">Week</th><th scope="col">Month</th></tr></thead>
+            <thead><tr><th scope="col">Source</th><th scope="col">Hour</th><th scope="col">Day</th><th scope="col">Week</th></tr></thead>
             <tbody>
-              <tr><td>Mining</td><td data-o="m-h"></td><td data-o="m-d"></td><td data-o="m-w"></td><td data-o="m-m"></td></tr>
-              <tr><td>Chest share</td><td data-o="c-h"></td><td data-o="c-d"></td><td data-o="c-w"></td><td data-o="c-m"></td></tr>
-              <tr><td>Electricity</td><td data-o="p-h"></td><td data-o="p-d"></td><td data-o="p-w"></td><td data-o="p-m"></td></tr>
-              <tr class="total"><td>After power</td><td data-o="n-h"></td><td data-o="n-d"></td><td data-o="n-w"></td><td data-o="n-m"></td></tr>
+              <tr><td>Mining</td><td data-o="m-h"></td><td data-o="m-d"></td><td data-o="m-w"></td></tr>
+              <tr><td>Cut of the tax</td><td data-o="c-h"></td><td data-o="c-d"></td><td data-o="c-w"></td></tr>
+              <tr><td>Electricity</td><td data-o="p-h"></td><td data-o="p-d"></td><td data-o="p-w"></td></tr>
+              <tr class="total"><td>After power</td><td data-o="n-h"></td><td data-o="n-d"></td><td data-o="n-w"></td></tr>
             </tbody>
           </table>
         </div>
         <div class="calc-meta meta3">
-          <div class="meta"><span>Chest per day</span><b id="fc-chest">—</b></div>
+          <div class="meta"><span>Miner chest / day</span><b id="fc-chest">—</b></div>
           <div class="meta"><span>Your share</span><b id="fc-share">—</b></div>
           <div class="meta"><span>vs mining alone</span><b id="fc-mult">—</b></div>
         </div>
         <div id="fc-flags"></div>
         <div>
-          <p class="flabel" style="font: 500 .74rem/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;">Per day by level</p>
+          <p class="flabel" style="margin-bottom: 14px;">Per day by level</p>
           <div class="bars" id="fc-bars"></div>
-          <p class="note" style="margin-top: 12px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--line-2); vertical-align: -1px;"></span> Mining &nbsp; <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--gold); vertical-align: -1px;"></span> Chest share</p>
+          <p class="note" style="margin-top: 12px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--line-2); vertical-align: -1px;"></span> Mining &nbsp; <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--gold); vertical-align: -1px;"></span> Cut of the tax</p>
         </div>
-        <p class="note">Values are in dollars of $HASH at payout prices, before pool fees and slippage. About 75% of mining is paid every ~10 minutes; the rest after the mined coin confirms and sells, trued up to the real price. The chest is 2.5% of all $HASH volume, including the platform's own buys for payouts. Only the rules are fixed (1 : 2 : 4 weights, square-root balancing, a 5% cap per wallet); the dollar amounts are not.</p>
+        <p class="note">Values are in dollars of $HASH at payout prices, before pool fees and slippage. About 75% of mining is paid every ~10 minutes; the rest after the mined coin confirms and sells, trued up to the real price. The miner chest is 2.5% of all $HASH volume, including the platform's own buys for payouts. Only the rules are fixed (1 : 2 : 4 weights, square-root balancing, a 5% cap per wallet); the dollar amounts are not.</p>
       </div>
     </div>
   </section>
@@ -175,28 +185,19 @@
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="30" height="30"><span>Hashcoin</span><span class="tick">$HASH</span></a>
-        <p>The coin your GPU mines. A Solana token with a 3% transfer fee that pays home miners.</p>
+        <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28"><span>Hashcoin</span><span class="tick">$HASH</span></a>
+        <p>The memecoin that pays its miners. 3% tax, 2.5% to everyone mining with a gaming PC.</p>
       </div>
-      <div>
-        <h4>Product</h4>
-        <ul><li><a href="index.html#how">How it works</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#gpus">Supported GPUs</a></li></ul>
-      </div>
-      <div>
-        <h4>Docs</h4>
-        <ul><li><a href="faq.html">FAQ and docs</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#safety">Safety</a></li><li><a href="index.html#roadmap">Roadmap</a></li></ul>
-      </div>
-      <div>
-        <h4>Community</h4>
-        <ul>
-          <li><a href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X (soon)</a></li>
-          <li><a href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord (soon)</a></li>
-          <li><a href="#" data-social="github" data-soon="The repository goes public before launch.">GitHub (soon)</a></li>
-        </ul>
-      </div>
+      <div><h4>Product</h4><ul><li><a href="index.html#how">How it works</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="index.html#mining">Mining app</a></li></ul></div>
+      <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#trust">Status</a></li><li><a href="index.html#waitlist">Waitlist</a></li></ul></div>
+      <div><h4>Community</h4><ul>
+        <li><a href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X (soon)</a></li>
+        <li><a href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord (soon)</a></li>
+        <li><a href="#" data-social="github" data-soon="The repository goes public before launch.">GitHub (soon)</a></li>
+      </ul></div>
     </div>
     <div class="disclaimer">
-      <p><b>Risk.</b> $HASH is a highly volatile token and may lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Example figures on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live before taking part.</p>
+      <p><b>Risk.</b> $HASH is a highly volatile memecoin and can lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Scenario figures on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live.</p>
       <p><b>Security.</b> We will never ask for your seed phrase or private key. The contract address is published only on this site.</p>
       <p>© 2026 Hashcoin. Pre-launch preview.</p>
     </div>

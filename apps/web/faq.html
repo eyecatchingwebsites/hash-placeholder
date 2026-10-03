@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FAQ and docs · Hashcoin</title>
-<meta name="description" content="How Hashcoin works: mining, payouts, levels, the $HASH token and fee, safety and risks.">
+<meta name="description" content="How Hashcoin works: mining, payouts, levels, the $HASH token and tax, safety and risks.">
 <meta name="theme-color" content="#0B0C0D">
 <meta property="og:title" content="Hashcoin ($HASH)">
 <meta property="og:description" content="Your GPU mines. Every $HASH trade adds to a chest shared among miners.">
@@ -22,15 +22,15 @@
 <header class="site-header">
   <div class="wrap nav">
     <a class="brand" href="index.html" aria-label="Hashcoin home">
-      <img src="brand/logo/hashcoin-mark.svg" alt="" width="30" height="30">
+      <img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28">
       <span>Hashcoin</span><span class="tick">$HASH</span>
     </a>
     <nav aria-label="Main">
       <ul class="nav-links">
         <li><a href="index.html#how">How it works</a></li>
-        <li><a href="index.html#levels">Levels</a></li>
         <li><a href="calculator.html">Calculator</a></li>
-        <li><a href="index.html#token">Token</a></li>
+        <li><a href="index.html#levels">Levels</a></li>
+        <li><a href="index.html#token">Tokenomics</a></li>
         <li><a href="faq.html" aria-current="page">FAQ</a></li>
       </ul>
     </nav>
@@ -53,9 +53,9 @@
   <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
     <ul>
       <li><a href="index.html#how">How it works</a></li>
-      <li><a href="index.html#levels">Levels</a></li>
       <li><a href="calculator.html">Calculator</a></li>
-      <li><a href="index.html#token">Token</a></li>
+      <li><a href="index.html#levels">Levels</a></li>
+      <li><a href="index.html#token">Tokenomics</a></li>
       <li><a href="faq.html" aria-current="page">FAQ</a></li>
     </ul>
     <div class="mobile-extra">
@@ -64,24 +64,34 @@
     </div>
   </nav>
 </header>
-
+<div class="ticker" aria-label="Token summary">
+  <ul>
+    <li>$HASH <b>Solana</b></li>
+    <li>Tax <b class="gold">3%</b></li>
+    <li>To miners <b class="gold">2.5%</b></li>
+    <li>Dev <b>0.5%</b></li>
+    <li>Payouts <b>every 10 min</b></li>
+    <li>Dev bag <b>1%, locked 90d</b></li>
+    <li>Launch <b>TBA</b></li>
+    <li>CA <b>posted here at launch</b></li>
+  </ul>
+</div>
 <main id="main">
   <section class="page-head">
     <div class="wrap">
-      <p class="eyebrow">FAQ and docs</p>
-      <h1 style="font-size: clamp(2.2rem, 5vw, 3.6rem); margin-top: 16px;">How Hashcoin works, in detail.</h1>
-      <p class="lede">Everything about mining, payouts, levels, the token and safety. Hashcoin hasn't launched yet. Where something is still being decided, we say so.</p>
+      <h1>FAQ</h1>
+      <p class="lede">Mining, payouts, levels, the token and safety. Hashcoin hasn't launched yet; where something is still being decided, we say so.</p>
     </div>
   </section>
 
-  <section class="section" style="padding-top: clamp(40px, 5vw, 64px);">
+  <section class="section" style="padding-top: clamp(28px, 4vw, 40px); border-top: 0;">
     <div class="wrap docs">
       <nav class="toc" aria-label="On this page">
         <a href="#start">Getting started</a>
         <a href="#mining">Mining and coins</a>
         <a href="#payouts">Payouts</a>
         <a href="#levels">Chest and levels</a>
-        <a href="#token">Token and fee</a>
+        <a href="#token">Tokenomics</a>
         <a href="#safety">Safety and antivirus</a>
         <a href="#risks">Risks</a>
       </nav>
@@ -92,7 +102,7 @@
           <div class="faq">
             <details open>
               <summary>What is Hashcoin?</summary>
-              <div class="a"><p>A Solana token ($HASH) and a Windows mining app that work together. Your GPU mines, the platform converts what it mines into $HASH and pays you, and a 3% fee on every $HASH transfer funds a chest that's shared among miners. It's built as a working product, not a joke coin.</p></div>
+              <div class="a"><p>A Solana token ($HASH) and a Windows mining app that work together. Your GPU mines, the platform converts what it mines into $HASH and pays you, and a 3% tax on every $HASH transfer funds a chest that's shared among miners. It's built as a working product, not a joke coin.</p></div>
             </details>
             <details>
               <summary>What do I need?</summary>
@@ -108,7 +118,7 @@
             </details>
             <details>
               <summary>When does it launch?</summary>
-              <div class="a"><p>When the app and payouts are proven end to end: a devnet test of the fee, chest and payouts, a private test on real GPUs, and an unedited install-to-first-payout video. The date will appear in the countdown on the home page. No $HASH token exists yet.</p></div>
+              <div class="a"><p>When the app and payouts are proven end to end: a devnet test of the tax, chest and payouts, a private test on real GPUs, and an unedited install-to-first-payout video. The date will appear in the countdown on the home page. No $HASH token exists yet.</p></div>
             </details>
           </div>
         </section>
@@ -199,13 +209,13 @@
         </section>
 
         <section id="token" aria-labelledby="token-h">
-          <h2 id="token-h">Token and fee</h2>
+          <h2 id="token-h">Tokenomics</h2>
           <div class="prose" style="margin-bottom: 24px;">
             <table>
               <tbody>
                 <tr><td>Chain</td><td>Solana, Token-2022 with the transfer-fee extension</td></tr>
-                <tr><td>Fee</td><td>3% on every transfer: 2.5% to the miner chest, 0.5% to development, no burn</td></tr>
-                <tr><td>Fee authority</td><td>In a multisig. Public commitment never to raise the fee</td></tr>
+                <tr><td>Tax</td><td>3% on every transfer: 2.5% to the miner chest, 0.5% to development, no burn</td></tr>
+                <tr><td>Tax authority</td><td>In a multisig. Public commitment never to raise the tax</td></tr>
                 <tr><td>Dev holding</td><td>1% of supply, bought openly at launch, no sells for 90 days, then at most 0.25% of supply per month. Excluded from the chest</td></tr>
                 <tr><td>Contract address</td><td>Published on this site first, at launch</td></tr>
               </tbody>
@@ -213,16 +223,16 @@
           </div>
           <div class="faq">
             <details>
-              <summary>Why can't the fee be avoided?</summary>
-              <div class="a"><p>Because the token program itself charges it on every transfer, in every pool, aggregator and wallet. Earlier fee-sharing coins failed when traders simply bought on other exchanges to dodge the fee. A Token-2022 transfer fee closes that gap.</p></div>
+              <summary>Why can't the tax be avoided?</summary>
+              <div class="a"><p>Because the token program itself charges it on every transfer, in every pool, aggregator and wallet. Earlier tax-sharing coins failed when traders simply bought on other exchanges to dodge the tax. A Token-2022 transfer tax closes that gap.</p></div>
             </details>
             <details>
-              <summary>Do your own payouts pay the fee?</summary>
-              <div class="a"><p>Yes. We send a little extra so you receive the full amount, and the fee we pay flows back to the treasury.</p></div>
+              <summary>Do your own payouts pay the tax?</summary>
+              <div class="a"><p>Yes. We send a little extra so you receive the full amount, and the tax we pay flows back to the treasury.</p></div>
             </details>
             <details>
               <summary>Which launchpad or exchange will it be on?</summary>
-              <div class="a"><p>Still being decided between a launchpad that supports a 3% Token-2022 fee and our own token with a Raydium or Orca pool. Either way, any Solana wallet and aggregator such as Jupiter can trade it, and the fee applies everywhere.</p></div>
+              <div class="a"><p>Still being decided between a launchpad that supports a 3% Token-2022 transfer fee and our own token with a Raydium or Orca pool. Either way, any Solana wallet and aggregator such as Jupiter can trade it, and the tax applies everywhere.</p></div>
             </details>
             <details>
               <summary>How do I know the contract address is real?</summary>
@@ -248,7 +258,7 @@
             </details>
             <details>
               <summary>Where is the money held?</summary>
-              <div class="a"><p>The treasury and fee authorities are in a multisig. The wallet that sends payouts holds only a small float. Every wallet we control will be listed on the home page at launch.</p></div>
+              <div class="a"><p>The treasury and tax authorities are in a multisig. The wallet that sends payouts holds only a small float. Every wallet we control will be listed on the home page at launch.</p></div>
             </details>
           </div>
         </section>
@@ -260,7 +270,7 @@
             <ul>
               <li><b>$HASH is volatile.</b> Like any new token, it can lose most or all of its value.</li>
               <li><b>Payouts vary.</b> They depend on coin prices, pool results, how much $HASH is traded and how many people mine. They can fall to near zero.</li>
-              <li><b>Costs are yours.</b> Electricity, heat and hardware wear. The 3% fee applies when you sell or move $HASH.</li>
+              <li><b>Costs are yours.</b> Electricity, heat and hardware wear. The 3% tax applies when you sell or move $HASH.</li>
               <li><b>Level 3 is all or nothing.</b> Selling or moving any $HASH ends it for that wallet, so partial profit-taking isn't possible at Level 3.</li>
               <li><b>New software.</b> Bugs are possible. The code is open so anyone can check it.</li>
               <li><b>Rules where you live.</b> Mining and tokens are regulated differently by country. Check yours.</li>
@@ -277,28 +287,19 @@
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="30" height="30"><span>Hashcoin</span><span class="tick">$HASH</span></a>
-        <p>The coin your GPU mines. A Solana token with a 3% transfer fee that pays home miners.</p>
+        <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28"><span>Hashcoin</span><span class="tick">$HASH</span></a>
+        <p>The memecoin that pays its miners. 3% tax, 2.5% to everyone mining with a gaming PC.</p>
       </div>
-      <div>
-        <h4>Product</h4>
-        <ul><li><a href="index.html#how">How it works</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#gpus">Supported GPUs</a></li></ul>
-      </div>
-      <div>
-        <h4>Docs</h4>
-        <ul><li><a href="faq.html">FAQ and docs</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#safety">Safety</a></li><li><a href="index.html#roadmap">Roadmap</a></li></ul>
-      </div>
-      <div>
-        <h4>Community</h4>
-        <ul>
-          <li><a href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X (soon)</a></li>
-          <li><a href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord (soon)</a></li>
-          <li><a href="#" data-social="github" data-soon="The repository goes public before launch.">GitHub (soon)</a></li>
-        </ul>
-      </div>
+      <div><h4>Product</h4><ul><li><a href="index.html#how">How it works</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="index.html#mining">Mining app</a></li></ul></div>
+      <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#trust">Status</a></li><li><a href="index.html#waitlist">Waitlist</a></li></ul></div>
+      <div><h4>Community</h4><ul>
+        <li><a href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X (soon)</a></li>
+        <li><a href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord (soon)</a></li>
+        <li><a href="#" data-social="github" data-soon="The repository goes public before launch.">GitHub (soon)</a></li>
+      </ul></div>
     </div>
     <div class="disclaimer">
-      <p><b>Risk.</b> $HASH is a highly volatile token and may lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Example figures on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live before taking part.</p>
+      <p><b>Risk.</b> $HASH is a highly volatile memecoin and can lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Scenario figures on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live.</p>
       <p><b>Security.</b> We will never ask for your seed phrase or private key. The contract address is published only on this site.</p>
       <p>© 2026 Hashcoin. Pre-launch preview.</p>
     </div>
