@@ -11,7 +11,7 @@
   const whole = (v) => "$" + Math.round(v).toLocaleString("en-US");
 
   // ---------- Tabs ----------
-  const tabs = $$("#earn [role=tab]");
+  const tabs = $$("#earn-panel [role=tab]");
   function showTab(id) {
     tabs.forEach((t) => {
       const on = t.id === id;

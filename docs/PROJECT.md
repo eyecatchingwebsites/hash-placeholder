@@ -272,6 +272,8 @@ It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and
 **Logo (decided Oct 3):** option C, an italic two-bar hash on a coin. Coin #EBB447, hash white. Final files in `apps/web/brand/logo/` (SVG master, PNGs 16–1024, favicon, wordmark lockups). Brand accent color = #EBB447.
 
 ## 13. Website direction (Oct 3)
+- **Positioning (user, Oct 3): not a memecoin.** Present $HASH as a token with real tech: a gaming PC mines, every payout is a market buy of $HASH, holders are rewarded, and a 5% tax pays it all back out. **Audience: traders who already own a gaming PC** (a few clicks to start). Don't market to existing GPU miners: they'd flood the chest without caring about the coin.
+- **Hero (Oct 3):** title "Your gaming PC buys $HASH for you." with a looping five-station animation: Press Start → your GPU mines → it buys $HASH → paid to your wallet (hold to level up) → every trade pays 5% → back. Gold $HASH coins travel the loop; each station has its own small animated illustration. The earnings estimate sits in the next section.
 - **Positioning:** a platform with a real function, not a joke memecoin. Look like a real product company. References: usepaid.app, usehotbot.com, boneronlong.xyz (plus octoprotocol.io).
 - **No rainbow or gradient buttons, no crowded layouts.**
 - **Brand:** logo option C (italic two-bar hash on a coin), gold **#EBB447**, white hash. Wordmark in Manrope ExtraBold.
