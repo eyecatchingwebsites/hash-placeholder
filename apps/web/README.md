@@ -26,8 +26,8 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 
 | File | What it is |
 |---|---|
-| `index.html` | Home, written for traders: hero with a "what your GPU makes" estimate, a simulated chest (trades → tax → split to miners), the estimate math, why the tax pays out, levels table, the miner app, tokenomics, status, waitlist with countdown, FAQ |
-| `calculator.html` | Full earnings calculator: GPU, power, electricity, level, and market scenarios |
+| `index.html` | Home, written for traders: hero with a mining / holding estimate, a simulated tax pot (trades → tax → split to miners and holders), the estimate math, why the tax pays out, holder and miner level tables, the miner app, tokenomics, status, waitlist with countdown, FAQ |
+| `calculator.html` | Full calculator: GPU, power, electricity, miner level, bag and holder level, volume per GPU, average GPU and miner level mix |
 | `faq.html` | FAQ and docs: getting started, mining, payouts, levels, token, safety, risks |
 
 ## Files
@@ -38,7 +38,7 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 | `assets/js/config.js` | **Launch settings:** `launchAt`, `ca` (contract address), `x`, `discord`, `github`. All `null` until launch |
 | `assets/js/site.js` | Shared behavior: header, mobile menu, placeholder toasts, countdown, contract-address button, scroll reveal |
 | `standalone/` | Generated single-file copies of the pages (see above) |
-| `assets/js/model.js` | The pre-launch estimate: cut = 2.5% × (daily volume per GPU + ā) × √(your GPU) × level ÷ (√ā × average level). Default $750 volume per GPU (30% volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining) |
+| `assets/js/model.js` | The pre-launch estimate for the decided design: 5% tax, 0.5% dev, miner chest = min(4 × a, 3.5% × (V/N + a)) per GPU (5× target), holders get the rest of 4.5% (at least 1%). Miner cut = chest per GPU × √(your GPU) × M-level ÷ (√a × average level); holder reward = bag × daily yield for the H-level. Default $750 volume per GPU (30% volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining) |
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic |
 | `assets/js/gpus.js` | **Generated** GPU list (91 cards) from `data/hashrate-no-gpus-2026-10-03.json` |
 | `scripts/gen_gpus.py` | Regenerates `gpus.js`: `python3 apps/web/scripts/gen_gpus.py data/<file>.json` (from the repo root) |
@@ -56,7 +56,8 @@ Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site
 
 From `CLAUDE.md` and `docs/DESIGN-BRIEF.md`:
 - Never promise returns. Avoid "pays for itself", "free", "guaranteed" and rising price charts.
-- Show one estimate, based on daily volume per GPU mining ($750 by default), labeled "Estimate, not a promise". The math is on the home page (`#math`).
+- Show one estimate, based on daily volume per GPU mining ($750 by default, launch-week trading), labeled "Estimate, not a promise". The math is on the home page (`#math`).
+- Tax wording: 5% tax; 0.5% development; up to 3.5% to miners (what reaches 5× their mining); at least 1% to holders. Levels are M1–M3 and H1–H3.
 - Say "tax" rather than "fee" on the site; that's the word traders use.
 - Keep "we will never ask for your seed phrase" and the risk disclaimer in the footer.
 

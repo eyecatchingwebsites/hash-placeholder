@@ -7,7 +7,7 @@
 <meta name="description" content="Estimate what your GPU could earn with Hashcoin, based on daily volume per GPU mining. An estimate, not a promise.">
 <meta name="theme-color" content="#0B0C0D">
 <meta property="og:title" content="Hashcoin ($HASH)">
-<meta property="og:description" content="Your GPU mines. Every $HASH trade adds to a chest shared among miners.">
+<meta property="og:description" content="Every trade pays miners and holders. 5% tax: up to 3.5% to miners, at least 1% to holders.">
 <meta property="og:image" content="brand/logo/hashcoin-1024.png">
 <link rel="icon" href="brand/logo/favicon.ico" sizes="any">
 <link rel="icon" href="brand/logo/hashcoin-mark.svg" type="image/svg+xml">
@@ -67,8 +67,9 @@
 <div class="ticker" aria-label="Token summary">
   <ul>
     <li>$HASH <b>Solana</b></li>
-    <li>Tax <b class="gold">3%</b></li>
-    <li>To miners <b class="gold">2.5%</b></li>
+    <li>Tax <b class="gold">5%</b></li>
+    <li>Miners <b class="gold">up to 3.5%</b></li>
+    <li>Holders <b class="gold">at least 1%</b></li>
     <li>Dev <b>0.5%</b></li>
     <li>Payouts <b>every 10 min</b></li>
     <li>Dev bag <b>1%, locked 90d</b></li>
@@ -79,8 +80,8 @@
 <main id="main">
   <section class="page-head">
     <div class="wrap">
-      <h1>What would your GPU make?</h1>
-      <p class="lede">One pre-launch estimate, based on <b>daily volume per GPU mining.</b> Mining revenue per card is real (hashrate.no, Oct 3, 2026). Change the inputs if you think the ratio will be higher or lower.</p>
+      <h1>What would you make?</h1>
+      <p class="lede">One pre-launch estimate for mining and holding, based on <b>daily volume per GPU mining.</b> Mining revenue per card is real (hashrate.no, Oct 3, 2026). Change the inputs if you think the ratio will be higher or lower.</p>
     </div>
   </section>
 
@@ -108,19 +109,37 @@
             <input type="range" id="fc-elec" min="0" max="0.5" step="0.01">
           </div>
           <div class="field">
-            <span class="flabel" id="fc-level-label">Your level</span>
+            <span class="flabel" id="fc-level-label">Your miner level</span>
             <div class="seg" id="fc-level" role="group" aria-labelledby="fc-level-label">
-              <button type="button" data-l="1" aria-pressed="false">Level 1</button>
-              <button type="button" data-l="2" aria-pressed="false">Level 2</button>
-              <button type="button" data-l="3" aria-pressed="false">Level 3</button>
+              <button type="button" data-l="1" aria-pressed="false">M1</button>
+              <button type="button" data-l="2" aria-pressed="false">M2</button>
+              <button type="button" data-l="3" aria-pressed="false">M3</button>
             </div>
             <p class="range-hint" id="fc-level-hint"></p>
           </div>
         </fieldset>
 
         <fieldset class="fieldset">
+          <legend>Your bag</legend>
+          <div class="field">
+            <label for="fc-bag">$HASH held, USD</label>
+            <input class="input mono" id="fc-bag" type="number" min="0" step="50" inputmode="decimal">
+          </div>
+          <div class="field">
+            <span class="flabel" id="fc-hlevel-label">Your holder level</span>
+            <div class="seg" id="fc-hlevel" role="group" aria-labelledby="fc-hlevel-label">
+              <button type="button" data-h="0" aria-pressed="false">None</button>
+              <button type="button" data-h="1" aria-pressed="false">H1</button>
+              <button type="button" data-h="2" aria-pressed="false">H2</button>
+              <button type="button" data-h="3" aria-pressed="false">H3</button>
+            </div>
+            <p class="range-hint" id="fc-hlevel-hint"></p>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
           <legend>Estimate inputs</legend>
-          <p class="scenario-desc">The estimate uses one market number: <b>daily volume per GPU mining.</b> Default $750 = 30% daily volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining. <a class="gold" href="index.html#math">See the math</a></p>
+          <p class="scenario-desc">The estimate uses one market number: <b>daily volume per GPU mining.</b> Default $750 = 30% daily volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining (launch-week trading). <a class="gold" href="index.html#math">See the math</a></p>
           <div class="range-row">
             <div class="range-top"><label for="fc-ratio">Daily volume per GPU mining</label><output id="fc-ratio-o" for="fc-ratio"></output></div>
             <input type="range" id="fc-ratio" min="0" max="1000" step="1">
@@ -132,11 +151,11 @@
           </div>
           <div class="two">
             <div class="range-row">
-              <div class="range-top"><label for="fc-p2">Miners at Level 2</label><output id="fc-p2-o" for="fc-p2"></output></div>
+              <div class="range-top"><label for="fc-p2">Miners at M2</label><output id="fc-p2-o" for="fc-p2"></output></div>
               <input type="range" id="fc-p2" min="0" max="100" step="5">
             </div>
             <div class="range-row">
-              <div class="range-top"><label for="fc-p3">Miners at Level 3</label><output id="fc-p3-o" for="fc-p3"></output></div>
+              <div class="range-top"><label for="fc-p3">Miners at M3</label><output id="fc-p3-o" for="fc-p3"></output></div>
               <input type="range" id="fc-p3" min="0" max="100" step="5">
             </div>
           </div>
@@ -154,24 +173,25 @@
             <thead><tr><th scope="col">Source</th><th scope="col">Hour</th><th scope="col">Day</th><th scope="col">Week</th></tr></thead>
             <tbody>
               <tr><td>Mining</td><td data-o="m-h"></td><td data-o="m-d"></td><td data-o="m-w"></td></tr>
-              <tr><td>Cut of the tax</td><td data-o="c-h"></td><td data-o="c-d"></td><td data-o="c-w"></td></tr>
+              <tr><td>Miner cut of the tax</td><td data-o="c-h"></td><td data-o="c-d"></td><td data-o="c-w"></td></tr>
+              <tr><td>Holder rewards</td><td data-o="h-h"></td><td data-o="h-d"></td><td data-o="h-w"></td></tr>
               <tr><td>Electricity</td><td data-o="p-h"></td><td data-o="p-d"></td><td data-o="p-w"></td></tr>
               <tr class="total"><td>After power</td><td data-o="n-h"></td><td data-o="n-d"></td><td data-o="n-w"></td></tr>
             </tbody>
           </table>
         </div>
         <div class="calc-meta meta3">
-          <div class="meta"><span>Chest per GPU / day</span><b id="fc-chest">—</b></div>
-          <div class="meta"><span>Your weight</span><b id="fc-share">—</b></div>
-          <div class="meta"><span>vs mining alone</span><b id="fc-mult">—</b></div>
+          <div class="meta"><span>Miners / holders</span><b id="fc-chest">—</b></div>
+          <div class="meta"><span>Your miner weight</span><b id="fc-share">—</b></div>
+          <div class="meta"><span>Mining pay vs mining</span><b id="fc-mult">—</b></div>
         </div>
         <div id="fc-flags"></div>
         <div>
-          <p class="flabel" style="margin-bottom: 14px;">Per day by level</p>
+          <p class="flabel" style="margin-bottom: 14px;">Mining pay per day by miner level</p>
           <div class="bars" id="fc-bars"></div>
           <p class="note" style="margin-top: 12px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--line-2); vertical-align: -1px;"></span> Mining &nbsp; <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--gold); vertical-align: -1px;"></span> Cut of the tax</p>
         </div>
-        <p class="note">Values are in dollars of $HASH at payout prices, before pool fees and slippage. About 75% of mining is paid every ~10 minutes; the rest after the mined coin confirms and sells, trued up to the real price. The miner chest is 2.5% of all $HASH volume, including the platform's own buys for payouts. Only the rules are fixed (1 : 2 : 4 weights, square-root balancing, a 5% cap per wallet); the dollar amounts are not.</p>
+        <p class="note">Values are in dollars of $HASH at payout prices, before pool fees and slippage. About 75% of mining is paid every ~10 minutes; the rest after the mined coin confirms and sells, trued up to the real price. The 5% tax splits into 0.5% development, a miner chest that targets 5× miners' mining (up to 3.5%), and holder rewards (the rest, at least 1%). Holder rewards assume your hold clock already meets your level. Only the rules are fixed (1 : 2 : 4 weights, square-root balancing for miners, a 5% cap per wallet); the dollar amounts are not.</p>
       </div>
     </div>
   </section>
@@ -182,7 +202,7 @@
     <div class="foot-grid">
       <div>
         <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28"><span>Hashcoin</span><span class="tick">$HASH</span></a>
-        <p>The memecoin that pays its miners. 3% tax, 2.5% to everyone mining with a gaming PC.</p>
+        <p>The memecoin that pays miners and holders. 5% tax, split by a public formula.</p>
       </div>
       <div><h4>Product</h4><ul><li><a href="index.html#how">How it works</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="index.html#mining">Mining app</a></li></ul></div>
       <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#trust">Status</a></li><li><a href="index.html#waitlist">Waitlist</a></li></ul></div>

@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hashcoin ($HASH) · Every trade pays the miners</title>
-<meta name="description" content="$HASH is a Solana memecoin with a 3% tax. 2.5% of every trade goes to people mining with their gaming PCs, paid every 10 minutes.">
+<title>Hashcoin ($HASH) · Every trade pays miners and holders</title>
+<meta name="description" content="$HASH is a Solana memecoin with a 5% tax that pays miners (targeted at 5× their mining) and holders (at least 1% of every trade).">
 <meta name="theme-color" content="#0B0C0D">
 <meta property="og:title" content="Hashcoin ($HASH)">
-<meta property="og:description" content="Every trade pays the miners. 3% tax, 2.5% to everyone mining with a gaming PC.">
+<meta property="og:description" content="Every trade pays miners and holders. 5% tax: up to 3.5% to miners, at least 1% to holders.">
 <meta property="og:image" content="brand/logo/hashcoin-1024.png">
 <link rel="icon" href="brand/logo/favicon.ico" sizes="any">
 <link rel="icon" href="brand/logo/hashcoin-mark.svg" type="image/svg+xml">
@@ -67,8 +67,9 @@
 <div class="ticker" aria-label="Token summary">
   <ul>
     <li>$HASH <b>Solana</b></li>
-    <li>Tax <b class="gold">3%</b></li>
-    <li>To miners <b class="gold">2.5%</b></li>
+    <li>Tax <b class="gold">5%</b></li>
+    <li>Miners <b class="gold">up to 3.5%</b></li>
+    <li>Holders <b class="gold">at least 1%</b></li>
     <li>Dev <b>0.5%</b></li>
     <li>Payouts <b>every 10 min</b></li>
     <li>Dev bag <b>1%, locked 90d</b></li>
@@ -82,29 +83,35 @@
   <section class="hero" aria-labelledby="hero-title">
     <div class="wrap hero-grid">
       <div>
-        <h1 id="hero-title">Every trade pays the <span class="gold">miners.</span></h1>
-        <p class="lede"><b>$HASH is a Solana memecoin with a 3% tax on every buy and sell.</b> 2.5% goes to people mining with their gaming PCs, paid out in $HASH every 10 minutes. Hold more and your cut doubles, then doubles again.</p>
+        <h1 id="hero-title">Every trade pays <span class="gold">miners and holders.</span></h1>
+        <p class="lede"><b>$HASH is a Solana memecoin with a 5% tax on every buy and sell.</b> It pays people mining with their gaming PCs and people holding $HASH, in $HASH, automatically. Hold more for longer and your cut grows.</p>
         <div class="hero-ctas">
           <a class="btn btn-gold" href="#waitlist">Join the waitlist <span class="tag">Coming soon</span></a>
           <a class="btn btn-ghost" href="#how">How it works</a>
         </div>
         <div class="hero-stats">
-          <div><b>3%</b><span>tax on every buy, sell and transfer</span></div>
-          <div><b>2.5%</b><span>of all volume goes to miners</span></div>
-          <div><b>4×</b><span>bigger cut for diamond hands</span></div>
+          <div><b>5%</b><span>tax on every buy, sell and transfer</span></div>
+          <div><b>5×</b><span>target pay for miners vs mining alone</span></div>
+          <div><b>≥1%</b><span>of all volume always goes to holders</span></div>
         </div>
       </div>
 
       <div class="panel" id="earn" aria-labelledby="earn-title">
-        <div class="panel-head"><span id="earn-title">What your GPU makes</span><span class="tag gold">Pre-launch estimate</span></div>
-        <div class="panel-body">
+        <div class="panel-head">
+          <span id="earn-title">What you'd make</span>
+          <span class="tabs" role="tablist" aria-label="Earn by">
+            <button type="button" role="tab" id="tab-mine" aria-selected="true" aria-controls="pane-mine">Mining</button>
+            <button type="button" role="tab" id="tab-hold" aria-selected="false" aria-controls="pane-hold">Holding</button>
+          </span>
+        </div>
+        <div class="panel-body" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine">
           <div class="earn-inputs">
             <label class="sr-only" for="earn-gpu">Your GPU</label>
             <select class="select" id="earn-gpu"></select>
-            <div class="seg" id="earn-level" role="group" aria-label="Level">
-              <button type="button" data-l="1" aria-pressed="false">L1</button>
-              <button type="button" data-l="2" aria-pressed="true">L2</button>
-              <button type="button" data-l="3" aria-pressed="false">L3</button>
+            <div class="seg" id="earn-level" role="group" aria-label="Miner level">
+              <button type="button" data-l="1" aria-pressed="false">M1</button>
+              <button type="button" data-l="2" aria-pressed="true">M2</button>
+              <button type="button" data-l="3" aria-pressed="false">M3</button>
             </div>
           </div>
           <div>
@@ -112,39 +119,54 @@
             <p class="earn-sub" id="earn-sub"></p>
           </div>
           <dl class="rows">
-            <div><dt>Your cut of the 2.5% tax</dt><dd id="earn-cut">—</dd></div>
+            <div><dt>Your cut of the tax</dt><dd id="earn-cut">—</dd></div>
             <div><dt>What your GPU mines</dt><dd id="earn-mine">—</dd></div>
-            <div><dt>Your weight in the chest</dt><dd id="earn-share">—</dd></div>
+            <div><dt>Total vs mining alone</dt><dd id="earn-mult">—</dd></div>
           </dl>
-          <div id="earn-flag"></div>
           <p class="assume" id="earn-assume"></p>
-          <a class="btn btn-ghost btn-sm" href="#math">See the math</a>
         </div>
-        <div class="panel-foot">An estimate, not a promise. Before electricity. <a href="calculator.html">Change the inputs</a></div>
+        <div class="panel-body" id="pane-hold" role="tabpanel" aria-labelledby="tab-hold" hidden>
+          <div class="field">
+            <label for="bag">Your bag (USD)</label>
+            <input class="input mono" id="bag" type="number" min="0" step="50" value="500" inputmode="decimal">
+          </div>
+          <div class="seg" id="bag-level" role="group" aria-label="Holder level">
+            <button type="button" data-h="1" aria-pressed="false">H1</button>
+            <button type="button" data-h="2" aria-pressed="true">H2</button>
+            <button type="button" data-h="3" aria-pressed="false">H3</button>
+          </div>
+          <div>
+            <div class="earn-big"><b id="hold-day">—</b><span>per day, in $HASH</span></div>
+            <p class="earn-sub" id="hold-sub"></p>
+          </div>
+          <div id="hold-flag"></div>
+          <p class="assume" id="hold-assume"></p>
+        </div>
+        <div class="panel-foot">Pre-launch estimate, not a promise. Launch-week volume. <a href="#math">See the math</a> · <a href="calculator.html">Change the inputs</a></div>
       </div>
     </div>
   </section>
 
-  <!-- HOW: where the money comes from -->
+  <!-- HOW -->
   <section class="section" id="how" aria-labelledby="how-title">
     <div class="wrap">
       <div class="head reveal">
         <h2 id="how-title">Where your cut comes from.</h2>
-        <p class="lede">Every time someone trades $HASH, 3% is taken. The token itself enforces it on every DEX, aggregator and wallet, so there's no way to trade around it.</p>
+        <p class="lede">Every time someone trades $HASH, 5% is taken. The token itself enforces it on every DEX, aggregator and wallet, so there's no way to trade around it.</p>
       </div>
 
       <div class="panel reveal" aria-describedby="sim-note">
         <div class="panel-head">
-          <span class="live-dot">Miner chest</span>
+          <span class="live-dot">Tax pot</span>
           <span class="sim-controls"><span class="tag gold">Simulation · sped up</span><button type="button" id="sim-toggle">Pause</button></span>
         </div>
         <div class="sim-grid">
           <div class="sim-col">
-            <h3><span>Trades</span><span>Tax to chest</span></h3>
+            <h3><span>Trades</span><span>4.5% to the pot</span></h3>
             <ol class="feed" id="sim-trades" aria-hidden="true"></ol>
           </div>
           <div class="sim-chest" id="sim-chest">
-            <span class="label">In the chest</span>
+            <span class="label">In the pot</span>
             <b id="sim-amount">$0.00</b>
             <div>
               <div class="sim-bar"><i id="sim-prog"></i></div>
@@ -152,7 +174,7 @@
             </div>
           </div>
           <div class="sim-col">
-            <h3><span>Payouts · 5 of 400 GPUs shown</span><span>Cut</span></h3>
+            <h3><span>Payouts · a few shown</span><span>Cut</span></h3>
             <ol class="feed pay" id="sim-pay" aria-hidden="true"></ol>
           </div>
         </div>
@@ -160,52 +182,53 @@
       </div>
 
       <div class="steps3 reveal">
-        <div><span class="n">01</span><h3>People trade $HASH</h3><p>Every buy, sell and transfer pays <b>3% tax</b>. A $1,000 buy puts <b>$25 into the miner chest</b>.</p></div>
-        <div><span class="n">02</span><h3>The chest fills up</h3><p><b>2.5% goes to the miner chest,</b> 0.5% funds development. No burn, no hidden wallets.</p></div>
-        <div><span class="n">03</span><h3>Miners split it every 10 min</h3><p>Everyone mining gets a cut. <b>Bigger GPU and bigger bag = bigger cut.</b> Paid straight to your wallet in $HASH.</p></div>
+        <div><span class="n">01</span><h3>People trade $HASH</h3><p>Every buy, sell and transfer pays <b>5% tax</b>. 0.5% funds development; <b>4.5% goes to miners and holders</b>.</p></div>
+        <div><span class="n">02</span><h3>Miners get to 5×</h3><p>Miners get what it takes to pay them <b>5× what their GPUs mine</b>, up to 3.5% of volume.</p></div>
+        <div><span class="n">03</span><h3>Holders get the rest</h3><p><b>At least 1%</b> of every trade, more when volume is high. Split by bag size and holder level.</p></div>
       </div>
       <p class="buy-note reveal"><b>Plus what your GPU mines.</b> The app mines whatever coin pays your card most, sells it, and buys $HASH with it for you. So every miner payout is also a market buy of $HASH.</p>
     </div>
   </section>
-
 
   <!-- MATH -->
   <section class="section" id="math" aria-labelledby="math-title">
     <div class="wrap">
       <div class="head reveal">
         <h2 id="math-title">The estimate is one number: volume per GPU.</h2>
-        <p class="lede">Your cut depends on how much $HASH trades and how many GPUs share the chest. Work through the formula and those two only ever appear as one ratio: <b>daily volume ÷ GPUs mining.</b> So the estimate is built on that ratio, not on a guess about one particular day.</p>
+        <p class="lede">What miners and holders earn depends on how much $HASH trades and how many GPUs are mining. Work through the formula and those two only appear as one ratio: <b>daily volume ÷ GPUs mining.</b></p>
       </div>
       <div class="math reveal">
         <ol class="derive">
-          <li><p>Your cut is your share of the chest.</p><code>cut = chest × your weight ÷ everyone's weight</code></li>
-          <li><p>The chest is 2.5% of the day's volume <i>V</i>, plus the platform's own $HASH buys for payouts (about <i>a</i> per GPU).</p><code>chest = 2.5% × (V + N × a)</code></li>
-          <li><p>Weight is √(GPU earnings) × level. Across <i>N</i> GPUs it adds up to about</p><code>everyone's weight ≈ N × √a × L</code></li>
-          <li><p>Divide step 2 by step 3. <i>N</i> cancels out everywhere except in <i>V ÷ N</i>:</p><code>cut = 2.5% × (<b>V ÷ N</b> + a) × √(your GPU) × your level ÷ (√a × L)</code></li>
+          <li><p>4.5% of the day's volume <i>V</i>, plus the platform's own payout buys (about <i>a</i> per GPU), goes to miners and holders.</p><code>pot = 4.5% × (V + N × a)</code></li>
+          <li><p>Miners get what lifts them to 5× their mining (4 × <i>a</i> per GPU on top), but never more than 3.5%.</p><code>chest ÷ N = min(4 × a, 3.5% × (V ÷ N + a))</code></li>
+          <li><p>Your share of the chest: √(your GPU's $/day) × your miner level, against the average.</p><code>your cut = chest ÷ N × √(your GPU) × level ÷ (√a × L)</code></li>
+          <li><p>Holders get everything else, split by bag × holder level. <i>N</i> cancels out everywhere except in <i>V ÷ N</i>:</p><code>holders ÷ N = 4.5% × (<b>V ÷ N</b> + a) − chest ÷ N</code></li>
         </ol>
-        <p class="legend"><i>V</i> = daily volume · <i>N</i> = GPUs mining · <i>a</i> = average mining GPU's earnings per day · <i>L</i> = average level multiplier</p>
+        <p class="legend"><i>V</i> = daily volume · <i>N</i> = GPUs mining · <i>a</i> = average mining GPU's earnings per day · <i>L</i> = average miner level</p>
       </div>
 
       <div class="math-grid reveal">
         <div class="panel">
           <div class="panel-head"><span>Why $750 per GPU</span></div>
           <div class="panel-body">
-            <code class="eq">V ÷ N = (V ÷ mcap) × (mcap ÷ holders) ÷ (miners ÷ holders)<br>      = 30% × $1,000 ÷ 40% = <b>$750</b></code>
+            <code class="eq">V ÷ N = (V ÷ mcap) × (mcap ÷ holders) ÷ (miners ÷ holders)
+      = 30% × $1,000 ÷ 40% = <b>$750</b></code>
             <p class="muted">Market cap cancels out. The same estimate holds for a $500K coin or a $50M coin, as long as people trade and mine in the same proportions.</p>
             <dl class="kv">
-              <div><dt>Volume / mcap</dt><dd><b>30% a day.</b> An active memecoin in its first weeks. Launch days often run 100%+.</dd></div>
+              <div><dt>Volume / mcap</dt><dd><b>30% a day.</b> An active memecoin in its first weeks. Later it's usually much lower.</dd></div>
               <div><dt>Mcap / holder</dt><dd><b>$1,000.</b> A $1M Solana memecoin has roughly 1,000 holders.</dd></div>
               <div><dt>Holders mining</dt><dd><b>40%.</b> The coin is aimed at traders with gaming PCs.</dd></div>
               <div><dt>Average GPU</dt><dd><b><i>a</i> = $2.50/day,</b> about an RTX 3080 (hashrate.no).</dd></div>
-              <div><dt>Level mix</dt><dd><b><i>L</i> = 1.5×.</b> Half of miners hold $50 for Level 2. Level 3 starts after day 14.</dd></div>
+              <div><dt>Miner levels</dt><dd><b><i>L</i> = 2.1×.</b> 30% M1, 50% M2, 20% M3.</dd></div>
+              <div><dt>Holders</dt><dd><b>60% of mcap</b> held by wallets that earn: 30% at H1, 35% at H2, 20% at H3 (by value).</dd></div>
             </dl>
           </div>
         </div>
         <div class="panel">
-          <div class="panel-head"><span>Your GPU, plugged in</span><span class="tag" id="plug-gpu"></span></div>
+          <div class="panel-head"><span>Plugged in</span><span class="tag" id="plug-gpu"></span></div>
           <div class="panel-body">
             <code class="eq" id="plug-eq"></code>
-            <p class="muted">The cut moves in a straight line with volume per GPU. At $375 per GPU it's about half; at $1,500 it's about double. After launch, this estimate is replaced by what each level was actually paid in the last 24 hours.</p>
+            <p class="muted" id="plug-note"></p>
           </div>
         </div>
       </div>
@@ -218,8 +241,8 @@
       <div class="head reveal"><h2 id="why-title">Built so the tax actually pays out.</h2></div>
       <div class="why reveal">
         <div><h3>The tax can't be dodged.</h3><p>Most tax tokens only charge in their own pool, so traders route around them and the rewards dry up. $HASH uses Solana's Token-2022 transfer fee, charged on every transfer, everywhere.</p></div>
-        <div><h3>Miners are buyers.</h3><p>Every payout starts as a market buy of $HASH. More GPUs mining means more buying, every 10 minutes, around the clock.</p></div>
-        <div><h3>Holders get the bigger cut.</h3><p>Hold $50 and your cut doubles. Hold $500 for 14 days without selling and it's 4×. Sell and that wallet loses Level 3 for good.</p></div>
+        <div><h3>It balances itself.</h3><p>Miners are paid up to 5× their mining. Anything beyond that goes to holders, and holders always get at least 1%. No one decides the split by hand; it's a public formula.</p></div>
+        <div><h3>Miners are buyers.</h3><p>Every payout starts as a market buy of $HASH, and miners need $HASH in their wallet to reach M2 and M3. More GPUs mining means more buying.</p></div>
       </div>
     </div>
   </section>
@@ -228,23 +251,37 @@
   <section class="section" id="levels" aria-labelledby="levels-title">
     <div class="wrap">
       <div class="head reveal">
-        <h2 id="levels-title">Hold more, get a bigger cut.</h2>
-        <p class="lede" id="levels-lede">Same GPU, same chest. Your level multiplies your share.</p>
+        <h2 id="levels-title">Two ladders. Climb either, or both.</h2>
+        <p class="lede">Holder levels pay you for your bag. Miner levels multiply your share of the miner chest, and unlock by holding too.</p>
       </div>
-      <div class="panel reveal">
-        <table class="lv-table">
-          <thead><tr><th scope="col">Level</th><th scope="col">What you need</th><th scope="col">Cut</th><th scope="col" class="r" id="lv-col">Per day</th></tr></thead>
-          <tbody>
-            <tr data-l="1"><td>Level 1</td><td>Just mine. No $HASH needed.</td><td><span class="x">1×</span></td><td class="usd" data-lv="1">—</td></tr>
-            <tr data-l="2"><td>Level 2</td><td>Mine and hold at least <b>$50</b> of $HASH. Mined $HASH counts.</td><td><span class="x">2×</span></td><td class="usd" data-lv="2">—</td></tr>
-            <tr data-l="3"><td>Level 3</td><td>Mine, hold at least <b>$500</b>, 14+ days since your first $HASH, and <b>never sold</b>.</td><td><span class="x">4×</span></td><td class="usd" data-lv="3">—</td></tr>
-          </tbody>
-        </table>
+      <div class="lv-grid reveal">
+        <div class="panel">
+          <div class="panel-head"><span>Holder levels</span><span class="tag" id="lvh-note">Per day, bag at the threshold</span></div>
+          <table class="lv-table">
+            <thead><tr><th scope="col">Level</th><th scope="col">What you need</th><th scope="col">Cut</th><th scope="col" class="r">Per day</th></tr></thead>
+            <tbody>
+              <tr><td>H1</td><td>Hold <b>$50</b>+</td><td><span class="x">1×</span></td><td class="usd" data-lvh="1">—</td></tr>
+              <tr><td>H2</td><td>Hold <b>$500</b>+ for <b>24 hours</b></td><td><span class="x">2×</span></td><td class="usd" data-lvh="2">—</td></tr>
+              <tr><td>H3</td><td>Hold <b>$2,500</b>+ for <b>72 hours</b></td><td><span class="x">4×</span></td><td class="usd" data-lvh="3">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span>Miner levels</span><span class="tag" id="lvm-note"></span></div>
+          <table class="lv-table" id="lvm">
+            <thead><tr><th scope="col">Level</th><th scope="col">What you need</th><th scope="col">Cut</th><th scope="col" class="r">Per day</th></tr></thead>
+            <tbody>
+              <tr data-l="1"><td>M1</td><td>Mine</td><td><span class="x">1×</span></td><td class="usd" data-lv="1">—</td></tr>
+              <tr data-l="2"><td>M2</td><td>Mine <b>2 of the last 7 days</b> and be <b>H1</b></td><td><span class="x">2×</span></td><td class="usd" data-lv="2">—</td></tr>
+              <tr data-l="3"><td>M3</td><td>Mine <b>5 of the last 7 days</b> and be <b>H2</b></td><td><span class="x">4×</span></td><td class="usd" data-lv="3">—</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="rules reveal">
-        <p><b>Dips don't reset you.</b>Fall under $500 and you're Level 2. Back above $500, Level 3 comes straight back. No new 14-day wait.</p>
-        <p><b>Selling ends Level 3.</b>Any transfer out counts: selling, another wallet, an LP, an exchange. Buying never counts against you.</p>
-        <p><b>Small GPUs aren't left out.</b>Shares use the square root of GPU earnings, so a 3060 gets a bigger boost relative to what it mines. One wallet can take 5% of a chest at most.</p>
+        <p><b>Selling shrinks your clock.</b>Sell 25% of your bag and your hold clock drops 25%. Sell everything and it restarts. Buying never hurts it.</p>
+        <p><b>Dips don't reset you.</b>If the price drops your bag under a threshold, you drop a level. Back above it, the level comes straight back.</p>
+        <p><b>No whale games.</b>Holder rewards follow bag size directly, so splitting a bag across wallets gains nothing. One wallet can take 5% of a payout at most.</p>
       </div>
     </div>
   </section>
@@ -264,9 +301,9 @@
           <div class="app-stats">
             <div class="app-stat"><span class="app-label">Paid</span><b>—</b></div>
             <div class="app-stat"><span class="app-label">Pending</span><b>—</b></div>
-            <div class="app-stat"><span class="app-label">Level</span><b class="gold">1</b></div>
+            <div class="app-stat"><span class="app-label">Levels</span><b class="gold">M1 · H0</b></div>
           </div>
-          <div class="app-progress"><div class="row"><span>Level 2</span><span class="mono">$12 to go</span></div><div class="bar"><i></i></div></div>
+          <div class="app-progress"><div class="row"><span>H1 (unlocks M2)</span><span class="mono">$12 to go</span></div><div class="bar"><i></i></div></div>
           <div class="app-actions"><span class="btn btn-ghost">Stop</span><span class="btn btn-gold">Mining…</span></div>
         </div>
       </div>
@@ -275,7 +312,7 @@
         <ol class="numbered">
           <li><span><b>Install the app</b>One small Windows installer. It finds your GPU and picks the coin that pays it most.</span></li>
           <li><span><b>Paste your wallet address</b>Your public Phantom or Solflare address. Never your seed phrase.</span></li>
-          <li><span><b>Press Start</b>$HASH lands in your wallet every 10 minutes. Stop whenever you want to game.</span></li>
+          <li><span><b>Press Start</b>$HASH lands in your wallet every 10 minutes. Mine 2 days and hold $50 for M2. Stop whenever you want to game.</span></li>
         </ol>
         <ul class="ticks">
           <li>NVIDIA, AMD and Intel (91 cards)</li>
@@ -294,25 +331,28 @@
     <div class="wrap token-grid">
       <div class="reveal">
         <h2 id="token-title">Tokenomics.</h2>
-        <p class="lede" style="margin-top: 14px;">One tax, two destinations, all on-chain.</p>
+        <p class="lede" style="margin-top: 14px;">One tax, split by a public formula, all on-chain.</p>
         <div style="margin-top: 28px;">
-          <div class="split-bar" role="img" aria-label="3% tax: 2.5% to miners, 0.5% to development"><div class="a">2.5% → miners</div><div class="b">0.5%</div></div>
-          <div class="split-legend"><span>Miner chest</span><span>Development</span></div>
+          <div class="split-bar three" role="img" aria-label="5% tax: 0.5% development, up to 3.5% to miners, at least 1% to holders">
+            <div class="d">0.5%</div><div class="m">≤ 3.5% miners</div><div class="h">≥ 1% holders</div>
+          </div>
+          <div class="split-legend"><span>Development</span><span>Miners: what reaches 5×</span><span>Holders: the rest</span></div>
         </div>
         <dl class="rows per100">
-          <div><dt>For every $100K traded</dt><dd>$3,000 tax</dd></div>
-          <div><dt>To miners</dt><dd class="gold">$2,500</dd></div>
+          <div><dt>For every $100K traded</dt><dd>$5,000 tax</dd></div>
           <div><dt>To development</dt><dd>$500</dd></div>
+          <div><dt>To miners</dt><dd class="gold">up to $3,500</dd></div>
+          <div><dt>To holders</dt><dd class="gold">at least $1,000</dd></div>
         </dl>
       </div>
       <dl class="kv reveal">
         <div><dt>Chain</dt><dd><b>Solana</b>, Token-2022</dd></div>
-        <div><dt>Tax</dt><dd><b>3%</b> on every buy, sell and transfer, on every DEX and wallet</dd></div>
+        <div><dt>Tax</dt><dd><b>5%</b> on every buy, sell and transfer, on every DEX and wallet</dd></div>
+        <div><dt>Split</dt><dd>0.5% development. Miners get what lifts them to <b>5× their mining</b>, up to 3.5%. Holders get the rest, <b>never less than 1%</b>. No burn.</dd></div>
         <div><dt>Tax authority</dt><dd>In a multisig. <b>The tax will never be raised.</b></dd></div>
-        <div><dt>Dev bag</dt><dd><b>1% of supply</b>, bought publicly at launch. Locked 90 days, then max 0.25% of supply a month. <b>Gets no chest payouts.</b></dd></div>
+        <div><dt>Dev bag</dt><dd><b>1% of supply</b>, bought publicly at launch. Locked 90 days, then max 0.25% of supply a month. <b>Gets no miner or holder payouts.</b></dd></div>
         <div><dt>Dev wallets</dt><dd>Every wallet we control is listed here at launch with Solscan links.</dd></div>
         <div><dt>Contract</dt><dd><b>Posted here first, at launch.</b> Any CA before that is fake.</dd></div>
-        <div><dt>Trade on</dt><dd>Any Solana DEX or wallet: Jupiter, Raydium, Phantom, Solflare. The tax applies everywhere.</dd></div>
       </dl>
     </div>
   </section>
@@ -326,10 +366,10 @@
         <p class="seed"><b>We will never ask for your seed phrase or private key, and we never DM first.</b> Anyone who does is a scammer.</p>
       </div>
       <ol class="status reveal">
-        <li class="done"><span>Done</span><div><b>Payout engine</b> · levels, chest split, 10-minute payouts</div></li>
+        <li class="done"><span>Done</span><div><b>Payout engine</b> · tax split, miner and holder levels, 10-minute payouts</div></li>
         <li class="done"><span>Done</span><div><b>Coin switcher</b> · picks the best coin per GPU</div></li>
         <li class="now"><span>Now</span><div><b>Windows app</b> and real mining pools</div></li>
-        <li><span>Next</span><div><b>Devnet test</b> of tax → chest → payouts, then a private test on real GPUs</div></li>
+        <li><span>Next</span><div><b>Devnet test</b> of tax → split → payouts, then a private test on real GPUs</div></li>
         <li><span>Next</span><div><b>Proof video</b> · unedited install to first payout</div></li>
         <li><span>Then</span><div><b>Launch</b> · CA posted here, waitlist goes first</div></li>
       </ol>
@@ -376,10 +416,10 @@
         <p class="muted" style="margin-top: 14px;">More in the <a href="faq.html" class="gold">full FAQ</a>.</p>
       </div>
       <div class="faq reveal">
-        <details><summary>Can I just trade it without mining?</summary><div class="a"><p>Yes. It trades like any Solana token. But the 2.5% only goes to wallets that are mining, so holding without mining earns nothing from the chest.</p></div></details>
-        <details><summary>How much will I actually make?</summary><div class="a"><p>Your cut depends on one ratio: daily volume divided by GPUs mining. The estimate uses $750 of volume per GPU; <a href="#math" class="gold">the math is here</a>. If the real ratio is half that, your cut is about half. After launch the site shows what each level was actually paid in the last 24 hours instead.</p></div></details>
-        <details><summary>Is this a rug?</summary><div class="a"><p>The tax is enforced by the token program and can never be raised. The dev bag is 1%, bought in public and locked for 90 days, and it gets no chest payouts. The treasury is a multisig, the code is open source, and every payout is on-chain. Check it all on Solscan at launch.</p></div></details>
-        <details><summary>What happens if I sell?</summary><div class="a"><p>You pay the 3% tax like everyone else, and that wallet can never be Level 3 again. You can still mine at Level 1 or 2.</p></div></details>
+        <details><summary>Can I just hold it without mining?</summary><div class="a"><p>Yes. Hold $50 or more and you earn holder rewards: at least 1% of every trade is split between holders by bag size and level (H1, H2, H3). Mining adds a second payout on top.</p></div></details>
+        <details><summary>How much will I actually make?</summary><div class="a"><p>It depends on one ratio: daily volume divided by GPUs mining. The estimate uses $750 of volume per GPU, which is launch-week trading; <a href="#math" class="gold">the math is here</a>. Miners are paid up to 5× their mining, and holders get the rest. When volume is lower, holders get less first, down to their 1% minimum, then miners. After launch the site shows what each level was actually paid in the last 24 hours instead.</p></div></details>
+        <details><summary>Is this a rug?</summary><div class="a"><p>The tax is enforced by the token program and can never be raised. The dev bag is 1%, bought in public and locked for 90 days, and it gets no miner or holder payouts. The treasury is a multisig, the code is open source, and every payout is on-chain. Check it all on Solscan at launch.</p></div></details>
+        <details><summary>What happens if I sell?</summary><div class="a"><p>You pay the 5% tax like everyone else, and your hold clock shrinks by the share you sold. Sell 25% of your bag and the clock drops 25%; sell everything and it restarts. Your levels drop if you fall under a threshold.</p></div></details>
         <details><summary>Will my antivirus flag the app?</summary><div class="a"><p>Some antivirus products flag every crypto miner as "potentially unwanted". The app is code-signed and open source with published checksums. You never need to turn off your antivirus.</p></div></details>
         <details><summary>When is launch and what's the CA?</summary><div class="a"><p>Launch is announced once the app and payouts are proven. The CA is posted on this site first. Any address posted before that isn't ours.</p></div></details>
       </div>
@@ -392,7 +432,7 @@
     <div class="foot-grid">
       <div>
         <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28"><span>Hashcoin</span><span class="tick">$HASH</span></a>
-        <p>The memecoin that pays its miners. 3% tax, 2.5% to everyone mining with a gaming PC.</p>
+        <p>The memecoin that pays miners and holders. 5% tax, split by a public formula.</p>
       </div>
       <div><h4>Product</h4><ul><li><a href="#how">How it works</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="#levels">Levels</a></li><li><a href="#mining">Mining app</a></li></ul></div>
       <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="#token">Tokenomics</a></li><li><a href="#trust">Status</a></li><li><a href="#waitlist">Waitlist</a></li></ul></div>

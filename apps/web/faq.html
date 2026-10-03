@@ -7,7 +7,7 @@
 <meta name="description" content="How Hashcoin works: mining, payouts, levels, the $HASH token and tax, safety and risks.">
 <meta name="theme-color" content="#0B0C0D">
 <meta property="og:title" content="Hashcoin ($HASH)">
-<meta property="og:description" content="Your GPU mines. Every $HASH trade adds to a chest shared among miners.">
+<meta property="og:description" content="Every trade pays miners and holders. 5% tax: up to 3.5% to miners, at least 1% to holders.">
 <meta property="og:image" content="brand/logo/hashcoin-1024.png">
 <link rel="icon" href="brand/logo/favicon.ico" sizes="any">
 <link rel="icon" href="brand/logo/hashcoin-mark.svg" type="image/svg+xml">
@@ -67,8 +67,9 @@
 <div class="ticker" aria-label="Token summary">
   <ul>
     <li>$HASH <b>Solana</b></li>
-    <li>Tax <b class="gold">3%</b></li>
-    <li>To miners <b class="gold">2.5%</b></li>
+    <li>Tax <b class="gold">5%</b></li>
+    <li>Miners <b class="gold">up to 3.5%</b></li>
+    <li>Holders <b class="gold">at least 1%</b></li>
     <li>Dev <b>0.5%</b></li>
     <li>Payouts <b>every 10 min</b></li>
     <li>Dev bag <b>1%, locked 90d</b></li>
@@ -90,7 +91,7 @@
         <a href="#start">Getting started</a>
         <a href="#mining">Mining and coins</a>
         <a href="#payouts">Payouts</a>
-        <a href="#levels">Chest and levels</a>
+        <a href="#levels">Levels and payouts</a>
         <a href="#token">Tokenomics</a>
         <a href="#safety">Safety and antivirus</a>
         <a href="#risks">Risks</a>
@@ -102,7 +103,7 @@
           <div class="faq">
             <details open>
               <summary>What is Hashcoin?</summary>
-              <div class="a"><p>A Solana token ($HASH) and a Windows mining app that work together. Your GPU mines, the platform converts what it mines into $HASH and pays you, and a 3% tax on every $HASH transfer funds a chest that's shared among miners. It's built as a working product, not a joke coin.</p></div>
+              <div class="a"><p>A Solana token ($HASH) and a Windows mining app that work together. A 5% tax on every $HASH trade pays two groups: people mining with their GPUs (the platform converts what they mine into $HASH and adds a cut of the tax) and people holding $HASH. It's built as a working product, not a joke coin.</p></div>
             </details>
             <details>
               <summary>What do I need?</summary>
@@ -114,11 +115,11 @@
             </details>
             <details>
               <summary>Do I need to buy $HASH?</summary>
-              <div class="a"><p>No. Level 1 only requires mining. Holding $HASH (including what you've mined) moves you to Level 2 or 3, which gives you a bigger weight in the chest.</p></div>
+              <div class="a"><p>No. M1 only requires mining. Holding $50 or more makes you H1, which earns holder rewards and unlocks M2; $500 for 24 hours makes you H2 and unlocks M3.</p></div>
             </details>
             <details>
               <summary>When does it launch?</summary>
-              <div class="a"><p>When the app and payouts are proven end to end: a devnet test of the tax, chest and payouts, a private test on real GPUs, and an unedited install-to-first-payout video. The date will appear in the countdown on the home page. No $HASH token exists yet.</p></div>
+              <div class="a"><p>When the app and payouts are proven end to end: a devnet test of the tax, the split and payouts, a private test on real GPUs, and an unedited install-to-first-payout video. The date will appear in the countdown on the home page. No $HASH token exists yet.</p></div>
             </details>
           </div>
         </section>
@@ -172,38 +173,51 @@
         </section>
 
         <section id="levels" aria-labelledby="levels-h">
-          <h2 id="levels-h">Chest and levels</h2>
+          <h2 id="levels-h">Levels and payouts</h2>
           <div class="prose" style="margin-bottom: 24px;">
-            <p>Each epoch the chest is shared among miners by weight: <b>the square root of your GPU's USD earnings, times your level multiplier.</b> The square root means a small card gets a bigger boost relative to what it mines. No wallet can take more than 5% of a chest; any excess goes to everyone else.</p>
+            <p>There are two ladders. <b>Holder levels</b> pay you a share of the holder pot for your bag. <b>Miner levels</b> multiply your share of the miner chest. You can climb either one, or both.</p>
             <table>
-              <thead><tr><th>Level</th><th>Requirement</th><th>Weight</th></tr></thead>
+              <thead><tr><th>Holder level</th><th>Requirement</th><th>Weight</th></tr></thead>
               <tbody>
-                <tr><td>Level 1</td><td>Mining (default)</td><td class="mono">1×</td></tr>
-                <tr><td>Level 2</td><td>Hold at least $50 of $HASH</td><td class="mono">2×</td></tr>
-                <tr><td>Level 3</td><td>Hold at least $500, 14+ days since $HASH first landed in the wallet, and never sold or transferred out</td><td class="mono">4×</td></tr>
+                <tr><td>H1</td><td>Hold at least $50 of $HASH</td><td class="mono">1×</td></tr>
+                <tr><td>H2</td><td>Hold at least $500, with 24 hours on your hold clock</td><td class="mono">2×</td></tr>
+                <tr><td>H3</td><td>Hold at least $2,500, with 72 hours on your hold clock</td><td class="mono">4×</td></tr>
               </tbody>
             </table>
+            <table>
+              <thead><tr><th>Miner level</th><th>Requirement</th><th>Weight</th></tr></thead>
+              <tbody>
+                <tr><td>M1</td><td>Mining</td><td class="mono">1×</td></tr>
+                <tr><td>M2</td><td>Mined on 2 of the last 7 days, and at least H1</td><td class="mono">2×</td></tr>
+                <tr><td>M3</td><td>Mined on 5 of the last 7 days, and at least H2</td><td class="mono">4×</td></tr>
+              </tbody>
+            </table>
+            <p>Holder pot share = <b>bag × holder weight</b>. Miner chest share = <b>√(your GPU's USD earnings) × miner weight</b>; the square root means a small card gets a bigger boost relative to what it mines. No wallet can take more than 5% of one payout; any excess goes to everyone else.</p>
           </div>
           <div class="faq">
             <details>
+              <summary>How is the 5% split between miners and holders?</summary>
+              <div class="a"><p>0.5% always goes to development. Miners get exactly what it takes to pay them, on average, <b>5× what their GPUs mine</b>, up to 3.5% of volume. Holders get everything else, and never less than 1%. When volume is high, miners hit 5× easily and holders get more; when it's low, miners get the full 3.5% and holders their 1%.</p></div>
+            </details>
+            <details>
+              <summary>What is the hold clock?</summary>
+              <div class="a"><p>It starts when $HASH first lands in your wallet and keeps running, even through price dips. <b>Selling shrinks it in proportion:</b> sell 25% of your bag and the clock drops by 25%; sell everything and it restarts from zero. Buying never moves it. Any transfer out counts as selling, including sending to another wallet, a liquidity pool or an exchange.</p></div>
+            </details>
+            <details>
               <summary>Does mined $HASH count toward the thresholds?</summary>
-              <div class="a"><p>Yes. Your position value includes mined $HASH, valued at a ~1-hour average price and checked at each payout.</p></div>
+              <div class="a"><p>Yes. Your bag includes mined $HASH, valued at a ~1-hour average price and checked at each payout.</p></div>
             </details>
             <details>
               <summary>What happens if the price dips?</summary>
-              <div class="a"><p>Below $50 you drop to Level 1; below $500 you drop from Level 3 to Level 2. When your position is back above $500, Level 3 returns immediately, with no new 14-day wait.</p></div>
+              <div class="a"><p>If your bag falls under a threshold, you drop to the level below. When it's back above, the level returns immediately, because your hold clock kept running.</p></div>
             </details>
             <details>
-              <summary>When does the 14-day clock start?</summary>
-              <div class="a"><p>The first time $HASH lands in the wallet, from a payout or a buy. It keeps running through dips.</p></div>
+              <summary>How often are holders paid?</summary>
+              <div class="a"><p>Miners are paid about every 10 minutes. Holder rewards go out hourly or daily (to be decided), because paying every holder every 10 minutes would cost too much in transaction fees.</p></div>
             </details>
             <details>
-              <summary>What counts as selling?</summary>
-              <div class="a"><p>Any transfer of $HASH out of the wallet: selling, sending to another wallet, depositing into a liquidity pool or an exchange. Doing any of these permanently ends Level 3 for that wallet. Levels 1 and 2 stay available. Buying never counts against you.</p></div>
-            </details>
-            <details>
-              <summary>How much is the chest worth?</summary>
-              <div class="a"><p>It's 2.5% of all $HASH trading volume, so it changes with the market. There's no fixed or promised amount. After launch the site shows what each level was actually paid in the last 24 hours. Only the 1 : 2 : 4 ratio is fixed.</p></div>
+              <summary>Can I split my bag across wallets to earn more?</summary>
+              <div class="a"><p>No. Holder rewards follow bag size directly, so ten small wallets earn the same as one big one, and moving tokens between wallets counts as selling, which shrinks the clock.</p></div>
             </details>
           </div>
         </section>
@@ -214,9 +228,9 @@
             <table>
               <tbody>
                 <tr><td>Chain</td><td>Solana, Token-2022 with the transfer-fee extension</td></tr>
-                <tr><td>Tax</td><td>3% on every transfer: 2.5% to the miner chest, 0.5% to development, no burn</td></tr>
+                <tr><td>Tax</td><td>5% on every transfer: 0.5% to development, up to 3.5% to miners (what reaches 5× their mining), at least 1% to holders. No burn</td></tr>
                 <tr><td>Tax authority</td><td>In a multisig. Public commitment never to raise the tax</td></tr>
-                <tr><td>Dev holding</td><td>1% of supply, bought openly at launch, no sells for 90 days, then at most 0.25% of supply per month. Excluded from the chest</td></tr>
+                <tr><td>Dev holding</td><td>1% of supply, bought openly at launch, no sells for 90 days, then at most 0.25% of supply per month. Gets no miner or holder payouts</td></tr>
                 <tr><td>Contract address</td><td>Published on this site first, at launch</td></tr>
               </tbody>
             </table>
@@ -232,7 +246,7 @@
             </details>
             <details>
               <summary>Which launchpad or exchange will it be on?</summary>
-              <div class="a"><p>Still being decided between a launchpad that supports a 3% Token-2022 transfer fee and our own token with a Raydium or Orca pool. Either way, any Solana wallet and aggregator such as Jupiter can trade it, and the tax applies everywhere.</p></div>
+              <div class="a"><p>Most likely our own Token-2022 token with a Raydium or Orca pool, since launchpads with built-in reward taxes don't seem to support 5%. Either way, any Solana wallet and aggregator such as Jupiter can trade it, and the tax applies everywhere.</p></div>
             </details>
             <details>
               <summary>How do I know the contract address is real?</summary>
@@ -270,8 +284,8 @@
             <ul>
               <li><b>$HASH is volatile.</b> Like any new token, it can lose most or all of its value.</li>
               <li><b>Payouts vary.</b> They depend on coin prices, pool results, how much $HASH is traded and how many people mine. They can fall to near zero.</li>
-              <li><b>Costs are yours.</b> Electricity, heat and hardware wear. The 3% tax applies when you sell or move $HASH.</li>
-              <li><b>Level 3 is all or nothing.</b> Selling or moving any $HASH ends it for that wallet, so partial profit-taking isn't possible at Level 3.</li>
+              <li><b>Costs are yours.</b> Electricity, heat and hardware wear. The 5% tax applies when you buy, sell or move $HASH.</li>
+              <li><b>Selling costs you level time.</b> Selling shrinks your hold clock in proportion, so taking profit can drop you a holder level, and with it a miner level.</li>
               <li><b>New software.</b> Bugs are possible. The code is open so anyone can check it.</li>
               <li><b>Rules where you live.</b> Mining and tokens are regulated differently by country. Check yours.</li>
             </ul>
@@ -288,7 +302,7 @@
     <div class="foot-grid">
       <div>
         <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="28" height="28"><span>Hashcoin</span><span class="tick">$HASH</span></a>
-        <p>The memecoin that pays its miners. 3% tax, 2.5% to everyone mining with a gaming PC.</p>
+        <p>The memecoin that pays miners and holders. 5% tax, split by a public formula.</p>
       </div>
       <div><h4>Product</h4><ul><li><a href="index.html#how">How it works</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="index.html#mining">Mining app</a></li></ul></div>
       <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#trust">Status</a></li><li><a href="index.html#waitlist">Waitlist</a></li></ul></div>
