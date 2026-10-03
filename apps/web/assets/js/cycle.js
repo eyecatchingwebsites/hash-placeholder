@@ -361,9 +361,15 @@
       setCaption(w.caption(i));
     };
   });
-  // The coin wheel plays once, the bag wheel once per level; then they swap (until someone picks).
-  let bagLoop = 0;
-  coin.onLoop = () => { if (auto) { show(1, true); return false; } return true; };
+  // The coin wheel plays three times, the bag wheel once per level; then they swap (until someone picks).
+  const COIN_TURNS = 3;
+  let bagLoop = 0, coinLoop = 0;
+  coin.onLoop = () => {
+    coinLoop++;
+    if (!auto || coinLoop < COIN_TURNS) return true;
+    show(1, true);
+    return false;
+  };
   bag.onLoop = () => {
     bagLoop++;
     if (bagLoop < 3) return true;
@@ -396,6 +402,7 @@
     note.hidden = i !== 1;
     hero.dataset.active = i === 1 ? "bag" : "coin";
     if (i === 1) { bagLoop = 0; setBagLevel(1); fillBag(1); }
+    if (i === 0) coinLoop = 0;
     buildSteps(w);
     if (fade) w.root.classList.add("entering");
     w.layout();
