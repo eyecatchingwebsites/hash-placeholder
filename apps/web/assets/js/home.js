@@ -32,12 +32,11 @@
       t.setAttribute("aria-selected", String(on));
       t.tabIndex = on ? 0 : -1;
       $("#" + t.getAttribute("aria-controls")).hidden = !on;
-      if (on) t.scrollIntoView({ block: "nearest", inline: "nearest" });
     });
   }
   function scrollToEl(el) {
-    const offset = 64 + $(".xbar").offsetHeight + 12;
-    const top = el === explore ? explore.offsetTop - 64 : el.getBoundingClientRect().top + window.scrollY - offset;
+    const offset = 64 + 12;
+    const top = el === explore ? explore.offsetTop - 40 : el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
   }
   // Returns true when the hash names a topic (or something inside one).
@@ -165,6 +164,11 @@
     $("#hold-flag").innerHTML = maxH && L > maxH
       ? `<p class="flag">Level ${L} needs a ${whole(M.HOLDER.usd[L - 1])} bag. Yours counts as Level ${maxH}.</p>` : "";
 
+    // Mine and hold: mined $HASH is part of the bag, so both payouts add up.
+    tween($("#both-day"), r.total + h.perDay, money);
+    $("#both-mine").innerHTML = `${money(r.total)}<small>mining at M${L}</small>`;
+    $("#both-hold").innerHTML = `${money(h.perDay)}<small>holder rewards${hl ? " at H" + hl : ""}</small>`;
+
     // Level tables
     [1, 2, 3].forEach((l) => {
       const bag = M.HOLDER.usd[l - 1];
@@ -194,6 +198,47 @@
       `$${E.volPerGpu} is launch-week trading; later it's usually lower. After launch this is replaced by what each level was actually paid.`;
   }
   render();
+
+  // ---------- How it works: the split balances itself ----------
+  const bal = $("#bal-vol");
+  if (bal) {
+    const LO = 40, HI = 3000; // daily volume per GPU mining, log scale
+    const toV = (p) => LO * Math.pow(HI / LO, p / 1000);
+    const toP = (v) => Math.round((1000 * Math.log(v / LO)) / Math.log(HI / LO));
+    const paintBal = () => {
+      const v = toV(+bal.value);
+      const mk = M.market({ volPerGpu: v });
+      const pool = M.TAX - M.DEV;
+      const m = mk.chestRate, ho = mk.holderRate;
+      $("#bal-vol-o").textContent = `${whole(v)} a day per GPU mining`;
+      $("#bal-m").style.width = (100 * m) / pool + "%";
+      $("#bal-h").style.width = (100 * ho) / pool + "%";
+      $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(1)}%`;
+      $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(1)}%`;
+      $("#bal-mult").textContent = F.mult(1 + mk.chestPerGpu / mk.avgRev);
+      $("#bal-hold").textContent = (100 * ho).toFixed(1) + "%";
+      $("#bal-note").textContent = mk.targetMet
+        ? "Busy: miners are already at 5×, so everything above that goes to holders."
+        : "Quiet: miners get the most they can (3.5%) to get as close to 5× as possible. Holders keep their 1% floor.";
+    };
+    bal.value = toP(E.volPerGpu);
+    paintBal();
+    // Sweeps between quiet and busy on its own until someone drags it.
+    let bAuto = !reduce, bOn = false, bRaf = 0, bT0 = 0;
+    const sweep = (now) => {
+      if (!bT0) bT0 = now;
+      bal.value = Math.round(500 - 470 * Math.cos(((now - bT0) / 9000) * 2 * Math.PI + Math.acos((500 - toP(E.volPerGpu)) / 470)));
+      paintBal();
+      bRaf = requestAnimationFrame(sweep);
+    };
+    bal.addEventListener("input", () => { bAuto = false; cancelAnimationFrame(bRaf); paintBal(); });
+    if (bAuto) whileVisible(bal, (on) => {
+      if (!bAuto || on === bOn) return;
+      bOn = on;
+      cancelAnimationFrame(bRaf);
+      if (on) { bT0 = 0; bRaf = requestAnimationFrame(sweep); }
+    });
+  }
 
   // ---------- Your PC: GPU meter ----------
   const meter = $("#gpu-meter");

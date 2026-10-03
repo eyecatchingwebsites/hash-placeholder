@@ -27,8 +27,8 @@
     "<b>Press Start.</b> One click on any PC with a graphics card.",
     "<b>Your GPU mines.</b> Only on spare power, on whichever coin pays most.",
     "<b>It buys $HASH.</b> Every miner's earnings are market buys: steady buy inflow.",
-    "<b>Paid to your wallet.</b> Every 10 minutes. Holding levels you up.",
-    "<b>Every trade pays 5%.</b> The tax flows back out to miners and holders.",
+    "<b>Paid to your wallet.</b> Every 10 minutes. Mined $HASH is also your bag, so it earns holder rewards at the same time.",
+    "<b>Trades pay you extra.</b> 5% of every trade is paid out on top: a miner bonus and holder rewards.",
   ];
 
   const el = (tag, attrs, parent) => {
@@ -66,18 +66,30 @@
     const box = root.getBoundingClientRect(), r = elm.getBoundingClientRect();
     return { l: r.left - box.left, t: r.top - box.top, w: r.width, h: r.height, cx: r.left - box.left + r.width / 2, cy: r.top - box.top + r.height / 2 };
   }
+  // Cards are laid out at a base width and scaled (CSS --s) so the ring fills big screens.
+  const BASE_W = 210;
   function layoutRing(W) {
     root.classList.add("ring");
     root.classList.remove("stack");
-    const cardW = Math.round(Math.min(224, Math.max(190, W * 0.29)));
-    stations.forEach((s) => (s.style.width = cardW + "px"));
-    const cardH = Math.max(...stations.map((s) => s.offsetHeight));
-    // As wide as the column allows (and, beside the title, short enough for the screen),
-    // but never so tight that neighbors overlap.
-    const minR = (cardW + 26) / (2 * Math.sin(Math.PI / N));
-    let maxR = Math.min((W - cardW - 12) / (2 * Math.cos(Math.PI / 10)), 290);
-    if (window.innerWidth >= 1180) maxR = Math.min(maxR, (window.innerHeight - 64 - 100 - cardH - 24) / (1 + Math.cos(Math.PI / 5)));
-    const R = Math.max(minR, maxR);
+    stations.forEach((s) => (s.style.width = BASE_W + "px"));
+    const baseH = Math.max(...stations.map((s) => s.offsetHeight));
+    const sinA = Math.sin(Math.PI / N), cosB = Math.cos(Math.PI / 10), tall = 1 + Math.cos(Math.PI / 5);
+    // Beside the title (wide screens) the ring also has to fit the window height.
+    const bar = root.parentElement.querySelector(".cycle-bar");
+    const Hav = window.innerWidth >= 1180 ? window.innerHeight - 64 - 48 - (bar ? bar.offsetHeight + 18 : 70) : Infinity;
+    const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
+    const fit = (k) => {
+      const cw = BASE_W * k, ch = baseH * k;
+      return Math.min((W - cw - 12) / (2 * cosB), (Hav - ch - 20) / tall);
+    };
+    // Largest scale that still leaves comfortable room between neighbors.
+    let sc = 0.9;
+    for (let k = sMax; k >= 0.9; k -= 0.01) {
+      if (fit(k) >= (BASE_W * k + 110 * k) / (2 * sinA)) { sc = k; break; }
+    }
+    const cardW = BASE_W * sc, cardH = baseH * sc;
+    root.style.setProperty("--s", sc.toFixed(3));
+    const R = Math.max((cardW + 26) / (2 * sinA), fit(sc));
     const cx = W / 2;
     const cy = cardH / 2 + R + 10;
     const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
@@ -93,12 +105,12 @@
     // Each label sits on its spoke just outside the card; the coin takes the room that's left.
     const ext = (k) => {
       const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), t = tags[k];
-      return Math.min(c > 1e-6 ? t.offsetWidth / 2 / c : Infinity, s > 1e-6 ? t.offsetHeight / 2 / s : Infinity);
+      return Math.min(c > 1e-6 ? t.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? t.offsetHeight * sc / 2 / s : Infinity);
     };
     const tagAt = {};
-    Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3));
-    const room = Math.min(...stations.map((_, i) => edge(i) - 26), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6));
-    const coinD = Math.round(Math.min(210, Math.max(120, 2 * room)));
+    Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3 * sc));
+    const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6 * sc));
+    const coinD = Math.round(Math.min(230 * sc, Math.max(120, 2 * room)));
     core.style.left = cx + "px";
     core.style.top = cy + "px";
     core.style.width = core.style.height = coinD + "px";
@@ -108,7 +120,7 @@
       tags[k].style.left = cx + tagAt[k] * Math.cos(a) + "px";
       tags[k].style.top = cy + tagAt[k] * Math.sin(a) + "px";
     });
-    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10;
+    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10 * sc;
     root.style.height = H + "px";
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     links.forEach((lk, i) => {
@@ -121,6 +133,7 @@
   function layoutStack(W) {
     root.classList.add("stack");
     root.classList.remove("ring");
+    root.style.removeProperty("--s");
     root.style.height = "";
     stations.forEach((s) => { s.style.width = s.style.left = s.style.top = ""; });
     core.style.left = core.style.top = core.style.width = core.style.height = "";
@@ -194,14 +207,15 @@
       if (tags[k]) tags[k].classList.toggle("hot", on);
     });
     if (i === 2) hot(["2"]);
+    else if (i === 3) { hot([]); outTimer = setTimeout(() => hot(["3"]), 1500); }
     else if (i === 4) { hot(["4"]); outTimer = setTimeout(() => hot(["4", "0", "3"]), OUT_DELAY_MS); }
-    else hot([]);
+    else if (i !== 3) hot([]);
     core.classList.toggle("pulse", i === 2 || i === 4);
   }
   function countUp() {
-    const from = 12840, to = 13043, start = performance.now();
+    const from = 12840, to = 13057, start = performance.now();
     const tick = (now) => {
-      const f = Math.min(1, Math.max(0, (now - start - 700) / 1400));
+      const f = Math.min(1, Math.max(0, (now - start - 500) / 1600));
       const e = 1 - Math.pow(1 - f, 3);
       balance.textContent = Math.round(from + (to - from) * e).toLocaleString("en-US") + " $HASH";
       if (f < 1 && stations[3].classList.contains("on")) requestAnimationFrame(tick);
@@ -266,6 +280,13 @@
   if ("ResizeObserver" in window) {
     let lastW = 0;
     new ResizeObserver(() => { if (root.clientWidth !== lastW) { lastW = root.clientWidth; layout(); } }).observe(root);
+    let lastH = window.innerHeight, rq = 0;
+    window.addEventListener("resize", () => {
+      if (window.innerHeight === lastH) return;
+      lastH = window.innerHeight;
+      cancelAnimationFrame(rq);
+      rq = requestAnimationFrame(layout);
+    });
   } else {
     window.addEventListener("resize", layout);
   }
@@ -288,7 +309,7 @@
     stepBtns.forEach((b) => (b.hidden = true));
     links.forEach((lk) => { lk.lit.classList.add("on"); lk.lit.setAttribute("stroke-dashoffset", "0"); });
     Object.keys(spokes).forEach((k) => { spokes[k].classList.add("hot"); if (tags[k]) tags[k].classList.add("hot"); });
-    caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5% back to miners and holders.";
+    caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet, where it earns holder rewards → 5% of every trade pays miners and holders extra.";
     return;
   }
   go(0);

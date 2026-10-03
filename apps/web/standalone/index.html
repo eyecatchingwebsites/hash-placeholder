@@ -420,9 +420,18 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .hero-ctas { margin-top: 28px; }
 @media (min-width: 1180px) {
   .hero { min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); display: flex; align-items: center; padding: 20px 0 28px; }
-  .hero > .wrap { width: 100%; max-width: 1320px; }
-  .hero-split { grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); align-items: center; gap: 40px; }
-  .hero h1 { font-size: clamp(2.6rem, 3.7vw, 3.4rem); }
+  .hero > .wrap, .site-header > .wrap { width: 100%; max-width: 2240px; padding: 0 clamp(32px, 3vw, 72px); }
+  .hero-split { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: center; gap: clamp(40px, 3vw, 72px); }
+  /* Type grows with the screen (and stays short enough for the window height). */
+  .hero h1 { font-size: clamp(2.6rem, min(3.9vw, 7.4vh), 6.6rem); }
+  .hero-points { max-width: 34em; gap: clamp(12px, 1.6vh, 20px); margin-top: clamp(24px, 3vh, 40px); }
+  .hero-points li { font-size: clamp(1rem, calc(.45vw + .5rem), 1.55rem); }
+  .devices { margin-top: clamp(24px, 3vh, 40px); }
+  .devices li { font-size: clamp(.8rem, calc(.3vw + .45rem), 1rem); padding: .45em .9em .45em .7em; }
+  .devices svg { width: 1.25em; height: 1.25em; }
+  .hero-ctas { margin-top: clamp(28px, 3.4vh, 44px); }
+  .hero-ctas .btn { min-height: clamp(46px, 5.4vh, 58px); padding: 0 clamp(20px, 1.4vw, 28px); font-size: clamp(.95rem, calc(.3vw + .6rem), 1.1rem); }
+  .cycle-caption { font-size: clamp(.95rem, calc(.3vw + .55rem), 1.15rem); }
 }
 @media (min-width: 1180px) and (max-height: 820px) {
   .hero h1 { font-size: 2.8rem; }
@@ -444,8 +453,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle .st > * { opacity: .42; transition: opacity .7s var(--ease); }
 .cycle .st.on > *, .cycle.static .st > * { opacity: 1; }
 .cycle .st.prep > .art { opacity: 0; transition: opacity .3s ease; }
+.cycle { --s: 1; }
 .cycle.ring .st, .cycle.ring .cycle-core { position: absolute; transform: translate(-50%, -50%); }
-.cycle.ring .st.on { transform: translate(-50%, -50%) scale(1.045); z-index: 2; }
+.cycle.ring .st { transform: translate(-50%, -50%) scale(var(--s)); }
+.cycle.ring .st.on { transform: translate(-50%, -50%) scale(calc(var(--s) * 1.045)); z-index: 2; }
+.cycle.ring .spoke-tag { transform: translate(-50%, -50%) scale(var(--s)); }
+.cycle.ring .spoke-tag.hot { transform: translate(-50%, -50%) scale(calc(var(--s) * 1.08)); }
 .cycle.ring .st p { display: none; }
 .cycle.ring .st-text { align-items: center; }
 .st-text { display: grid; grid-template-columns: 26px 1fr; gap: 2px 10px; }
@@ -484,7 +497,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle.paused .art *, .cycle.paused .art { animation-play-state: paused !important; }
 /* Animations run on .on and keep their last frame on .seen (same declaration, so no restart). */
 .st.seen .art * { animation-play-state: paused !important; }
-.st.seen .art .chip, .st.seen .art .t-row, .st.seen .art .chart path, .st.seen .art .w-plus, .st.seen .art .cursor, .st.seen .art .fake-btn, .st.seen .art .fake-btn span, .st.seen .art .scr-status, .st.seen .art .w-clock i { animation-play-state: running !important; }
+.st.seen .art .chip, .st.seen .art .t-row, .st.seen .art .chart path, .st.seen .art .w-in, .st.seen .art .tax-split span, .st.seen .art .cursor, .st.seen .art .fake-btn, .st.seen .art .fake-btn span, .st.seen .art .scr-status, .st.seen .art .w-clock i { animation-play-state: running !important; }
 
 /* 1: PC with a Start click */
 .art-pc .mon { width: 146px; height: 80px; border: 2px solid var(--line-2); border-radius: 6px; background: #0E1013; display: grid; margin-top: -10px; }
@@ -537,40 +550,56 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .art-buy .side { font: 800 .64rem/1 var(--font-mono); color: var(--gold-ink); background: var(--gold); padding: 3px 6px; border-radius: 3px; }
 .st.on .art-buy .t-row, .st.seen .art-buy .t-row { animation: rise .45s var(--ease) 1.3s both; }
 
-/* 4: wallet balance ticks up, level pills, hold clock */
-.art-wallet .wallet { width: min(190px, 88%); display: grid; gap: 6px; padding: 8px 12px; border: 1px solid var(--line-2); border-radius: 6px; background: #0E1013; }
-.art-wallet .w-label { display: flex; justify-content: space-between; font: 600 .64rem/1 var(--font-mono); color: var(--dim); }
-.art-wallet .w-plus { font-style: normal; color: var(--gold); opacity: 0; }
-.st.on .art-wallet .w-plus, .st.seen .art-wallet .w-plus { animation: plus 1.8s var(--ease) .5s both; }
-@keyframes plus { 0% { opacity: 0; transform: translateY(8px); } 25%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
-.art-wallet .w-bal { font-size: .95rem; color: var(--gold); }
-.art-wallet .w-levels { display: flex; gap: 4px; }
-.art-wallet .w-levels span { font: 700 .62rem/1 var(--font-mono); padding: 3px 6px; border-radius: 3px; border: 1px solid var(--line-2); color: var(--dim); }
+/* 4: wallet: mining payout lands, then a holder reward on the same bag */
+.art-wallet .wallet { width: min(184px, 90%); display: grid; gap: 4px; padding: 7px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: #0E1013; }
+.art-wallet .w-label { display: flex; justify-content: space-between; align-items: center; font: 600 .62rem/1 var(--font-mono); color: var(--dim); }
+.art-wallet .w-bal { font-size: .9rem; color: var(--gold); line-height: 1.1; }
+.art-wallet .w-levels { display: flex; gap: 3px; }
+.art-wallet .w-levels span { font: 700 .54rem/1 var(--font-mono); padding: 2px 4px; border-radius: 3px; border: 1px solid var(--line-2); color: var(--dim); }
 .art-wallet .w-levels span.on { background: var(--c); border-color: var(--c); color: var(--gold-ink); }
-.art-wallet .w-clock { height: 4px; border-radius: 2px; background: var(--line-2); overflow: hidden; }
-.art-wallet .w-clock i { display: block; height: 100%; width: 45%; background: var(--l3); }
-.st.on .art-wallet .w-clock i, .st.seen .art-wallet .w-clock i { animation: clock 2.6s cubic-bezier(.4, 0, .2, 1) .4s both; }
-@keyframes clock { from { width: 45%; } to { width: 82%; } }
+.art-wallet .w-in { display: flex; justify-content: space-between; font: 600 .6rem/1.2 var(--font-mono); color: var(--muted); opacity: 0; }
+.art-wallet .w-in b { color: var(--gold); }
+.art-wallet .w-hold b { color: var(--gold-2); }
+.st.on .art-wallet .w-mine, .st.seen .art-wallet .w-mine { animation: rise .45s var(--ease) .5s both; }
+.st.on .art-wallet .w-hold, .st.seen .art-wallet .w-hold { animation: rise .45s var(--ease) 1.5s both; }
+.cycle.static .art-wallet .w-in { opacity: 1; }
 
 /* 5: trade tape rolls, each trade pays 5% */
-.art-trades { padding: 6px 10px; place-items: stretch; }
+.art-trades { padding: 5px 8px; place-items: stretch; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 4px; }
 .art-trades .tape-win { height: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); }
 .art-trades .tape { list-style: none; margin: 0; padding: 0; display: grid; }
-.art-trades .tape li { display: grid; grid-template-columns: 34px 1fr auto; gap: 6px; font-size: .68rem; color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--line); height: 22px; align-items: center; }
+.art-trades .tape li { display: grid; grid-template-columns: 30px 1fr auto; gap: 4px; font-size: .64rem; padding-right: 2px; color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--line); height: 22px; align-items: center; }
 .st.on .art-trades .tape, .st.seen .art-trades .tape { animation: tape 4s linear infinite; }
 .art-trades .tape b { font: 800 .62rem/1 var(--font-mono); color: var(--text); }
 .art-trades .tape b.sell { color: var(--dim); }
 .art-trades .tape em { font-style: normal; color: var(--gold); font-family: var(--font-mono); font-weight: 600; }
 @keyframes tape { to { transform: translateY(-88px); } }
+.art-trades .tax-split { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.art-trades .tax-split span { font: 700 .56rem/1 var(--font-mono); letter-spacing: -.01em; text-align: center; color: var(--gold-ink); background: var(--gold); padding: 4px 3px; border-radius: 3px; white-space: nowrap; opacity: 0; }
+.art-trades .tax-split span + span { background: var(--gold-2); }
+.st.on .art-trades .tax-split span, .st.seen .art-trades .tax-split span { animation: rise .4s var(--ease) 1.1s both; }
+.st.on .art-trades .tax-split span + span, .st.seen .art-trades .tax-split span + span { animation-delay: 1.5s; }
+.cycle.static .art-trades .tax-split span { opacity: 1; }
 
 /* ---------- Explore: one topic at a time ---------- */
 .explore { border-top: 1px solid var(--line); }
-.xbar { position: sticky; top: 64px; z-index: 40; background: rgba(11, 12, 13, .92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
-.xtabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 10px 0; }
-.xtabs::-webkit-scrollbar { display: none; }
-.xtabs button { flex: none; border: 1px solid transparent; background: none; color: var(--muted); font: 700 .94rem/1 var(--font-display); padding: 11px 16px; border-radius: 999px; cursor: pointer; transition: background .25s, color .25s; }
-.xtabs button:hover { color: var(--text); background: var(--panel); }
-.xtabs button[aria-selected="true"] { background: var(--gold); color: var(--gold-ink); }
+.xbar { padding: clamp(28px, 4vw, 48px) 0 0; }
+.xbar-title { font: 700 1.05rem/1.2 var(--font-display); color: var(--muted); margin-bottom: 14px; }
+.xtabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+.xtabs button { display: grid; justify-items: center; align-content: center; gap: 10px; min-height: 104px; padding: 16px 10px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--panel); color: var(--text); font: 700 1rem/1.2 var(--font-display); text-align: center; cursor: pointer;
+  transition: background .25s, color .25s, border-color .25s, transform .25s var(--ease), box-shadow .25s; }
+.xtabs button svg { width: 30px; height: 30px; fill: none; stroke: var(--gold); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: stroke .25s; }
+.xtabs button:hover { border-color: var(--gold-line); transform: translateY(-2px); }
+.xtabs button[aria-selected="true"] { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); box-shadow: 0 10px 30px rgba(235, 180, 71, .22); }
+.xtabs button[aria-selected="true"] svg { stroke: var(--gold-ink); }
+@media (max-width: 960px) {
+  .xtabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .xtabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .xtabs button { min-height: 84px; padding: 12px 6px; font-size: .86rem; gap: 8px; }
+  .xtabs button svg { width: 24px; height: 24px; }
+}
 .xpanels { padding-top: clamp(36px, 5vw, 56px); padding-bottom: clamp(64px, 8vw, 96px); }
 .xpanel { animation: panelIn .45s var(--ease); }
 .xpanel:focus { outline: none; }
@@ -686,7 +715,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 }
 @media (max-width: 560px) {
   .gm-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .xtabs button { padding: 10px 13px; font-size: .9rem; }
 }
 @media (max-width: 960px) {
   .lv-grid, .pc-grid, .earn-grid, .rules, .flow3 { grid-template-columns: minmax(0, 1fr); }
@@ -701,6 +729,32 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .bar-row:nth-child(1) .track i.chest { background: var(--l1); }
 .bar-row:nth-child(2) .track i.chest { background: var(--l2); }
 .bar-row:nth-child(3) .track i.chest { background: var(--l3); }
+
+/* Earnings: mine and hold together */
+.both { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 16px; padding: 18px 20px; border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--lv) 45%, var(--line-2)); background: color-mix(in srgb, var(--lv) 7%, var(--panel)); }
+.both h3 { font-size: 1.25rem; }
+.both h3 b { color: var(--lv); }
+.both p { margin-top: 6px; color: var(--muted); font-size: .92rem; max-width: 560px; }
+.both-sum { display: flex; align-items: center; gap: 10px; font: 600 1rem/1 var(--font-mono); color: var(--text); }
+.both-sum i { font-style: normal; color: var(--dim); }
+.both-sum span small { display: block; margin-top: 4px; font: 500 .74rem/1 var(--font-body); color: var(--dim); }
+
+/* How it works: the self-balancing split */
+.balance { margin-bottom: 16px; }
+.bal-lede { color: var(--muted); max-width: 720px; }
+.bal-lede b { color: var(--text); }
+.bal-ends { display: flex; justify-content: space-between; font-size: .8rem; color: var(--dim); }
+.bal-bar { display: flex; height: 46px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line-2); }
+.bal-bar i { display: flex; align-items: center; min-width: 0; overflow: hidden; white-space: nowrap; font: 700 .86rem/1 var(--font-display); color: var(--gold-ink); padding: 0 12px; transition: width .35s var(--ease); }
+.bal-bar .m { background: var(--gold); }
+.bal-bar .h { background: var(--gold-2); justify-content: flex-end; }
+.bal-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bal-out div { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.bal-out span { display: block; font-size: .84rem; color: var(--muted); }
+.bal-out b { display: inline-block; margin-top: 6px; font: 800 1.7rem/1 var(--font-display); color: var(--gold); letter-spacing: -.02em; }
+.bal-out div + div b { color: var(--gold-2); }
+.bal-out small { margin-left: 6px; color: var(--dim); font-size: .84rem; }
+.bal-note { font-size: .9rem; color: var(--text); min-height: 1.5em; }
 
 </style>
 </head>
@@ -764,8 +818,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
         <h1 id="hero-title">Your GPU buys <span class="gold">$HASH</span> for you.</h1>
         <ul class="hero-points">
           <li><b>Press Start.</b> Your GPU mines in the background.</li>
-          <li><b>Every payout is a buy.</b> Its earnings buy $HASH for you, every 10 minutes.</li>
-          <li><b>Every trade pays you.</b> A 5% tax goes to miners and holders.</li>
+          <li><b>Every payout is a buy.</b> Your earnings buy $HASH, and that $HASH earns holder rewards too.</li>
+          <li><b>Trades pay you extra.</b> 5% of every trade goes to miners and holders.</li>
           <li><b>Your PC works like normal.</b> It only uses spare GPU power.</li>
         </ul>
         <ul class="devices" aria-label="Works on">
@@ -781,7 +835,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
       </div>
 
       <div class="hero-ring">
-        <div class="cycle" id="cycle" role="img" aria-label="The Hashcoin loop: 1, press Start on any PC with a graphics card. 2, your GPU mines. 3, what it mines buys $HASH on the market, a steady buy inflow into the coin. 4, the $HASH is paid to your wallet every 10 minutes, and holding it levels you up. 5, every $HASH trade pays a 5% tax, which flows back to miners and holders. Then it repeats.">
+        <div class="cycle" id="cycle" role="img" aria-label="The Hashcoin loop: 1, press Start on any PC with a graphics card. 2, your GPU mines. 3, what it mines buys $HASH on the market, a steady buy inflow into the coin. 4, the $HASH is paid to your wallet every 10 minutes, where it also earns holder rewards. 5, every $HASH trade pays a 5% tax, paid out on top as a miner bonus and holder rewards. Then it repeats.">
           <svg class="cycle-svg" aria-hidden="true" focusable="false"></svg>
 
           <article class="st" data-st="0">
@@ -823,13 +877,13 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
           <article class="st" data-st="3">
             <div class="art art-wallet" aria-hidden="true">
               <div class="wallet">
-                <span class="w-label">Your wallet <em class="w-plus">+203</em></span>
+                <span class="w-label">Your wallet <span class="w-levels"><span class="l1 on">H1</span><span class="l2 on">H2</span><span class="l3">H3</span></span></span>
                 <b class="w-bal mono" data-bal>12,840 $HASH</b>
-                <div class="w-levels"><span class="l1 on">H1</span><span class="l2 on">H2</span><span class="l3">H3</span></div>
-                <div class="w-clock"><i></i></div>
+                <span class="w-in w-mine"><span>From mining</span><b>+203</b></span>
+                <span class="w-in w-hold"><span>Holder reward</span><b>+14</b></span>
               </div>
             </div>
-            <div class="st-text"><span class="st-n">4</span><h3>Paid to your wallet</h3><p>Every 10 minutes. Holding levels you up.</p></div>
+            <div class="st-text"><span class="st-n">4</span><h3>Paid to your wallet</h3><p>Mined $HASH earns holder rewards too.</p></div>
           </article>
 
           <article class="st" data-st="4">
@@ -846,8 +900,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
                   <li><b>BUY</b><span class="mono">$130</span><em>5% tax</em></li>
                 </ul>
               </div>
+              <div class="tax-split"><span>+ Miner bonus</span><span>+ Holder rewards</span></div>
             </div>
-            <div class="st-text"><span class="st-n">5</span><h3>Every trade pays 5%</h3><p>It flows back to miners and holders.</p></div>
+            <div class="st-text"><span class="st-n">5</span><h3>Trades pay you extra</h3><p>5% of every trade goes to miners and holders.</p></div>
           </article>
 
           <div class="cycle-core" aria-hidden="true">
@@ -855,8 +910,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
           </div>
           <span class="spoke-tag" data-spoke="2">Buy inflow</span>
           <span class="spoke-tag" data-spoke="4">5% tax</span>
-          <span class="spoke-tag" data-spoke="0">Pays miners</span>
-          <span class="spoke-tag" data-spoke="3">Pays holders</span>
+          <span class="spoke-tag" data-spoke="0">Miner bonus</span>
+          <span class="spoke-tag" data-spoke="3">Holder rewards</span>
         </div>
         <div class="cycle-bar">
           <p id="cycle-caption" class="cycle-caption" aria-live="off"></p>
@@ -873,14 +928,15 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   <section class="explore" id="explore" aria-label="Learn more">
     <div class="xbar">
       <div class="wrap">
-        <div class="xtabs" role="tablist" aria-label="Topics">
-          <button type="button" role="tab" id="t-earn" aria-controls="earn" aria-selected="true">What you'd make</button>
-          <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="false" tabindex="-1">How it works</button>
-          <button type="button" role="tab" id="t-levels" aria-controls="levels" aria-selected="false" tabindex="-1">Levels</button>
-          <button type="button" role="tab" id="t-pc" aria-controls="pc" aria-selected="false" tabindex="-1">Your PC</button>
-          <button type="button" role="tab" id="t-token" aria-controls="token" aria-selected="false" tabindex="-1">Tokenomics</button>
-          <button type="button" role="tab" id="t-launch" aria-controls="launch" aria-selected="false" tabindex="-1">Launch</button>
-          <button type="button" role="tab" id="t-faq" aria-controls="faq" aria-selected="false" tabindex="-1">FAQ</button>
+        <p class="xbar-title" id="xbar-title">Tap a topic to learn more</p>
+        <div class="xtabs" role="tablist" aria-labelledby="xbar-title">
+          <button type="button" role="tab" id="t-earn" aria-controls="earn" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.9-1.6-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2s1.2 1.7 2.8 2 2.8.8 2.8 2-1.2 2.2-2.8 2.2c-1.3 0-2.4-.6-2.9-1.5M12 6v1.8M12 16.2V18"/></svg><span>What you'd make</span></button>
+          <button type="button" role="tab" id="t-how" aria-controls="how" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-14.3 4.9M4 12a8 8 0 0 1 14.3-4.9"/><path d="M18.5 3.5v3.8h-3.8M5.5 20.5v-3.8h3.8"/></svg><span>How it works</span></button>
+          <button type="button" role="tab" id="t-levels" aria-controls="levels" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-5M12 20V10M19 20V4"/></svg><span>Levels</span></button>
+          <button type="button" role="tab" id="t-pc" aria-controls="pc" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span>Your PC</span></button>
+          <button type="button" role="tab" id="t-token" aria-controls="token" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4"/></svg><span>Tokenomics</span></button>
+          <button type="button" role="tab" id="t-launch" aria-controls="launch" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 2.5 4.5 6 4 10l-2 3h-4l-2-3c-.5-4 1-7.5 4-10z"/><circle cx="12" cy="9.5" r="1.6"/><path d="M8.5 15l-2.5 2.5 1 2.5 3-2M15.5 15l2.5 2.5-1 2.5-3-2"/></svg><span>Launch</span></button>
+          <button type="button" role="tab" id="t-faq" aria-controls="faq" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1.1.9-1.1 1.6v.5M12 16.8v.2"/></svg><span>FAQ</span></button>
         </div>
       </div>
     </div>
@@ -926,7 +982,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
               <div class="stack-bar" aria-hidden="true"><i class="mined" id="sb-mined"></i><i class="tax" id="sb-tax"></i></div>
               <dl class="sum">
                 <div><dt><i class="sw mined"></i>Your GPU mines</dt><dd id="earn-mine">—</dd></div>
-                <div><dt><i class="sw tax"></i>Plus your share of the tax</dt><dd id="earn-cut">—</dd></div>
+                <div><dt><i class="sw tax"></i>Plus your miner bonus</dt><dd id="earn-cut">—</dd></div>
               </dl>
               <p class="esub" id="earn-sub"></p>
             </div>
@@ -944,6 +1000,10 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
               <div id="hold-flag"></div>
             </div>
           </div>
+          <div class="both">
+            <div><h3>Mine and hold: <b id="both-day">—</b> a day</h3><p>The $HASH you mine lands in your wallet and counts as your bag, so it earns holder rewards while you keep mining.</p></div>
+            <div class="both-sum"><span id="both-mine">—</span><i>+</i><span id="both-hold">—</span></div>
+          </div>
           <p class="xfoot">Estimate at launch-week trading. Not a promise. <a href="#math">See the math</a> · <a href="calculator.html">Full calculator</a></p>
         </div>
       </div>
@@ -956,8 +1016,26 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
         </div>
         <div class="flow3">
           <div><span class="n">5%</span><h3>Every trade</h3><p>Buys, sells and transfers, on every DEX.</p></div>
-          <div><span class="n gold">≤3.5%</span><h3>Miners</h3><p>Topped up to 5× what their GPU mines.</p></div>
-          <div><span class="n gold2">≥1%</span><h3>Holders</h3><p>Everything else. Never less than 1%.</p></div>
+          <div><span class="n gold">up to 3.5%</span><h3>Miner bonus</h3><p>Paid on top of what your GPU mines.</p></div>
+          <div><span class="n gold2">at least 1%</span><h3>Holder rewards</h3><p>Paid on your bag, mined $HASH included.</p></div>
+        </div>
+
+        <div class="panel balance" id="balance">
+          <div class="panel-head"><span>The split balances itself</span><span class="tag">Same formula on-chain</span></div>
+          <div class="panel-body">
+            <p class="bal-lede">Miners are topped up until they earn <b>5× what their GPU mines</b>. Past that, every extra dollar goes to holders. Holders never get less than 1%.</p>
+            <div class="range-row">
+              <div class="range-top"><label for="bal-vol">Trading volume</label><output id="bal-vol-o"></output></div>
+              <input type="range" id="bal-vol" min="0" max="1000" step="1">
+              <div class="bal-ends"><span>Quiet day</span><span>Busy day</span></div>
+            </div>
+            <div class="bal-bar" aria-hidden="true"><i class="m" id="bal-m"><span id="bal-m-t"></span></i><i class="h" id="bal-h"><span id="bal-h-t"></span></i></div>
+            <div class="bal-out">
+              <div><span>Miners earn</span><b id="bal-mult">—</b><small>their mining</small></div>
+              <div><span>Holders get</span><b id="bal-hold">—</b><small>of all volume</small></div>
+            </div>
+            <p class="bal-note" id="bal-note"></p>
+          </div>
         </div>
 
         <div class="panel" aria-describedby="sim-note">
@@ -1110,7 +1188,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
           <div>
             <div class="xhead"><h2>Tokenomics.</h2><p class="lede">One tax, split by a public formula.</p></div>
             <div class="split-bar three" role="img" aria-label="5% tax: 0.5% development, up to 3.5% to miners, at least 1% to holders">
-              <div class="d">0.5%</div><div class="m">≤ 3.5% miners</div><div class="h">≥ 1% holders</div>
+              <div class="d">0.5%</div><div class="m">Miner bonus, up to 3.5%</div><div class="h">Holders, 1%+</div>
             </div>
             <dl class="rows per100">
               <div><dt>Every $100K traded</dt><dd>$5,000 tax</dd></div>
@@ -1122,6 +1200,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
           <dl class="kv">
             <div><dt>Chain</dt><dd><b>Solana</b>, Token-2022</dd></div>
             <div><dt>Tax</dt><dd><b>5%</b> on every buy, sell and transfer. <b>Never raised.</b></dd></div>
+            <div><dt>Split</dt><dd><b>Adjusts itself.</b> Miners topped up to 5× their mining, holders get the rest (at least 1%).</dd></div>
             <div><dt>Burn</dt><dd>None</dd></div>
             <div><dt>Dev bag</dt><dd><b>1%</b>, bought in public. Locked 90 days. No payouts.</dd></div>
             <div><dt>Wallets</dt><dd>Every dev wallet listed here at launch.</dd></div>
@@ -1175,6 +1254,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
           <div class="faq">
             <details><summary>Will mining slow down my PC?</summary><div class="a"><p>No. The miner only uses GPU power you aren't using. When a game or render needs the GPU, mining steps back and only your hashrate drops.</p></div></details>
             <details><summary>Does it work on laptops and workstations?</summary><div class="a"><p>Yes. Any PC with an NVIDIA, AMD or Intel graphics card: gaming PCs, gaming laptops, AI rigs, editing and render machines.</p></div></details>
+            <details><summary>Does the $HASH I mine earn holder rewards?</summary><div class="a"><p>Yes. Mined $HASH lands in your wallet and counts as your bag, so you get the miner bonus and holder rewards at the same time.</p></div></details>
+            <details><summary>How is the tax split between miners and holders?</summary><div class="a"><p>It adjusts itself every payout. Miners get what tops them up to 5× what their GPUs mine (up to 3.5%). Holders get the rest, never less than 1%.</p></div></details>
             <details><summary>Can I just hold without mining?</summary><div class="a"><p>Yes. Hold $50+ and you get a share of the holder rewards. Mining adds a second payout.</p></div></details>
             <details><summary>How much will I make?</summary><div class="a"><p>It depends on trading volume and how many GPUs mine. The estimate uses launch-week trading. After launch, the site shows what each level was actually paid.</p></div></details>
             <details><summary>What happens if I sell?</summary><div class="a"><p>You pay the 5% tax, and your hold clock shrinks by the share you sold.</p></div></details>
@@ -1634,8 +1715,8 @@ window.HashModel = (function () {
     "<b>Press Start.</b> One click on any PC with a graphics card.",
     "<b>Your GPU mines.</b> Only on spare power, on whichever coin pays most.",
     "<b>It buys $HASH.</b> Every miner's earnings are market buys: steady buy inflow.",
-    "<b>Paid to your wallet.</b> Every 10 minutes. Holding levels you up.",
-    "<b>Every trade pays 5%.</b> The tax flows back out to miners and holders.",
+    "<b>Paid to your wallet.</b> Every 10 minutes. Mined $HASH is also your bag, so it earns holder rewards at the same time.",
+    "<b>Trades pay you extra.</b> 5% of every trade is paid out on top: a miner bonus and holder rewards.",
   ];
 
   const el = (tag, attrs, parent) => {
@@ -1673,18 +1754,30 @@ window.HashModel = (function () {
     const box = root.getBoundingClientRect(), r = elm.getBoundingClientRect();
     return { l: r.left - box.left, t: r.top - box.top, w: r.width, h: r.height, cx: r.left - box.left + r.width / 2, cy: r.top - box.top + r.height / 2 };
   }
+  // Cards are laid out at a base width and scaled (CSS --s) so the ring fills big screens.
+  const BASE_W = 210;
   function layoutRing(W) {
     root.classList.add("ring");
     root.classList.remove("stack");
-    const cardW = Math.round(Math.min(224, Math.max(190, W * 0.29)));
-    stations.forEach((s) => (s.style.width = cardW + "px"));
-    const cardH = Math.max(...stations.map((s) => s.offsetHeight));
-    // As wide as the column allows (and, beside the title, short enough for the screen),
-    // but never so tight that neighbors overlap.
-    const minR = (cardW + 26) / (2 * Math.sin(Math.PI / N));
-    let maxR = Math.min((W - cardW - 12) / (2 * Math.cos(Math.PI / 10)), 290);
-    if (window.innerWidth >= 1180) maxR = Math.min(maxR, (window.innerHeight - 64 - 100 - cardH - 24) / (1 + Math.cos(Math.PI / 5)));
-    const R = Math.max(minR, maxR);
+    stations.forEach((s) => (s.style.width = BASE_W + "px"));
+    const baseH = Math.max(...stations.map((s) => s.offsetHeight));
+    const sinA = Math.sin(Math.PI / N), cosB = Math.cos(Math.PI / 10), tall = 1 + Math.cos(Math.PI / 5);
+    // Beside the title (wide screens) the ring also has to fit the window height.
+    const bar = root.parentElement.querySelector(".cycle-bar");
+    const Hav = window.innerWidth >= 1180 ? window.innerHeight - 64 - 48 - (bar ? bar.offsetHeight + 18 : 70) : Infinity;
+    const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
+    const fit = (k) => {
+      const cw = BASE_W * k, ch = baseH * k;
+      return Math.min((W - cw - 12) / (2 * cosB), (Hav - ch - 20) / tall);
+    };
+    // Largest scale that still leaves comfortable room between neighbors.
+    let sc = 0.9;
+    for (let k = sMax; k >= 0.9; k -= 0.01) {
+      if (fit(k) >= (BASE_W * k + 110 * k) / (2 * sinA)) { sc = k; break; }
+    }
+    const cardW = BASE_W * sc, cardH = baseH * sc;
+    root.style.setProperty("--s", sc.toFixed(3));
+    const R = Math.max((cardW + 26) / (2 * sinA), fit(sc));
     const cx = W / 2;
     const cy = cardH / 2 + R + 10;
     const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
@@ -1700,12 +1793,12 @@ window.HashModel = (function () {
     // Each label sits on its spoke just outside the card; the coin takes the room that's left.
     const ext = (k) => {
       const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), t = tags[k];
-      return Math.min(c > 1e-6 ? t.offsetWidth / 2 / c : Infinity, s > 1e-6 ? t.offsetHeight / 2 / s : Infinity);
+      return Math.min(c > 1e-6 ? t.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? t.offsetHeight * sc / 2 / s : Infinity);
     };
     const tagAt = {};
-    Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3));
-    const room = Math.min(...stations.map((_, i) => edge(i) - 26), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6));
-    const coinD = Math.round(Math.min(210, Math.max(120, 2 * room)));
+    Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3 * sc));
+    const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6 * sc));
+    const coinD = Math.round(Math.min(230 * sc, Math.max(120, 2 * room)));
     core.style.left = cx + "px";
     core.style.top = cy + "px";
     core.style.width = core.style.height = coinD + "px";
@@ -1715,7 +1808,7 @@ window.HashModel = (function () {
       tags[k].style.left = cx + tagAt[k] * Math.cos(a) + "px";
       tags[k].style.top = cy + tagAt[k] * Math.sin(a) + "px";
     });
-    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10;
+    const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 10 * sc;
     root.style.height = H + "px";
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     links.forEach((lk, i) => {
@@ -1728,6 +1821,7 @@ window.HashModel = (function () {
   function layoutStack(W) {
     root.classList.add("stack");
     root.classList.remove("ring");
+    root.style.removeProperty("--s");
     root.style.height = "";
     stations.forEach((s) => { s.style.width = s.style.left = s.style.top = ""; });
     core.style.left = core.style.top = core.style.width = core.style.height = "";
@@ -1801,14 +1895,15 @@ window.HashModel = (function () {
       if (tags[k]) tags[k].classList.toggle("hot", on);
     });
     if (i === 2) hot(["2"]);
+    else if (i === 3) { hot([]); outTimer = setTimeout(() => hot(["3"]), 1500); }
     else if (i === 4) { hot(["4"]); outTimer = setTimeout(() => hot(["4", "0", "3"]), OUT_DELAY_MS); }
-    else hot([]);
+    else if (i !== 3) hot([]);
     core.classList.toggle("pulse", i === 2 || i === 4);
   }
   function countUp() {
-    const from = 12840, to = 13043, start = performance.now();
+    const from = 12840, to = 13057, start = performance.now();
     const tick = (now) => {
-      const f = Math.min(1, Math.max(0, (now - start - 700) / 1400));
+      const f = Math.min(1, Math.max(0, (now - start - 500) / 1600));
       const e = 1 - Math.pow(1 - f, 3);
       balance.textContent = Math.round(from + (to - from) * e).toLocaleString("en-US") + " $HASH";
       if (f < 1 && stations[3].classList.contains("on")) requestAnimationFrame(tick);
@@ -1873,6 +1968,13 @@ window.HashModel = (function () {
   if ("ResizeObserver" in window) {
     let lastW = 0;
     new ResizeObserver(() => { if (root.clientWidth !== lastW) { lastW = root.clientWidth; layout(); } }).observe(root);
+    let lastH = window.innerHeight, rq = 0;
+    window.addEventListener("resize", () => {
+      if (window.innerHeight === lastH) return;
+      lastH = window.innerHeight;
+      cancelAnimationFrame(rq);
+      rq = requestAnimationFrame(layout);
+    });
   } else {
     window.addEventListener("resize", layout);
   }
@@ -1895,7 +1997,7 @@ window.HashModel = (function () {
     stepBtns.forEach((b) => (b.hidden = true));
     links.forEach((lk) => { lk.lit.classList.add("on"); lk.lit.setAttribute("stroke-dashoffset", "0"); });
     Object.keys(spokes).forEach((k) => { spokes[k].classList.add("hot"); if (tags[k]) tags[k].classList.add("hot"); });
-    caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5% back to miners and holders.";
+    caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet, where it earns holder rewards → 5% of every trade pays miners and holders extra.";
     return;
   }
   go(0);
@@ -1937,12 +2039,11 @@ window.HashModel = (function () {
       t.setAttribute("aria-selected", String(on));
       t.tabIndex = on ? 0 : -1;
       $("#" + t.getAttribute("aria-controls")).hidden = !on;
-      if (on) t.scrollIntoView({ block: "nearest", inline: "nearest" });
     });
   }
   function scrollToEl(el) {
-    const offset = 64 + $(".xbar").offsetHeight + 12;
-    const top = el === explore ? explore.offsetTop - 64 : el.getBoundingClientRect().top + window.scrollY - offset;
+    const offset = 64 + 12;
+    const top = el === explore ? explore.offsetTop - 40 : el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
   }
   // Returns true when the hash names a topic (or something inside one).
@@ -2070,6 +2171,11 @@ window.HashModel = (function () {
     $("#hold-flag").innerHTML = maxH && L > maxH
       ? `<p class="flag">Level ${L} needs a ${whole(M.HOLDER.usd[L - 1])} bag. Yours counts as Level ${maxH}.</p>` : "";
 
+    // Mine and hold: mined $HASH is part of the bag, so both payouts add up.
+    tween($("#both-day"), r.total + h.perDay, money);
+    $("#both-mine").innerHTML = `${money(r.total)}<small>mining at M${L}</small>`;
+    $("#both-hold").innerHTML = `${money(h.perDay)}<small>holder rewards${hl ? " at H" + hl : ""}</small>`;
+
     // Level tables
     [1, 2, 3].forEach((l) => {
       const bag = M.HOLDER.usd[l - 1];
@@ -2099,6 +2205,47 @@ window.HashModel = (function () {
       `$${E.volPerGpu} is launch-week trading; later it's usually lower. After launch this is replaced by what each level was actually paid.`;
   }
   render();
+
+  // ---------- How it works: the split balances itself ----------
+  const bal = $("#bal-vol");
+  if (bal) {
+    const LO = 40, HI = 3000; // daily volume per GPU mining, log scale
+    const toV = (p) => LO * Math.pow(HI / LO, p / 1000);
+    const toP = (v) => Math.round((1000 * Math.log(v / LO)) / Math.log(HI / LO));
+    const paintBal = () => {
+      const v = toV(+bal.value);
+      const mk = M.market({ volPerGpu: v });
+      const pool = M.TAX - M.DEV;
+      const m = mk.chestRate, ho = mk.holderRate;
+      $("#bal-vol-o").textContent = `${whole(v)} a day per GPU mining`;
+      $("#bal-m").style.width = (100 * m) / pool + "%";
+      $("#bal-h").style.width = (100 * ho) / pool + "%";
+      $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(1)}%`;
+      $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(1)}%`;
+      $("#bal-mult").textContent = F.mult(1 + mk.chestPerGpu / mk.avgRev);
+      $("#bal-hold").textContent = (100 * ho).toFixed(1) + "%";
+      $("#bal-note").textContent = mk.targetMet
+        ? "Busy: miners are already at 5×, so everything above that goes to holders."
+        : "Quiet: miners get the most they can (3.5%) to get as close to 5× as possible. Holders keep their 1% floor.";
+    };
+    bal.value = toP(E.volPerGpu);
+    paintBal();
+    // Sweeps between quiet and busy on its own until someone drags it.
+    let bAuto = !reduce, bOn = false, bRaf = 0, bT0 = 0;
+    const sweep = (now) => {
+      if (!bT0) bT0 = now;
+      bal.value = Math.round(500 - 470 * Math.cos(((now - bT0) / 9000) * 2 * Math.PI + Math.acos((500 - toP(E.volPerGpu)) / 470)));
+      paintBal();
+      bRaf = requestAnimationFrame(sweep);
+    };
+    bal.addEventListener("input", () => { bAuto = false; cancelAnimationFrame(bRaf); paintBal(); });
+    if (bAuto) whileVisible(bal, (on) => {
+      if (!bAuto || on === bOn) return;
+      bOn = on;
+      cancelAnimationFrame(bRaf);
+      if (on) { bT0 = 0; bRaf = requestAnimationFrame(sweep); }
+    });
+  }
 
   // ---------- Your PC: GPU meter ----------
   const meter = $("#gpu-meter");

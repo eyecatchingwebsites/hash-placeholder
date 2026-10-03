@@ -51,7 +51,7 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 2. Set `ca` only when the token is live. The header "CA" button then copies it. Never before launch.
 3. Set the `x`, `discord` and `github` links.
 4. Replace the placeholders with live data: the waitlist form, the payout feed, the wallet addresses in "Dev wallet transparency", and the download button. Each needs the backend (`docs/TECHNICAL-PLAN.md`, phases 3 and 4).
-5. The "Your PC" tab says mining only uses spare GPU power and your PC works like normal. The app must really yield the GPU to games and apps before launch (`docs/TECHNICAL-PLAN.md` phase 5); otherwise change that copy.
+5. The "Your PC" tab says mining only uses spare GPU power and your PC works like normal. That's the user's experience mining PRL; change the copy if another coin or miner the app uses behaves differently.
 
 ## Copy rules
 

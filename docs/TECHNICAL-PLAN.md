@@ -113,7 +113,7 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README). Nex
 3. **Waitlist backend:** a `waitlist` table, a POST endpoint, and a live counter. Store an X handle or email, the GPU model, and an optional public wallet. Rate-limit and validate.
 4. **Status strip and hero numbers** read from the dashboard API. Until launch they show "—", never invented numbers.
 5. **Rules (from CLAUDE.md):** no return promises, and the contract address published only on the site.
-6. **Launch requirement:** the site says mining "only uses spare GPU power" and that your PC works like normal (only the hashrate drops when a game or render needs the GPU). **The app must deliver that before the site goes live** (see Phase 5), or the copy changes.
+6. **Site claim to keep true:** the site says mining only uses spare GPU power and your PC works like normal (only the hashrate drops when a game or render runs). That's the user's own experience mining PRL, not a feature we build. Re-check it on other coins/miners the app switches to; if one behaves differently, change the copy.
 
 ## Phase 5: Desktop app to release 🔑 (needs a Windows PC with a GPU)
 1. Put the real miners and pools into config. Run the app against the dev API on the user's PC. Confirm GPU detection (nvidia-smi, AMD and Intel via Win32_VideoController), download, verify, and that mining starts.
@@ -121,7 +121,7 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README). Nex
 3. **Safety:**
    - Temperature limit (pause above ~83 °C).
    - Power limit via the miner's flags where supported.
-   - **Yield the GPU to the user (the site promises this):** run the miner at the lowest process and GPU scheduling priority, and back off automatically (lower intensity, or pause) while a fullscreen game, a listed game/render/AI process, or high foreground GPU use is detected. Goal: no noticeable frame-rate or render-time loss; only the hashrate drops. Test on the user's PC with heavy games.
+   - Pause while a fullscreen game or a listed game process is running (optional; mining PRL already doesn't affect games in the user's experience).
    - "Mine only when idle" option.
 4. **Settings:**
    - Auto-start at login (off by default).
