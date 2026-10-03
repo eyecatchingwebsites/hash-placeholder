@@ -154,6 +154,17 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 - In the sim, V/N stays above ~$220 only for the first ~4 days, then falls to ~$40–100 as hype fades. Holder pot over 90 days: $26K at a 5× target, $50K at 3×, $16K at 8×. Miner extra d30 ~111–114% in all three (vs 55% for the current 3% design); price 0.16–0.18× vs 0.12×.
 - Consistency note: the website's $750/GPU matches the first week; the sim's day-30 ratio is ~10× lower.
 
+**Holder minimum (user decision Oct 3): holders always get at least 1% of volume**, so the chest is capped at 3.5%. Split per trade: 0.5% dev, 1% to 4.5% to holders, 0% to 3.5% to miners (whatever reaches the 5× target, up to 3.5%). The 5× target now needs ≈ $283 of volume per GPU per day (4 × $2.50 ÷ 3.5% − $2.50).
+
+| Design (20 seeds, medians) | Miner extra d7 / d30 / d90 | M1 / M2 / M3 extra d30 | Holder pot (90d) | H1 / H2 / H3 yield d7 | H1 / H2 / H3 yield d30 | Renters | Price d90 |
+|---|---|---|---|---|---|---|---|
+| Current 3% fixed | 279% / 55% / 38% | – | $0 | – | – | 7.4% | 0.12× |
+| 5×, no holder minimum | 615% / 111% / 46% | 66% / 117% / 229% | $26K | ~0 | ~0 | 8.7% | 0.16× |
+| **5×, holders ≥ 1% (decided)** | 490% / 90% / 44% | 54% / 98% / 206% | **$66K** | 0.11% / 0.22% / 0.43% a day | 0.04% / 0.08% / 0.16% a day | 7.7% | 0.16× |
+| Same, if 5% cuts volume 30% | 368% / 74% / 43% | 44% / 79% / 164% | $50K | 0.07% / 0.14% / 0.29% | 0.03% / 0.06% / 0.12% | 7.0% | 0.17× |
+
+Miner "extra" includes holder rewards that home miners earn on their own bags. Yields are % of the bag paid per day.
+
 **Calculator presets (4070, L2, old 3% chest rate):**
 
 | Stage | Per day |
@@ -237,7 +248,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
   - Some antivirus will still label any miner as "potentially unwanted": the FAQ explains, and users only ever allow the Hashcoin folder.
 
 ## 11. Open decisions
-- **Proposed (Oct 3): 5% tax with a dynamic split and two ladders.** Dev fixed at 0.5%. The other 4.5% is split between the miner chest and a holder side (holder rewards + burn), set automatically to hold miners at a **target of 5× their mining** (total pay; decided Oct 3), chest capped at 4.5%. **No burn** (decided): all of the rest goes to holder rewards. Published formula, rate-limited changes, live on the site. Holder rewards are in (user decision; many large tokens do it). **Holder levels H1–H3:** bag $50 / $500 / $2,500 and a hold clock (draft 0 / 24h / 72h; user wants it fast because tokens move fast) that selling shrinks in proportion; holder pot split by bag × 1/2/4, 5% cap per wallet. **Miner levels M1–M3:** by days mined (draft 0 / 2 / 5), weight √(GPU $) × 1/2/4; **M2 requires H1, M3 requires H2** (user decision). Notes: 5% probably rules out the LaunchLab 1%/3% option. Sim results in §8; open: whether holders get a minimum share when volume is low, exact clocks.
+- **Proposed (Oct 3): 5% tax with a dynamic split and two ladders.** Dev fixed at 0.5%. The other 4.5% is split between the miner chest and a holder side (holder rewards + burn), set automatically to hold miners at a **target of 5× their mining** (total pay; decided Oct 3), chest capped at 4.5%. **No burn** (decided): all of the rest goes to holder rewards. **Holders always get at least 1%** (decided), so the chest is capped at 3.5%. Published formula, rate-limited changes, live on the site. Holder rewards are in (user decision; many large tokens do it). **Holder levels H1–H3:** bag $50 / $500 / $2,500 and a hold clock (draft 0 / 24h / 72h; user wants it fast because tokens move fast) that selling shrinks in proportion; holder pot split by bag × 1/2/4, 5% cap per wallet. **Miner levels M1–M3:** by days mined (draft 0 / 2 / 5), weight √(GPU $) × 1/2/4; **M2 requires H1, M3 requires H2** (user decision). Notes: 5% probably rules out the LaunchLab 1%/3% option. Sim results in §8; open: exact clocks; whether to make it the official design (then update engine and website).
 - Launchpad: LaunchLab 3% reward launch vs our own Token-2022 token and pool (verify LaunchLab details).
 - L2 threshold or minimum wallet age, to reduce renter capture.
 - Payout cadence (10 min vs hourly) vs transaction cost.
