@@ -226,6 +226,6 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 
 ## 12. Name: Hashcoin ($HASH), decided Oct 3
 It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and "hash" is literally what payouts are measured by (hashrate). Before launch, check the .com and the $HASH ticker for clashes on Solana (HASH is also Provenance Blockchain's ticker on other chains).
-Logo direction: classic BTC/LTC-style coin mark meets cash/mining. Simple, iconic, made by the user with ChatGPT image generation (prompts given in chat Oct 3).
+**Logo (decided Oct 3):** option C, an italic two-bar hash on a coin. Coin #EBB447, hash white. Final files in `apps/web/brand/logo/` (SVG master, PNGs 16–1024, favicon, wordmark lockups). Brand accent color = #EBB447.
 
 Design direction from the user (Oct 3): product company look like usepaid.app / usehotbot.com / boneronlong.xyz. No rainbow buttons, no crowded layouts. Logo: the user makes it with ChatGPT. 3D: free models and code-built, try both. Colors undecided.
