@@ -1,6 +1,6 @@
-// Hero loop: $HASH coins travel through the five stations (PC → GPU → buy → wallet → trades → back).
-// Each station lights up as a coin passes and the caption follows. Pauses off-screen and on request;
-// static with reduced motion.
+// Hero loop, one step at a time: the active station lights up and plays its animation,
+// then a $HASH coin carries the loop to the next station. Repeats forever.
+// Pauses off-screen and on request; click a station or a number to jump; static with reduced motion.
 (function () {
   "use strict";
   const root = document.getElementById("cycle");
@@ -9,9 +9,11 @@
   const stations = Array.from(root.querySelectorAll(".st"));
   const caption = document.getElementById("cycle-caption");
   const pauseBtn = document.getElementById("cycle-pause");
+  const stepsBox = document.getElementById("cycle-steps");
+  const balance = root.querySelector("[data-bal]");
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg";
-  const LAP_MS = 16000, COINS = 3;
+  const DWELL_MS = 3400, TRAVEL_MS = 900;
   const CAPTIONS = [
     "<b>1. Press Start.</b> One click on the gaming PC you already have. No mining experience needed.",
     "<b>2. Your GPU mines.</b> The app picks whichever coin pays your graphics card most right now.",
@@ -28,16 +30,27 @@
   };
   const glow = el("path", { class: "cycle-track-glow" }, svg);
   const track = el("path", { class: "cycle-track" }, svg);
-  const coins = Array.from({ length: COINS }, (_, i) => {
-    const g = el("g", { class: "cycle-coin" }, svg);
-    el("circle", { r: 9 }, g);
-    const t = el("text", { "text-anchor": "middle", "dominant-baseline": "central" }, g);
-    t.textContent = "#";
-    return { g, off: i / COINS, last: -1 };
+  // The coin draws above the cards so it stays visible while it travels.
+  const fx = el("svg", { class: "cycle-fx", "aria-hidden": "true", focusable: "false" });
+  root.append(fx);
+  const coin = el("g", { class: "cycle-coin" }, fx);
+  el("circle", { r: 10 }, coin);
+  const coinText = el("text", { "text-anchor": "middle", "dominant-baseline": "central" }, coin);
+  coinText.textContent = "#";
+
+  const stepBtns = stations.map((_, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = String(i + 1);
+    b.setAttribute("aria-label", `Step ${i + 1}`);
+    b.addEventListener("click", () => go(i));
+    stepsBox.append(b);
+    return b;
   });
+  stations.forEach((s, i) => s.addEventListener("click", () => go(i)));
 
   // ---------- Path through the station centers, with elbows and rounded corners ----------
-  let L = 0;
+  let L = 0, stops = [];
   function centers() {
     const box = root.getBoundingClientRect();
     return stations.map((s) => {
@@ -62,6 +75,7 @@
     const box = root.getBoundingClientRect();
     if (!box.width) return;
     svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
+    fx.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
     const c = centers();
     const pts = [];
     const oneColumn = c.every((p) => Math.abs(p.x - c[0].x) < 2);
@@ -69,71 +83,97 @@
       const p = c[i], q = c[(i + 1) % c.length];
       pts.push(p);
       if (oneColumn && i === c.length - 1) {
-        // return lane down the right edge
-        const lane = box.width - 8;
+        const lane = box.width - 8; // return lane down the right edge
         pts.push({ x: lane, y: p.y }, { x: lane, y: q.y });
       } else if (Math.abs(p.x - q.x) > 2 && Math.abs(p.y - q.y) > 2) {
-        pts.push({ x: q.x, y: p.y }); // elbow: across, then up or down
+        pts.push({ x: q.x, y: p.y });
       }
     }
     const d = roundedPath(pts, 28);
     track.setAttribute("d", d);
     glow.setAttribute("d", d);
     L = track.getTotalLength();
-    draw();
+    // Where along the path each station sits (nearest sampled point to its center).
+    const samples = 600;
+    stops = c.map((p) => {
+      let best = 0, bestD = Infinity;
+      for (let k = 0; k < samples; k++) {
+        const q = track.getPointAtLength((k / samples) * L);
+        const dd = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
+        if (dd < bestD) { bestD = dd; best = (k / samples) * L; }
+      }
+      return best;
+    });
+    placeCoin();
   }
 
-  // ---------- Animation ----------
-  let pos = 0, last = 0, raf = 0, visible = true, paused = false, step = -1;
-  const lit = new Map();
-  function light(i) {
-    const s = stations[i];
-    s.classList.add("on");
-    clearTimeout(lit.get(s));
-    lit.set(s, setTimeout(() => s.classList.remove("on"), 1800));
-  }
-  function setCaption(i) {
-    if (i === step) return;
-    step = i;
+  // ---------- Step machine ----------
+  let step = 0, phase = "dwell", t = 0, last = 0, raf = 0, visible = true, paused = false;
+
+  function activate(i) {
+    stations.forEach((s, k) => {
+      s.classList.remove("on");
+      if (k === i) { void s.offsetWidth; s.classList.add("on"); } // restart its CSS animations
+    });
+    stepBtns.forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
     caption.innerHTML = CAPTIONS[i];
+    if (i === 3 && balance) countUp();
   }
-  const rects = () => {
-    const box = root.getBoundingClientRect();
-    return stations.map((s) => {
-      const r = s.getBoundingClientRect();
-      return { l: r.left - box.left, t: r.top - box.top, r: r.right - box.left, b: r.bottom - box.top };
-    });
-  };
-  let cached = null;
-  function draw() {
-    if (!L) return;
-    cached = cached || rects();
-    coins.forEach((c, ci) => {
-      const p = track.getPointAtLength((((pos / LAP_MS + c.off) % 1) * L));
-      c.g.setAttribute("transform", `translate(${p.x} ${p.y})`);
-      const inside = cached.findIndex((r) => p.x > r.l && p.x < r.r && p.y > r.t && p.y < r.b);
-      if (inside >= 0 && inside !== c.last) {
-        light(inside);
-        if (ci === 0) setCaption(inside);
-      }
-      if (inside >= 0) c.last = inside;
-    });
+  function countUp() {
+    const from = 12840, to = 13043, start = performance.now();
+    const tick = (now) => {
+      const f = Math.min(1, (now - start - 600) / 1200);
+      balance.textContent = Math.round(from + (to - from) * Math.max(0, f)).toLocaleString("en-US") + " $HASH";
+      if (f < 1 && stations[3].classList.contains("on")) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
-  function frame(t) {
+  function placeCoin() {
+    if (!L || !stops.length) return;
+    let at;
+    if (phase === "travel") {
+      const a = stops[step], b0 = stops[(step + 1) % stops.length];
+      const b = b0 <= a ? b0 + L : b0;
+      const f = Math.min(1, t / TRAVEL_MS);
+      const ease = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+      at = (a + (b - a) * ease) % L;
+    } else {
+      at = stops[step];
+    }
+    const p = track.getPointAtLength(at);
+    coin.setAttribute("transform", `translate(${p.x} ${p.y})`);
+    coin.style.opacity = phase === "travel" ? 1 : 0;
+  }
+  function go(i) {
+    step = i;
+    phase = "dwell";
+    t = 0;
+    activate(i);
+    placeCoin();
+    if (!reduce) kick();
+  }
+  function frame(now) {
     raf = 0;
     if (!running()) { last = 0; return; }
-    if (last) pos += t - last;
-    last = t;
-    draw();
+    if (last) t += now - last;
+    last = now;
+    if (phase === "dwell" && t >= DWELL_MS) {
+      phase = "travel"; t = 0;
+      stations[step].classList.remove("on");
+    } else if (phase === "travel" && t >= TRAVEL_MS) {
+      step = (step + 1) % stations.length;
+      phase = "dwell"; t = 0;
+      activate(step);
+    }
+    placeCoin();
     raf = requestAnimationFrame(frame);
   }
   const running = () => visible && !paused && !document.hidden && !reduce;
   function kick() { if (running() && !raf) { last = 0; raf = requestAnimationFrame(frame); } }
 
   // ---------- Wire up ----------
-  const relayout = () => { cached = null; layout(); };
-  if ("ResizeObserver" in window) new ResizeObserver(relayout).observe(root);
-  else window.addEventListener("resize", relayout);
+  if ("ResizeObserver" in window) new ResizeObserver(layout).observe(root);
+  else window.addEventListener("resize", layout);
   if ("IntersectionObserver" in window) {
     new IntersectionObserver((en) => { visible = en[0].isIntersecting; kick(); }, { threshold: 0.05 }).observe(root);
   }
@@ -146,12 +186,13 @@
   });
 
   layout();
-  setCaption(0);
   if (reduce) {
+    root.classList.add("static");
     pauseBtn.hidden = true;
-    coins.forEach((c) => (c.g.style.display = "none"));
+    coin.style.display = "none";
+    stepBtns.forEach((b) => (b.hidden = true));
     caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5% back to miners and holders.";
     return;
   }
-  kick();
+  go(0);
 })();
