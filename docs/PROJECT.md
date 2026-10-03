@@ -11,7 +11,7 @@ Last updated: October 3, 2026. Stage: design, simulation, and early build. Numbe
 - Website design brief: `docs/DESIGN-BRIEF.md` (3D brief `docs/3D-BRIEF.md` is shelved: no 3D models for now)
 - **Website questionnaire (generates the build prompt): `apps/web/brand/website-questionnaire.html`** (published: https://claude.ai/artifact/T7dniP5JRG8bMSfKyZEfSe)
 - Logo: `apps/web/brand/logo/` · logo explorations: https://claude.ai/artifact/JTubhyKEYFEAsCWrdL9jF9 · color picker: https://claude.ai/artifact/H4h9afZLydLLgRYaXWqFnd
-- **Website (static front end): `apps/web`** (`index.html`, `calculator.html`, `faq.html`; how to run: `apps/web/README.md`). The old draft artifact (https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ) is outdated.
+- **Website (static front end): `apps/web`** (`index.html`, `calculator.html`, `faq.html`; how to run: `apps/web/README.md`). **Live preview link (always the latest version): https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc**. Republish it after every website change (from `apps/web/standalone/`). The old draft artifact (https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ) is outdated.
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
 - Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branches so far: `claude/lucid-fermat-16svvo`, then `claude/vibrant-cray-fpbieb` (website build).
 

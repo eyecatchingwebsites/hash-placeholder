@@ -89,7 +89,7 @@ p { margin: 0; }
 .btn-ghost .tag { color: var(--muted); }
 
 /* ---------- Header + ticker ---------- */
-.site-header { position: sticky; top: 0; z-index: 50; background: rgba(11, 12, 13, .9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: rgba(11, 12, 13, .9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
 .nav { display: flex; align-items: center; gap: 28px; height: 64px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 800 1.15rem/1 var(--font-display); letter-spacing: -.02em; }
 .brand img { width: 28px; height: 28px; }

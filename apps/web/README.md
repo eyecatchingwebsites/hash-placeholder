@@ -20,6 +20,8 @@ python3 apps/web/scripts/build_standalone.py
 
 Fonts (Manrope, Inter, JetBrains Mono) load from Google Fonts. Offline, the site falls back to system fonts and still works.
 
+**Preview link:** https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc (private claude.ai artifact, republished after each change from the `standalone/` files).
+
 ## Pages
 
 | File | What it is |
