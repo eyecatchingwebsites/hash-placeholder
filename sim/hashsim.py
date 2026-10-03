@@ -99,6 +99,10 @@ class Params:
     boost_lo: float = 3.0            # boost = chest paid / mined USD (trailing day)
     boost_hi: float = 10.0
     split_step: float = 0.01         # max change of the chest rate per day
+    # Target mode (overrides boost_lo/hi): each day the chest takes exactly what lifts miners'
+    # total pay to target_total_mult x what their GPUs mined, between chest_floor and chest_max.
+    target_total_mult: float = 0.0   # 0 = off; 5 = miners get mining + 4x mining from the chest
+    chest_floor: float = 0.0
     holder_burn_frac: float = 0.25   # part of the holder side that is burned
     h_usd: tuple = (50.0, 500.0, 2500.0)   # H1 / H2 / H3 bag (USD)
     h_days: tuple = (0.0, 1.0, 3.0)        # H1 / H2 / H3 hold clock (days); selling shrinks the clock
@@ -292,6 +296,10 @@ def run(p: Params):
         volume_all = volume + stake_buys
 
         # --- split the tax
+        if p.dual and p.target_total_mult > 0:
+            mined_now = sum(m.rev for m in alive)
+            need = (p.target_total_mult - 1) * mined_now - carry
+            chest_rate = max(p.chest_floor, min(p.chest_max, need / volume_all if volume_all else p.chest_max))
         if p.dual:
             chest_usd = volume_all * chest_rate + carry
             holder_side = volume_all * max(0.0, p.tax_total - p.tax_dev - chest_rate)
@@ -453,7 +461,7 @@ def run(p: Params):
         # --- dynamic split: move the chest rate toward the target for today's boost
         boost = chest_paid / mined_usd if mined_usd else 0
         rate_today = chest_rate
-        if p.dual:
+        if p.dual and p.target_total_mult <= 0:
             tgt = target_chest_rate(p, boost)
             chest_rate += max(-p.split_step, min(p.split_step, tgt - chest_rate))
 
@@ -498,6 +506,10 @@ def run(p: Params):
         "chest_rate_day7": d7["chest_rate_pct"],
         "chest_rate_day30": d30["chest_rate_pct"],
         "chest_rate_final": rows[-1]["chest_rate_pct"],
+        "boost_day7": d7["boost_x"],
+        "boost_day30": d30["boost_x"],
+        "boost_final": rows[-1]["boost_x"],
+        "days_at_target": sum(1 for r in rows if r["chest_rate_pct"] < 100 * p.chest_max - 1e-6) if p.dual else 0,
         "holder_pot_total": sum(r["holder_pot"] for r in rows),
         **{f"H{k}_yield_day7": d7[f"H{k}_yield_pct_day"] for k in (1, 2, 3)},
         **{f"H{k}_yield_day30": d30[f"H{k}_yield_pct_day"] for k in (1, 2, 3)},
@@ -538,6 +550,16 @@ SCENARIOS = {
     # so the price comparison isn't driven by a different buy-in assumption
     "dual_5pct_lowboost_samebuyin": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, boost_lo=0.5, boost_hi=2.0,
                                          home_target_probs_dual=(0.45, 0.35, 0.20, 0.0)),
+    # Target mode (user decision Oct 3): no burn, chest set each day so miners' total pay = N x mining
+    "dual_target3x": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
+                          target_total_mult=3.0, home_target_probs_dual=(0.45, 0.35, 0.20, 0.0)),
+    "dual_target5x": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
+                          target_total_mult=5.0, home_target_probs_dual=(0.45, 0.35, 0.20, 0.0)),
+    "dual_target8x": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
+                          target_total_mult=8.0, home_target_probs_dual=(0.45, 0.35, 0.20, 0.0)),
+    "dual_target5x_vol70": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
+                                target_total_mult=5.0, home_target_probs_dual=(0.45, 0.35, 0.20, 0.0),
+                                turnover0=0.14, turnover_floor=0.021),
     # Same, with all of the holder side going to holder rewards (no burn)
     "dual_5pct_noburn": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0),
 }
@@ -577,7 +599,8 @@ def main():
     cols = ["scenario", "median_extra_day7", "median_extra_day30", "median_extra_final",
             "L1_extra_day30", "L2_extra_day30", "L3_extra_day30",
             "L1_home_day30", "L2_home_day30", "L3_home_day30", "avg_renter_chest_pct", "peak_rent_cards", "home_miners_ever",
-            "chest_rate_day7", "chest_rate_day30", "chest_rate_final", "holder_pot_total",
+            "chest_rate_day7", "chest_rate_day30", "chest_rate_final", "boost_day7", "boost_day30", "boost_final",
+            "days_at_target", "holder_pot_total",
             "H1_yield_day7", "H2_yield_day7", "H3_yield_day7", "H1_yield_day30", "H2_yield_day30", "H3_yield_day30",
             "final_price_x", "burned_pct", "creator_total"]
     with open(out / "summary.csv", "w", newline="") as f:
