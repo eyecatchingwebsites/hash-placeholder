@@ -224,22 +224,8 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 - Coins to support for switching, and which pools have per-worker APIs.
 - Legal review (payouts funded by other people's fees, custody, marketing language).
 
-## 12. Name candidates (name not final; user likes Hashcoin)
-Check each name, ticker and .com for existing use before choosing (e.g. HASH is already used by Provenance Blockchain).
-
-| Name | Ticker | Angle |
-|---|---|---|
-| Hashcoin | $HASH | Current working name. Clear, but generic and the ticker is taken elsewhere |
-| Night Shift | $SHIFT | "Your GPU works the night shift." Strong story for gamers' idle hours |
-| Overclock | $OC | Gamer vocabulary. Short ticker |
-| Idle | $IDLE | "Put your idle GPU to work." |
-| Rigpay | $RIG | Says exactly what it does |
-| Afterhours | $AFTER | Mining while you're away |
-| Hashback | $HSHB | "Cash back" for your GPU |
-| Overtime | $OT | Your GPU works overtime, you get paid |
-| Coolant | $COOL | Hardware culture, friendly |
-| Fanspin | $FAN | The visual hook is spinning fans |
-| Proof | $PROOF | Proof of work, proof it works |
-| Sidegig | $GIG | Your GPU's side hustle |
+## 12. Name: Hashcoin ($HASH), decided Oct 3
+It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and "hash" is literally what payouts are measured by (hashrate). Before launch, check the .com and the $HASH ticker for clashes on Solana (HASH is also Provenance Blockchain's ticker on other chains).
+Logo direction: classic BTC/LTC-style coin mark meets cash/mining. Simple, iconic, made by the user with ChatGPT image generation (prompts given in chat Oct 3).
 
 Design direction from the user (Oct 3): product company look like usepaid.app / usehotbot.com / boneronlong.xyz. No rainbow buttons, no crowded layouts. Logo: the user makes it with ChatGPT. 3D: free models and code-built, try both. Colors undecided.
