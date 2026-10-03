@@ -1,5 +1,5 @@
-import { computeLevel, type PriceContext, type WalletState } from "./levels.js";
-import type { Level, Rules } from "./rules.js";
+import { computeHolderLevel, computeMinerLevel, type PriceContext, type WalletState } from "./levels.js";
+import type { HolderLevel, Level, Rules } from "./rules.js";
 import { chestShares } from "./weights.js";
 
 export interface EpochInput {
@@ -7,18 +7,24 @@ export interface EpochInput {
   now: number;
   /** Estimated mining earnings per wallet this epoch (USD), from accepted shares. */
   earnings: Map<string, number>;
+  /** Days with accepted shares in the last `rules.miner.windowDays` days, per wallet (including today). */
+  daysMined: Map<string, number>;
   wallets: Map<string, WalletState>;
   price: PriceContext;
-  /** Chest fees collected this epoch (USD), plus anything carried from earlier epochs. */
+  /** Chest for this epoch (USD, from splitTax), plus anything carried from earlier epochs. */
   chestUsd: number;
   /** USD value the float can pay out right now. Immediate payouts are scaled down to fit. */
   floatAvailableUsd: number;
   rules: Rules;
+  /** Dev, treasury and payout wallets: never get chest payouts. */
+  excluded?: ReadonlySet<string>;
 }
 
 export interface PayoutLine {
   address: string;
+  /** Miner level M1-M3. */
   level: Level;
+  holderLevel: HolderLevel;
   miningUsd: number;
   /** Mining paid now, from the float. */
   immediateUsd: number;
@@ -49,14 +55,18 @@ export interface EpochResult {
   totals: { miningUsd: number; immediateUsd: number; pendingUsd: number; chestUsd: number; payNowUsd: number };
 }
 
-const EMPTY_WALLET = (address: string): WalletState => ({ address, balance: 0n, firstHashAt: null, everSold: false });
+const EMPTY_WALLET = (address: string): WalletState => ({ address, balance: 0n, clockStartAt: null });
 
 export function runEpoch(input: EpochInput): EpochResult {
   const { rules, price, now } = input;
-  const entries = [...input.earnings].filter(([, usd]) => usd > 0).map(([address, earningsUsd]) => {
-    const w = input.wallets.get(address) ?? EMPTY_WALLET(address);
-    return { address, earningsUsd, level: computeLevel(w, price, now, rules) };
-  });
+  const entries = [...input.earnings]
+    .filter(([address, usd]) => usd > 0 && !input.excluded?.has(address))
+    .map(([address, earningsUsd]) => {
+      const w = input.wallets.get(address) ?? EMPTY_WALLET(address);
+      const holderLevel = computeHolderLevel(w, price, now, rules);
+      const level = computeMinerLevel(input.daysMined.get(address) ?? 0, holderLevel, rules);
+      return { address, earningsUsd, level, holderLevel };
+    });
 
   const shares = chestShares(entries, rules);
   const miningTotal = entries.reduce((a, e) => a + e.earningsUsd, 0);
@@ -75,7 +85,7 @@ export function runEpoch(input: EpochInput): EpochResult {
     const pendingUsd = e.earningsUsd - immediateUsd;
     chestPaid += chestUsd;
     lines.push({
-      address: e.address, level: e.level, miningUsd: e.earningsUsd, immediateUsd, pendingUsd,
+      address: e.address, level: e.level, holderLevel: e.holderLevel, miningUsd: e.earningsUsd, immediateUsd, pendingUsd,
       chestShare: share, chestUsd, payNowUsd: immediateUsd + chestUsd,
     });
     if (pendingUsd > 0) {
