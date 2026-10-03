@@ -1,0 +1,257 @@
+<title>Hashcoin Website Questionnaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Chakra+Petch:wght@700&family=Oswald:wght@600&family=Fraunces:opsz,wght@9..144,700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one question per card in a single column, each answer a clickable tile with a small visual mock. Prompt builder at the end. */
+:root {
+  --bg: #f3f3f1; --card: #ffffff; --ink: #18191a; --muted: #686b6e; --line: #e0e0dc; --gold: #EBB447; --gold-ink: #6b4a05;
+  --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f1112; --card: #181a1c; --ink: #ecedee; --muted: #9a9ea2; --line: #2a2d30; --gold-ink: #EBB447; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0f1112; --card: #181a1c; --ink: #ecedee; --muted: #9a9ea2; --line: #2a2d30; --gold-ink: #EBB447; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 80px; display: grid; gap: 18px; }
+header.top { display: flex; gap: 14px; align-items: center; }
+header.top svg { flex: none; }
+h1 { font-size: 1.7rem; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.sub { color: var(--muted); margin: 2px 0 0; }
+.progress { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; gap: 12px; align-items: center; font: 500 .85rem var(--mono); color: var(--muted); }
+.progress .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.progress .bar i { display: block; height: 100%; background: var(--gold); width: 0; transition: width .2s; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; }
+.q h2 { margin: 0; font-size: 1.1rem; font-weight: 800; display: flex; gap: 10px; align-items: baseline; }
+.q h2 b { font: 700 .8rem var(--mono); color: var(--gold-ink); min-width: 2.2em; }
+.q .hint { color: var(--muted); font-size: .88rem; margin: -8px 0 0; }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.opt { text-align: left; font: inherit; color: inherit; background: var(--bg); border: 2px solid transparent; border-radius: 12px; padding: 10px; cursor: pointer; display: grid; gap: 8px; align-content: start; }
+.opt:hover { border-color: var(--line); }
+.opt[aria-pressed="true"] { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--bg)); }
+.opt:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.opt .t { font-weight: 800; font-size: .95rem; display: flex; gap: 8px; align-items: center; }
+.opt .t .k { font: 700 .72rem var(--mono); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--line); flex: none; }
+.opt[aria-pressed="true"] .t .k { background: var(--gold); color: #1b1404; }
+.opt .d { color: var(--muted); font-size: .82rem; }
+.viz { border-radius: 8px; overflow: hidden; height: 96px; position: relative; border: 1px solid var(--line); }
+.other { width: 100%; font: inherit; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.out { background: var(--card); border: 2px solid var(--gold); border-radius: 14px; padding: 20px; display: grid; gap: 12px; }
+.out h2 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+.out textarea { width: 100%; min-height: 360px; font: 500 .8rem/1.5 var(--mono); padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { font: 800 .95rem var(--sans); padding: 11px 18px; border-radius: 8px; border: 0; background: var(--gold); color: #1b1404; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.missing { color: var(--muted); font-size: .88rem; }
+/* mini mock helpers */
+.m { position: absolute; inset: 0; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.ln { height: 6px; border-radius: 3px; }
+.blk { border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@keyframes flow { to { stroke-dashoffset: -40; } }
+@keyframes pulse { 50% { opacity: .35; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#EBB447"/><g transform="translate(50 50) skewX(-16) translate(-50 -50)" fill="#fff"><rect x="35" y="24" width="11" height="52" rx="2"/><rect x="54" y="24" width="11" height="52" rx="2"/><rect x="25" y="37" width="50" height="10" rx="2"/><rect x="25" y="54" width="50" height="10" rx="2"/></g></svg>
+    <div>
+      <h1>Hashcoin website questionnaire</h1>
+      <p class="sub">20 quick picks. Click an answer, or type your own in the box under each question. At the bottom, a build prompt writes itself from your answers.</p>
+    </div>
+  </header>
+  <div class="progress"><span id="count">0 / 20</span><div class="bar"><i id="bar"></i></div></div>
+  <div id="qs"></div>
+  <section class="out" id="out">
+    <h2>Your build prompt</h2>
+    <p class="missing" id="missing"></p>
+    <textarea id="prompt" readonly aria-label="Generated build prompt"></textarea>
+    <div class="row"><button class="btn" id="copy">Copy prompt</button><button class="btn ghost" id="reset">Clear answers</button><span class="missing" id="copied"></span></div>
+    <p class="missing">Paste this into a new Claude Code session on this repo (after a context clear). Your answers are saved in this browser.</p>
+  </section>
+</div>
+
+<script>
+const G = "#EBB447";
+// Mini page thumbnail: background, text color, accent usage
+const page = (bg, ink, acc, opts = {}) => `<div class="m" style="background:${bg}">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:4px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:${G};display:block"></i><span class="ln" style="width:30px;background:${ink};opacity:.6"></span></span><span class="blk" style="width:26px;height:10px;background:${acc}"></span></div>
+  <div class="ln" style="width:70%;height:10px;background:${ink};margin-top:6px"></div><div class="ln" style="width:50%;height:10px;background:${ink}"></div>
+  <div class="ln" style="width:60%;background:${ink};opacity:.35"></div>
+  <div style="display:flex;gap:4px;margin-top:4px"><span class="blk" style="width:38px;height:13px;background:${acc}"></span><span class="blk" style="width:38px;height:13px;border:1px solid ${ink};opacity:.5"></span></div>
+  ${opts.band ? `<div style="position:absolute;left:0;right:0;bottom:0;height:26px;background:${opts.band}"></div>` : ""}</div>`;
+const swatch = (c, label, ink = "#fff") => `<div class="m" style="background:${c};place-content:center;justify-items:center"><span style="font:700 .72rem var(--mono);color:${ink}">${label}</span><svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="${G}"/></svg></div>`;
+const font = (fam, wt, extra = "") => `<div class="m" style="background:#0e1110;color:#ecefec;place-content:center"><span style="font:${wt} 1.25rem/1.05 ${fam};${extra}">The memecoin your GPU mines.</span></div>`;
+const btn = (r) => `<div class="m" style="background:#0e1110;place-content:center;justify-items:center;gap:8px"><span style="background:${G};color:#1b1404;font:800 .8rem var(--sans);padding:8px 16px;border-radius:${r}">Register your GPU</span><span style="border:1px solid #444;color:#ddd;font:700 .75rem var(--sans);padding:6px 14px;border-radius:${r}">How it works</span></div>`;
+const loopSvg = (anim) => `<svg viewBox="0 0 200 96" width="100%" height="96" style="background:#0e1110;display:block"><g fill="none" stroke="${G}" stroke-width="2" ${anim ? 'stroke-dasharray="6 6" style="animation:flow 1.2s linear infinite"' : ''}><path d="M60 26 C90 6,120 6,146 26"/><path d="M150 66 C120 90,80 90,54 66"/></g><g font-family="Manrope" font-weight="800" font-size="10" fill="#ecefec" text-anchor="middle"><rect x="12" y="30" width="56" height="34" rx="6" fill="#1a1f1d"/><text x="40" y="51">GPU</text><rect x="134" y="30" width="56" height="34" rx="6" fill="#1a1f1d"/><text x="162" y="51">$HASH</text></g></svg>`;
+
+const Q = [
+  { id: "mood", q: "Overall look", opts: [
+    ["Dark premium", "Near-black, gold accents, like a hardware launch.", page("#0e1110", "#ecefec", G)],
+    ["Light and clean", "White fintech style, gold accents.", page("#ffffff", "#18191a", G)],
+    ["Dark top, light below", "Dramatic dark hero, readable light sections after.", page("#0e1110", "#ecefec", G, { band: "#f4f4f2" })],
+    ["Bold gold", "Gold is the background in big sections.", page(G, "#1b1404", "#1b1404")]] },
+  { id: "bg", q: "Main background color", hint: "Only matters for dark or mixed looks.", opts: [
+    ["Pure near-black", "#0B0C0D", swatch("#0b0c0d", "#0B0C0D")],
+    ["Warm charcoal", "#15130F, a hint of brown", swatch("#15130f", "#15130F")],
+    ["Cool graphite", "#0E1114, a hint of blue", swatch("#0e1114", "#0E1114")],
+    ["Deep navy", "#0A1020", swatch("#0a1020", "#0A1020")]] },
+  { id: "gold", q: "How much gold (#EBB447)?", opts: [
+    ["Buttons only", "Gold only on the main button and logo.", page("#0e1110", "#ecefec", G)],
+    ["Buttons + key words", "Gold also on a few highlighted words and numbers.", `<div class="m" style="background:#0e1110;color:#ecefec;font:800 .85rem var(--sans)">Your GPU earns <span style="color:${G}">$HASH</span>.<span style="font:700 1.3rem var(--mono);color:${G}">+412%</span></div>`],
+    ["Gold glow", "Soft gold light behind the hero and on hover.", `<div class="m" style="background:radial-gradient(circle at 70% 40%, #EBB44755, #0e1110 60%);place-content:center"></div>`],
+    ["Gold sections", "Whole bands in gold for big moments.", page("#0e1110", "#ecefec", G, { band: G })]] },
+  { id: "font", q: "Headline font style", opts: [
+    ["Technical / wide", "Chakra Petch. Hardware, gaming.", font("'Chakra Petch'", 700)],
+    ["Clean geometric", "Manrope ExtraBold. Fintech, matches the logo wordmark.", font("Manrope", 800, "letter-spacing:-.02em")],
+    ["Tall condensed", "Oswald. Loud, poster-like.", font("Oswald", 600, "text-transform:uppercase")],
+    ["Serif editorial", "Fraunces. Premium, unusual for crypto.", font("Fraunces", 700)]] },
+  { id: "headline", q: "Main headline", opts: [
+    ["The memecoin your GPU mines.", "Short, clear, a little cheeky."],
+    ["Your GPU's night shift.", "Story-driven, mysterious."],
+    ["Mine anything. Earn $HASH.", "Direct, product-like."],
+    ["Turn your gaming PC into a mining rig.", "Most literal, easiest to get."]] },
+  { id: "hero", q: "Hero visual (right side of the top section)", opts: [
+    ["Animated cycle diagram", "GPU → $HASH loop with flowing light.", loopSvg(true)],
+    ["Live mining log", "Terminal-style share and payout feed.", `<div class="m" style="background:#0e1110;font:500 .62rem/1.6 var(--mono);color:#7fd8c6">12:01:04 accepted RTX 4070 PRL<br>12:01:06 accepted RX 7900 QTC<br><span style="color:${G}">12:01:10 payout +41,203 $HASH</span><br>12:01:12 accepted RTX 3060 PRL</div>`],
+    ["Big logo coin", "The coin, large, slowly turning.", `<div class="m" style="background:#0e1110;place-content:center"><svg width="70" height="70" viewBox="0 0 100 100" style="animation:spin 6s linear infinite"><circle cx="50" cy="50" r="48" fill="${G}"/><g transform="translate(50 50) skewX(-16) translate(-50 -50)" fill="#fff"><rect x="35" y="24" width="11" height="52" rx="2"/><rect x="54" y="24" width="11" height="52" rx="2"/><rect x="25" y="37" width="50" height="10" rx="2"/><rect x="25" y="54" width="50" height="10" rx="2"/></g></svg></div>`],
+    ["App preview", "A screenshot-style mock of the miner app.", `<div class="m" style="background:#1a1d1c"><div class="blk" style="background:#0e1110;height:70px;padding:6px;display:grid;gap:5px"><span class="ln" style="width:50%;background:#ecefec"></span><span class="blk" style="height:14px;background:${G};width:60%"></span><span class="ln" style="width:80%;background:#555"></span><span class="ln" style="width:70%;background:#555"></span></div></div>`]] },
+  { id: "cycle", q: "How the mining cycle is explained", opts: [
+    ["Flowing loop animation", "Light travels around the loop continuously.", loopSvg(true)],
+    ["Steps that light up", "4 steps, each lights up in turn.", `<div class="m" style="background:#0e1110;grid-template-columns:repeat(4,1fr);align-content:center">${[1,2,3,4].map((i) => `<span class="blk" style="height:40px;background:${i === 2 ? G : "#232826"};animation:${i === 2 ? "pulse 1.6s infinite" : "none"}"></span>`).join("")}</div>`],
+    ["Scroll story", "The diagram builds as you scroll down.", `<div class="m" style="background:#0e1110;place-content:center;color:#888;font:700 .75rem var(--mono)">scroll ↓ step 1 → 2 → 3 → 4</div>`],
+    ["Simple static diagram", "One clean picture, no animation.", loopSvg(false)]] },
+  { id: "tone", q: "Tone of the writing", opts: [
+    ["Serious product", "Clear and professional, no jokes."],
+    ["Dry humor", "Professional with a few witty lines, like HOTBOT."],
+    ["Full meme energy", "Jokes everywhere, crypto slang."],
+    ["Mostly serious, one joke per section", "Balanced."]] },
+  { id: "cta", q: "Main button (before launch)", opts: [
+    ["Register your GPU", "Waitlist. Shown as 'coming soon' for now.", btn("8px")],
+    ["Download miner", "Points to the app (coming soon)."],
+    ["Buy $HASH", "Points to the launchpad (coming soon)."],
+    ["Join X / Telegram", "Community first."]] },
+  { id: "stats", q: "Live numbers before launch", opts: [
+    ["Show '—' placeholders", "Stat strip exists, empty until launch.", `<div class="m" style="background:#0e1110;grid-template-columns:repeat(3,1fr);font:800 1.1rem var(--sans);color:#ecefec;align-content:center;text-align:center">—<span>—</span><span>—</span></div>`],
+    ["Hide them", "No stats section until launch."],
+    ["Labeled example numbers", "Shows 'Example' clearly."],
+    ["Launch countdown", "A timer instead of stats.", `<div class="m" style="background:#0e1110;place-content:center;font:700 1.2rem var(--mono);color:${G}">02 : 14 : 37</div>`]] },
+  { id: "sections", q: "Which sections? (pick several)", multi: true, opts: [
+    ["How it works", ""], ["Levels (1×/2×/4×)", ""], ["Earnings calculator", ""], ["Tokenomics", ""], ["Payout feed (preview)", ""], ["Miner app preview", ""],
+    ["Safety & trust", ""], ["FAQ", ""], ["Roadmap", ""], ["Dev wallet transparency", ""], ["'Works with' logos", ""], ["Supported GPUs list", ""]] },
+  { id: "calc", q: "Earnings calculator", opts: [
+    ["Simple", "Pick GPU + level, see an example per day."],
+    ["Full", "Sliders for volume, miners, level mix."],
+    ["Simple on the page, full on its own page", ""],
+    ["No calculator", ""]] },
+  { id: "levels", q: "How levels are shown", opts: [
+    ["Three cards", "1× / 2× / 4× side by side.", `<div class="m" style="background:#0e1110;grid-template-columns:repeat(3,1fr);align-content:center">${["1×","2×","4×"].map((t, i) => `<span class="blk" style="height:58px;background:#1a1f1d;color:${i === 2 ? G : "#ecefec"};font:800 1rem var(--sans);display:grid;place-items:center">${t}</span>`).join("")}</div>`],
+    ["A ladder / progress bar", "One bar with the three steps on it.", `<div class="m" style="background:#0e1110;align-content:center"><div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#9aabb8 0 33%,#2fc4ad 33% 66%,${G} 66%)"></div><div style="display:flex;justify-content:space-between;color:#ccc;font:700 .7rem var(--mono)"><span>1×</span><span>2×</span><span>4×</span></div></div>`],
+    ["A simple table", "Level, requirement, weight.", `<div class="m" style="background:#0e1110;font:500 .62rem/1.8 var(--mono);color:#ccc">L1 · just mine · 1×<br>L2 · hold $50 · 2×<br>L3 · $500 + 14d · 4×</div>`],
+    ["Growing coin stacks", "Three stacks of coins, taller per level.", `<div class="m" style="background:#0e1110;grid-template-columns:repeat(3,1fr);align-items:end;height:100%">${[20, 40, 70].map((h) => `<span class="blk" style="height:${h}px;background:repeating-linear-gradient(${G} 0 5px,#c9930f 5px 7px)"></span>`).join("")}</div>`]] },
+  { id: "toke", q: "Tokenomics visual", opts: [
+    ["Fee bar", "One bar: 2.5% miners · 0.5% dev.", `<div class="m" style="background:#0e1110;align-content:center"><div style="display:flex;height:22px;border-radius:5px;overflow:hidden;font:800 .65rem var(--sans)"><span style="flex:5;background:${G};color:#1b1404;padding:4px">2.5% miners</span><span style="flex:1.5;background:#333;color:#ddd;padding:4px">0.5%</span></div></div>`],
+    ["Donut chart", "Classic pie-style ring.", `<div class="m" style="background:#0e1110;place-content:center"><div style="width:60px;height:60px;border-radius:50%;background:conic-gradient(${G} 0 83%,#444 83%);-webkit-mask:radial-gradient(circle,transparent 45%,#000 46%);mask:radial-gradient(circle,transparent 45%,#000 46%)"></div></div>`],
+    ["Big numbers", "3% · 2.5% · 0.5% · 1% dev as large figures."],
+    ["Simple fact list", "Plain rows of facts."]] },
+  { id: "corners", q: "Button and card corners", opts: [
+    ["Sharp", "0–2 px. Technical.", btn("2px")], ["Slightly rounded", "8 px. Balanced.", btn("8px")], ["Pill", "Fully round.", btn("99px")], ["Mixed", "Pill buttons, slightly rounded cards."]] },
+  { id: "density", q: "Spacing", opts: [
+    ["Airy", "Lots of space, fewer things per screen."], ["Balanced", "Normal landing page."], ["Compact", "More information per screen, like a dashboard."]] },
+  { id: "motion", q: "How much animation", opts: [
+    ["Minimal", "Only the cycle moves."], ["Moderate", "Cycle + gentle fade-ins and hover effects."], ["Rich", "Lots of motion, number counters, parallax."]] },
+  { id: "mascot", q: "Mascot or character", opts: [
+    ["None", "Logo only. Cleaner."], ["Small GPU character", "A cute graphics card for socials and small spots."], ["Coin character", "The logo coin with a face."], ["Later, not now", ""]] },
+  { id: "socials", q: "Links in the header", opts: [
+    ["X only", "Simplest."], ["X + Telegram", "Most common for Solana tokens."], ["X + Telegram + Discord", "Discord for miner support."], ["X + Telegram + DexScreener (at launch)", "Chart link appears after launch."]] },
+  { id: "structure", q: "Site structure", opts: [
+    ["One long page", "Everything on the home page."], ["Home + separate pages", "Home, Calculator, FAQ/Docs."], ["Home + docs-style 'Litepaper'", "A detailed explainer page."], ["Home + app download page", ""]] },
+];
+
+const KEYS = "ABCDEFGHIJKL";
+let A = {};
+try { A = JSON.parse(localStorage.getItem("hash-site-q") || "{}"); } catch (e) {}
+const save = () => { try { localStorage.setItem("hash-site-q", JSON.stringify(A)); } catch (e) {} };
+
+function renderQs() {
+  document.getElementById("qs").innerHTML = Q.map((q, qi) => `
+    <section class="q" id="q-${q.id}">
+      <h2><b>${String(qi + 1).padStart(2, "0")}</b>${q.q}</h2>
+      ${q.hint ? `<p class="hint">${q.hint}</p>` : ""}
+      ${q.multi ? `<p class="hint">Pick as many as you want.</p>` : ""}
+      <div class="opts">${q.opts.map(([t, d, v], oi) => `
+        <button type="button" class="opt" data-q="${q.id}" data-o="${oi}" aria-pressed="false">
+          ${v ? `<div class="viz">${v}</div>` : ""}
+          <span class="t"><span class="k">${KEYS[oi]}</span>${t}</span>${d ? `<span class="d">${d}</span>` : ""}
+        </button>`).join("")}</div>
+      <input class="other" id="other-${q.id}" placeholder="Or type your own answer / extra notes" aria-label="Your own answer for ${q.q}">
+    </section>`).join("");
+  document.querySelectorAll(".opt").forEach((b) => b.addEventListener("click", () => {
+    const q = Q.find((x) => x.id === b.dataset.q), o = +b.dataset.o;
+    const cur = A[q.id] || { picks: [], other: "" };
+    if (q.multi) cur.picks = cur.picks.includes(o) ? cur.picks.filter((x) => x !== o) : [...cur.picks, o];
+    else cur.picks = cur.picks[0] === o ? [] : [o];
+    A[q.id] = cur; save(); sync();
+  }));
+  Q.forEach((q) => document.getElementById("other-" + q.id).addEventListener("input", (e) => {
+    A[q.id] = { ...(A[q.id] || { picks: [] }), other: e.target.value }; save(); sync(false);
+  }));
+}
+
+const answered = (q) => A[q.id] && (A[q.id].picks.length || (A[q.id].other || "").trim());
+const answerText = (q) => {
+  const a = A[q.id]; if (!a) return null;
+  const parts = a.picks.map((i) => { const [t, d] = q.opts[i]; return d ? `${t} (${d})` : t; });
+  if ((a.other || "").trim()) parts.push(`note: ${a.other.trim()}`);
+  return parts.join("; ");
+};
+
+function buildPrompt() {
+  const lines = Q.map((q, i) => `${i + 1}. ${q.q}: ${answerText(q) || "(no preference, use your judgment)"}`).join("\n");
+  return `Build the Hashcoin marketing website as a static front end only. No backend, no sign-ups, no wallet connection and no real data yet.
+
+## Read first
+- CLAUDE.md, then docs/PROJECT.md (all decisions and numbers), docs/DESIGN-BRIEF.md (positioning, reference sites, copy rules).
+- The current draft at apps/web/index.html is a rough first pass. Replace it.
+- Logo files: apps/web/brand/logo/ (hashcoin-mark.svg master, PNGs, favicon.ico, wordmark lockups). Brand color #EBB447. Logo = italic two-bar hash on a gold coin.
+
+## What Hashcoin is (for the copy)
+A platform with a real function, not a joke coin. A Windows app mines the best-paying coin for each user's GPU (PRL, QUAN, QTC per card), sells it, buys $HASH, and pays the user in $HASH every ~10 minutes. A 3% Token-2022 transfer fee on every $HASH trade (it can't be avoided on any exchange): 2.5% to a miner chest, 0.5% to development. Chest share = sqrt(GPU earnings) x level weight: Level 1 = just mine (1x), Level 2 = hold $50 (2x), Level 3 = hold $500 + 14 days since first $HASH + never sold or transferred out (4x). Dips below $500 drop you to L2 and you're restored when back above. 5% max chest share per wallet. Dev holds 1% of supply, locked 90 days, excluded from payouts. Solana. The contract address is published only on the site, at launch.
+
+## My design answers
+${lines}
+
+## Rules
+- Static site in apps/web (plain HTML/CSS/JS, or a small Vite build if needed). It must work by opening the file or with a simple static server.
+- No rainbow or gradient buttons, no clutter, no emoji as decoration. One accent color (#EBB447). Make it look like a real product company (references: usepaid.app, usehotbot.com, boneronlong.xyz).
+- Everything that needs a backend (waitlist, download, buy, live stats, payout feed) is a clearly labeled placeholder ("Coming soon" / "Preview"). Never invent live numbers. Label any example figures as examples.
+- Copy rules: never promise returns. No "pays for itself", "free money", "guaranteed", and no rising price charts. Show the mechanism, not price predictions. Include a short risk disclaimer and "we will never ask for your seed phrase".
+- The earnings example uses real GPU revenue figures from data/hashrate-no-gpus-2026-10-03.json (24h revenue, Oct 3 2026) and is clearly labeled as an example.
+- Responsive down to 375 px wide, fast, accessible (contrast, focus states, reduced-motion fallback).
+- When done: run it in a browser, screenshot desktop and mobile, fix what looks off, then commit and push to the current branch. Update docs/PROJECT.md (website status) and apps/web/README.md (how to run).`;
+}
+
+function sync(rerenderInputs = true) {
+  let n = 0;
+  Q.forEach((q) => {
+    const a = A[q.id] || { picks: [], other: "" };
+    document.querySelectorAll(`.opt[data-q="${q.id}"]`).forEach((b) => b.setAttribute("aria-pressed", String(a.picks.includes(+b.dataset.o))));
+    if (rerenderInputs) document.getElementById("other-" + q.id).value = a.other || "";
+    if (answered(q)) n++;
+  });
+  document.getElementById("count").textContent = `${n} / 20`;
+  document.getElementById("bar").style.width = (n / 20 * 100) + "%";
+  const miss = Q.map((q, i) => answered(q) ? null : i + 1).filter(Boolean);
+  document.getElementById("missing").textContent = miss.length ? `Unanswered: ${miss.join(", ")}. Those will say "use your judgment".` : "All 20 answered.";
+  document.getElementById("prompt").value = buildPrompt();
+}
+
+document.getElementById("copy").addEventListener("click", () => {
+  const ta = document.getElementById("prompt");
+  navigator.clipboard?.writeText(ta.value).then(() => { document.getElementById("copied").textContent = "Copied."; })
+    .catch(() => { ta.focus(); ta.select(); document.getElementById("copied").textContent = "Selected. Press Ctrl+C to copy."; });
+});
+document.getElementById("reset").addEventListener("click", () => { A = {}; save(); sync(); });
+
+renderQs(); sync();
+</script>
