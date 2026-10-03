@@ -1,0 +1,15 @@
+[package]
+name = "hashcoin-core"
+version = "0.1.0"
+edition = "2021"
+description = "Platform-independent logic for the Hashcoin miner app"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ed25519-dalek = "2"
+base64 = "0.22"
+sha2 = "0.10"
+hex = "0.4"
+bs58 = "0.5"
+zip = { version = "2", default-features = false, features = ["deflate"] }
