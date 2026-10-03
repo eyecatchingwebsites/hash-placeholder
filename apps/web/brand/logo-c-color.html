@@ -1,0 +1,168 @@
+<title>Hashcoin Coin Color</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: big previews on top (white, black, dark-site mock), sliders + exact values below, icon-size strip. */
+:root {
+  --bg: #f4f4f2; --card: #ffffff; --ink: #18191a; --muted: #6b6e70; --line: #e2e2de;
+  --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f1112; --card: #181a1c; --ink: #ecedee; --muted: #9a9ea2; --line: #2a2d30; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0f1112; --card: #181a1c; --ink: #ecedee; --muted: #9a9ea2; --line: #2a2d30; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 20px; }
+h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.previews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .previews { grid-template-columns: minmax(0, 1fr); } }
+.pv { border-radius: 14px; border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; padding: 28px; min-height: 260px; position: relative; }
+.pv small { position: absolute; left: 12px; top: 10px; font: 500 .72rem var(--mono); }
+.pv svg { width: 180px; max-width: 100%; height: auto; }
+.pv.white { background: #fff; color: #6b6e70; }
+.pv.black { background: #0b0c0d; color: #8a8e92; }
+.pv.site { background: #0e1110; color: #8a8e92; align-content: center; gap: 14px; }
+.site .lock { display: flex; align-items: center; gap: 12px; }
+.site .lock span { font: 800 1.9rem var(--sans); color: #ecefec; letter-spacing: -.02em; }
+.site .btn { font: 700 .9rem var(--sans); padding: 10px 18px; border-radius: 8px; color: #111; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; }
+@media (max-width: 760px) { .panel { grid-template-columns: minmax(0, 1fr); } }
+.sliders { display: grid; gap: 18px; }
+.ctl { display: grid; gap: 6px; }
+.ctl .row { display: flex; justify-content: space-between; font-weight: 700; }
+.ctl output { font: 500 .85rem var(--mono); color: var(--muted); }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; border-radius: 9px; border: 1px solid var(--line); margin: 0; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 3px solid #18191a; box-shadow: 0 1px 4px #0005; }
+input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid #18191a; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.values { display: grid; gap: 12px; align-content: start; }
+.chip { height: 64px; border-radius: 10px; border: 1px solid var(--line); }
+.val { display: flex; gap: 8px; align-items: center; }
+.val input { flex: 1; min-width: 0; font: 700 1rem var(--mono); padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); text-transform: uppercase; }
+.val button, .presets button { font: 700 .82rem var(--sans); padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.mono { font: 500 .85rem var(--mono); color: var(--muted); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; }
+.presets i { width: 14px; height: 14px; border-radius: 50%; display: block; }
+.sizes { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; }
+.sizes figure { margin: 0; display: grid; gap: 4px; justify-items: center; font: 500 .7rem var(--mono); color: var(--muted); }
+.sizes .on-dark { background: #0b0c0d; padding: 8px; border-radius: 8px; display: flex; gap: 12px; align-items: flex-end; }
+.toggle { display: flex; gap: 8px; align-items: center; font-weight: 700; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hashcoin coin color</h1>
+    <p class="sub">Logo option C. Drag the sliders or type a hex code. Your pick stays saved in this browser.</p>
+  </header>
+
+  <div class="previews">
+    <div class="pv white"><small>On white</small><span id="pWhite"></span></div>
+    <div class="pv black"><small>On black</small><span id="pBlack"></span></div>
+    <div class="pv site"><small>On the dark website</small>
+      <div class="lock"><span id="pSite"></span><span>Hashcoin</span></div>
+      <a class="btn" id="pBtn">Register your GPU</a>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="sliders">
+      <div class="ctl"><div class="row"><label for="h">Hue</label><output id="hO"></output></div><input type="range" id="h" min="0" max="360" step="1"></div>
+      <div class="ctl"><div class="row"><label for="s">Saturation</label><output id="sO"></output></div><input type="range" id="s" min="0" max="100" step="1"></div>
+      <div class="ctl"><div class="row"><label for="l">Lightness</label><output id="lO"></output></div><input type="range" id="l" min="10" max="90" step="1"></div>
+      <label class="toggle"><input type="checkbox" id="darkHash"> Dark hash instead of white</label>
+      <div class="presets" aria-label="Starting points">
+        <button data-hex="#E9A51C"><i style="background:#E9A51C"></i>Gold</button>
+        <button data-hex="#F7931A"><i style="background:#F7931A"></i>Bitcoin-ish orange</button>
+        <button data-hex="#F08A3C"><i style="background:#F08A3C"></i>Amber</button>
+        <button data-hex="#D4AF37"><i style="background:#D4AF37"></i>Metallic gold</button>
+        <button data-hex="#FFC93C"><i style="background:#FFC93C"></i>Bright yellow</button>
+        <button data-hex="#2F6BFF"><i style="background:#2F6BFF"></i>Electric blue</button>
+      </div>
+    </div>
+    <div class="values">
+      <div class="chip" id="chip"></div>
+      <div class="val"><input id="hex" aria-label="Hex color" maxlength="7" spellcheck="false"><button id="copy">Copy</button></div>
+      <div class="mono" id="rgb"></div>
+      <div class="mono" id="contrast"></div>
+    </div>
+  </section>
+
+  <div class="sizes" aria-label="Icon sizes">
+    <span id="sizesLight" style="display:flex;gap:18px;align-items:flex-end;"></span>
+    <span class="on-dark" id="sizesDark"></span>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let st = { h: 39, s: 83, l: 51, dark: false };
+try { const v = JSON.parse(localStorage.getItem("hash-c-color") || "null"); if (v) st = { ...st, ...v }; } catch (e) {}
+
+function hslToRgb(h, s, l) {
+  s /= 100; l /= 100;
+  const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return [f(0), f(8), f(4)].map((x) => Math.round(x * 255));
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min; s = l > .5 ? d / (2 - max - min) : d / (max + min);
+    h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+const toHex = (rgb) => "#" + rgb.map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase();
+const lum = (rgb) => { const c = rgb.map((v) => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+
+function coin(fill, hash, size) {
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="Hashcoin logo"><circle cx="50" cy="50" r="48" fill="${fill}"/>
+  <g transform="translate(50 50) skewX(-16) translate(-50 -50)" fill="${hash}"><rect x="35" y="24" width="11" height="52" rx="2"/><rect x="54" y="24" width="11" height="52" rx="2"/><rect x="25" y="37" width="50" height="10" rx="2"/><rect x="25" y="54" width="50" height="10" rx="2"/></g></svg>`;
+}
+
+function render(fromHexInput = false) {
+  const rgb = hslToRgb(st.h, st.s, st.l), hex = toHex(rgb), hash = st.dark ? "#15110d" : "#ffffff";
+  $("h").value = st.h; $("s").value = st.s; $("l").value = st.l; $("darkHash").checked = st.dark;
+  $("hO").textContent = st.h + "°"; $("sO").textContent = st.s + "%"; $("lO").textContent = st.l + "%";
+  $("h").style.background = "linear-gradient(90deg," + Array.from({ length: 13 }, (_, i) => `hsl(${i * 30} ${st.s}% ${st.l}%)`).join(",") + ")";
+  $("s").style.background = `linear-gradient(90deg, hsl(${st.h} 0% ${st.l}%), hsl(${st.h} 100% ${st.l}%))`;
+  $("l").style.background = `linear-gradient(90deg, hsl(${st.h} ${st.s}% 10%), hsl(${st.h} ${st.s}% 50%), hsl(${st.h} ${st.s}% 90%))`;
+  $("pWhite").innerHTML = coin(hex, hash, 180); $("pBlack").innerHTML = coin(hex, hash, 180); $("pSite").innerHTML = coin(hex, hash, 52);
+  $("pBtn").style.background = hex; $("pBtn").style.color = st.dark || lum(rgb) > .45 ? "#111" : "#fff";
+  $("chip").style.background = hex;
+  if (!fromHexInput) $("hex").value = hex;
+  $("rgb").textContent = `RGB ${rgb.join(", ")}  ·  HSL ${st.h}° ${st.s}% ${st.l}%`;
+  const c = ratio(rgb, st.dark ? [21, 17, 13] : [255, 255, 255]);
+  $("contrast").textContent = `Hash contrast ${c.toFixed(2)}:1 · ${c >= 3 ? "reads well small" : "may blur at 16 px. Try darker, or a dark hash"}`;
+  const sizes = [64, 48, 32, 24, 16];
+  $("sizesLight").innerHTML = sizes.map((s) => `<figure>${coin(hex, hash, s)}<figcaption>${s}px</figcaption></figure>`).join("");
+  $("sizesDark").innerHTML = sizes.map((s) => coin(hex, hash, s)).join("");
+  try { localStorage.setItem("hash-c-color", JSON.stringify(st)); } catch (e) {}
+}
+
+["h", "s", "l"].forEach((k) => $(k).addEventListener("input", (e) => { st[k] = +e.target.value; render(); }));
+$("darkHash").addEventListener("change", (e) => { st.dark = e.target.checked; render(); });
+$("hex").addEventListener("input", (e) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(e.target.value.trim());
+  if (!m) return;
+  const n = parseInt(m[1], 16);
+  [st.h, st.s, st.l] = rgbToHsl(n >> 16, (n >> 8) & 255, n & 255);
+  render(true);
+});
+document.querySelectorAll(".presets button").forEach((b) => b.addEventListener("click", () => {
+  const n = parseInt(b.dataset.hex.slice(1), 16);
+  [st.h, st.s, st.l] = rgbToHsl(n >> 16, (n >> 8) & 255, n & 255);
+  render();
+}));
+$("copy").addEventListener("click", () => {
+  const v = $("hex").value;
+  navigator.clipboard?.writeText(v).then(() => { $("copy").textContent = "Copied"; setTimeout(() => ($("copy").textContent = "Copy"), 1200); })
+    .catch(() => { $("hex").select(); });
+});
+render();
+</script>
