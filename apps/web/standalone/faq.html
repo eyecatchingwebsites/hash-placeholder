@@ -500,6 +500,13 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 /* ---------- Hero loop ---------- */
 .hero-head { max-width: 860px; }
 .hero-head h1 { max-width: 16ch; }
+.hero-split { display: grid; gap: clamp(28px, 4vw, 48px); }
+@media (min-width: 1180px) {
+  .hero { padding-top: clamp(28px, 4vw, 48px); }
+  .hero-split { grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); align-items: center; gap: 40px; }
+  .hero-split h1 { font-size: clamp(2.6rem, 4vw, 3.7rem); }
+  .hero-split .cycle { margin-top: 0; }
+}
 .cycle { position: relative; margin-top: clamp(36px, 5vw, 56px); }
 .cycle-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .cycle-link { fill: none; stroke: var(--line-2); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 9; }
@@ -507,7 +514,28 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .st { position: relative; z-index: 1; display: grid; gap: 14px; align-content: start; padding: 16px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-2); transition: border-color .4s var(--ease), box-shadow .4s var(--ease); }
 /* Ring: stations placed around the coin by cycle.js */
 .cycle.ring .st { position: absolute; transform: translate(-50%, -50%); }
-.cycle.ring .cycle-core { position: absolute; transform: translate(-50%, -50%); width: 230px; }
+.cycle.ring .cycle-core { position: absolute; transform: translate(-50%, -50%); }
+.cycle.ring .st { padding: 12px; gap: 10px; }
+.cycle.ring .art { height: 92px; }
+.cycle.ring .st h3 { font-size: 1rem; }
+.cycle.ring .st p { display: none; }
+.cycle.ring .st-text { align-items: center; }
+.cycle.ring .st-n { grid-row: auto; }
+.cycle.ring .art-trades .tape { height: 44px; }
+.cycle.ring .art-pc .mon { transform: scale(.85); }
+.cycle.ring .art-gpu .gpu { transform: scale(.85); }
+.cycle-core img { width: 100%; height: 100%; filter: drop-shadow(0 0 40px rgba(235, 180, 71, .35)); transition: transform .4s var(--ease), filter .4s var(--ease); }
+.cycle-core.pulse img { transform: scale(1.06); filter: drop-shadow(0 0 70px rgba(235, 180, 71, .6)); }
+.cycle.stack .cycle-core { width: 160px; height: 160px; justify-self: center; }
+/* Spokes between the coin and a station: gold flows in (buy inflow) or out (paid to miners and holders) */
+.cycle-spoke { fill: none; stroke: var(--gold); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 10; opacity: 0; transition: opacity .35s; filter: drop-shadow(0 0 5px rgba(235, 180, 71, .6)); }
+.cycle-spoke.in { opacity: 1; animation: spokeIn .6s linear infinite; }
+.cycle-spoke.out { opacity: 1; animation: spokeOut .6s linear infinite; }
+@keyframes spokeIn { to { stroke-dashoffset: 12; } }
+@keyframes spokeOut { to { stroke-dashoffset: -12; } }
+.spoke-tag { position: absolute; z-index: 2; transform: translate(-50%, -50%) scale(.9); padding: 5px 10px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); font: 700 .78rem/1 var(--font-display); white-space: nowrap; opacity: 0; transition: opacity .35s, transform .35s var(--ease); pointer-events: none; }
+.spoke-tag.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.cycle.stack .spoke-tag { display: none; }
 /* Stack (narrow screens): one column, connectors between cards, return lane on the right */
 .cycle.stack { display: grid; gap: 30px; padding-right: 22px; }
 .st.on { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(235, 180, 71, .08), 0 18px 50px rgba(0, 0, 0, .45); }
@@ -517,10 +545,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .st h3 { font-size: 1.08rem; }
 .st p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
 .art { position: relative; height: 128px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
-.cycle-core { position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 12px; text-align: center; padding: 8px; }
-.cycle-core img { width: 112px; height: 112px; filter: drop-shadow(0 0 28px rgba(235, 180, 71, .35)); }
-.cycle-core p { font-size: .9rem; color: var(--muted); max-width: 24ch; }
-.cycle-core b { color: var(--text); }
+.cycle-core { position: relative; z-index: 1; display: grid; place-items: center; }
 .cycle-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
 .cycle-caption { color: var(--muted); font-size: .95rem; min-height: 1.5em; }
 .cycle-caption b { color: var(--text); }

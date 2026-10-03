@@ -18,13 +18,13 @@
   const NS = "http://www.w3.org/2000/svg";
   const N = stations.length;
   const DWELL_MS = 3400, LINK_MS = 1000;
-  const RING_MIN_WIDTH = 900;
+  const RING_MIN_WIDTH = 600;
   const CAPTIONS = [
     "<b>1. Press Start.</b> One click on the gaming PC you already have. No mining experience needed.",
     "<b>2. Your GPU mines.</b> The app picks whichever coin pays your graphics card most right now.",
-    "<b>3. It buys $HASH.</b> What you mine is sold and swapped into $HASH on the open market: steady buy inflow.",
-    "<b>4. Paid to your wallet.</b> Every 10 minutes. Hold it to reach H1–H3 and M2–M3; selling shrinks your hold clock.",
-    "<b>5. Every trade pays 5%.</b> Up to 3.5% tops miners up toward 5× their mining; at least 1% goes to holders. Then it loops.",
+    "<b>3. It buys $HASH.</b> Everything every miner earns is swapped into $HASH on the open market: buy inflow into the coin, around the clock.",
+    "<b>4. Paid to your wallet.</b> Every 10 minutes. Holding levels you up and earns holder rewards, so what gets bought tends to stay held.",
+    "<b>5. Every trade pays 5%.</b> It flows back out to both sides: miners are topped up toward 5× their mining, holders get at least 1% of all volume.",
   ];
 
   const el = (tag, attrs, parent) => {
@@ -33,6 +33,12 @@
     if (parent) parent.append(e);
     return e;
   };
+  // Spokes from the coin: station 2 (buys $HASH) flows in; stations 0 (miners) and 3 (holders) flow out on step 4.
+  const SPOKES = { 2: "in", 0: "out", 3: "out" };
+  const spokes = {};
+  Object.keys(SPOKES).forEach((k) => (spokes[k] = el("path", { class: "cycle-spoke" }, svg)));
+  const tags = {};
+  root.querySelectorAll(".spoke-tag").forEach((t) => (tags[t.dataset.spoke] = t));
   // links[i] joins station i to station i+1 (the last one closes the loop)
   const links = stations.map(() => ({
     base: el("path", { class: "cycle-link" }, svg),
@@ -59,10 +65,11 @@
   function layoutRing(W) {
     root.classList.add("ring");
     root.classList.remove("stack");
-    const cardW = Math.min(290, Math.max(240, W * 0.25));
+    const cardW = Math.round(Math.min(250, Math.max(196, W * 0.29)));
     stations.forEach((s) => (s.style.width = cardW + "px"));
     const cardH = Math.max(...stations.map((s) => s.offsetHeight));
-    const R = Math.min(W / 2 - cardW / 2 - 4, Math.max(300, cardW * 1.18));
+    // As wide as the column allows, but never so tight that neighbors overlap.
+    const R = Math.max((cardW + 26) / (2 * Math.sin(Math.PI / N)), Math.min((W - cardW - 8) / (2 * Math.cos(Math.PI / 10)), 300));
     const cx = W / 2;
     const cy = cardH / 2 + R + 8;
     const angle = (i) => (-90 + i * (360 / N)) * (Math.PI / 180);
@@ -70,8 +77,18 @@
       s.style.left = cx + R * Math.cos(angle(i)) + "px";
       s.style.top = cy + R * Math.sin(angle(i)) + "px";
     });
+    const coinD = Math.round(Math.min(220, Math.max(130, (R - cardH / 2) * 1.5)));
     core.style.left = cx + "px";
     core.style.top = cy + "px";
+    core.style.width = core.style.height = coinD + "px";
+    Object.keys(spokes).forEach((k) => {
+      const a = angle(+k), r0 = coinD / 2 + 6;
+      const sx = cx + r0 * Math.cos(a), sy = cy + r0 * Math.sin(a);
+      const ex = cx + R * Math.cos(a), ey = cy + R * Math.sin(a);
+      spokes[k].setAttribute("d", `M ${sx} ${sy} L ${ex} ${ey}`);
+      const tagR = (r0 + (R - cardH / 2)) / 2 + 4;
+      if (tags[k]) { tags[k].style.left = cx + tagR * Math.cos(a) + "px"; tags[k].style.top = cy + tagR * Math.sin(a) + "px"; }
+    });
     const H = cy + R * Math.sin(angle(2)) + cardH / 2 + 8;
     root.style.height = H + "px";
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
@@ -89,7 +106,8 @@
     root.classList.remove("ring");
     root.style.height = "";
     stations.forEach((s) => { s.style.width = s.style.left = s.style.top = ""; });
-    core.style.left = core.style.top = "";
+    core.style.left = core.style.top = core.style.width = core.style.height = "";
+    Object.values(spokes).forEach((sp) => sp.setAttribute("d", ""));
     const H = root.offsetHeight;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     const r = stations.map(rel);
@@ -131,6 +149,17 @@
     stepBtns.forEach((b, k) => b.setAttribute("aria-pressed", String(k === i)));
     caption.innerHTML = CAPTIONS[i];
     if (i === 3 && balance) countUp();
+    paintSpokes(i);
+  }
+  // Step 2 (buys $HASH): inflow into the coin. Step 4 (every trade pays 5%): out to miners and holders.
+  function paintSpokes(i) {
+    const active = i === 2 ? ["2"] : i === 4 ? ["0", "3"] : [];
+    Object.keys(spokes).forEach((k) => {
+      const on = active.includes(k);
+      spokes[k].classList.toggle(SPOKES[k], on);
+      if (tags[k]) tags[k].classList.toggle("show", on);
+    });
+    core.classList.toggle("pulse", i === 2);
   }
   function countUp() {
     const from = 12840, to = 13043, start = performance.now();
@@ -205,6 +234,7 @@
     pauseBtn.hidden = true;
     stepBtns.forEach((b) => (b.hidden = true));
     links.forEach((lk) => { lk.lit.style.opacity = 1; lk.lit.setAttribute("stroke-dashoffset", "0"); });
+    Object.keys(spokes).forEach((k) => { spokes[k].style.opacity = 1; if (tags[k]) tags[k].classList.add("show"); });
     caption.innerHTML = "Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5% back to miners and holders.";
     return;
   }
