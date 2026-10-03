@@ -11,9 +11,9 @@ Last updated: October 3, 2026. Stage: design, simulation, and early build. Numbe
 - Website design brief: `docs/DESIGN-BRIEF.md` (3D brief `docs/3D-BRIEF.md` is shelved: no 3D models for now)
 - **Website questionnaire (generates the build prompt): `apps/web/brand/website-questionnaire.html`** (published: https://claude.ai/artifact/T7dniP5JRG8bMSfKyZEfSe)
 - Logo: `apps/web/brand/logo/` · logo explorations: https://claude.ai/artifact/JTubhyKEYFEAsCWrdL9jF9 · color picker: https://claude.ai/artifact/H4h9afZLydLLgRYaXWqFnd
-- Website design draft: `apps/web/index.html` (published: https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ)
+- **Website (static front end): `apps/web`** (`index.html`, `calculator.html`, `faq.html`; how to run: `apps/web/README.md`). The old draft artifact (https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ) is outdated.
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
-- Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branch: `claude/lucid-fermat-16svvo`.
+- Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branches so far: `claude/lucid-fermat-16svvo`, then `claude/vibrant-cray-fpbieb` (website build).
 
 ---
 
@@ -201,7 +201,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 3% token, fee collection, mock pool feed, batch payouts | Next |
-| Website: landing page (`apps/web`) | Rough draft exists (to be replaced). Logo done. Questionnaire ready; the build happens from its generated prompt (front end only) |
+| Website (`apps/web`) | Static front end built Oct 3 from the questionnaire answers: home, calculator, FAQ/docs pages. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js` |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | To do |
@@ -235,5 +235,7 @@ It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and
 - **No rainbow or gradient buttons, no crowded layouts.**
 - **Brand:** logo option C (italic two-bar hash on a coin), gold **#EBB447**, white hash. Wordmark in Manrope ExtraBold.
 - **3D models dropped** for now (user decision). Use 2D/SVG animation for the mining cycle instead.
-- **Next step:** the user fills in the 20-question questionnaire, copies the generated prompt, clears context, and pastes it to build the website. That build is **front end only**: no backend, no sign-ups, no wallet connection; placeholders labeled "Coming soon"/"Preview".
+- **Built (Oct 3) from the questionnaire answers:** dark premium (#0B0C0D, gold on buttons and key words), Manrope ExtraBold headlines, 8px corners, moderate motion. Headline "Home mining, multiplied." A big animated loop in the hero (mine → convert → 3% fee → chest → paid) is the centerpiece. The main button is "Join the waitlist" (coming soon). A launch countdown replaces stats (date TBA). Header: X, Discord, contract address button. Pages: Home, Calculator, FAQ/Docs. Front end only: no backend, no sign-ups, no wallet connection.
+- **Website examples:** the levels section and the simple calculator use real hashrate.no revenue plus an example market, clearly labeled ($100K/day volume, 500 miners averaging $2.50/day, 40% L2, 20% L3). For an RTX 4070 that example gives about $5.7 / $8.5 / $14.0 per day at L1 / L2 / L3. These are illustrations, not forecasts.
+- **Before the site goes live:** set `launchAt`, `ca` and the social links in `apps/web/assets/js/config.js`, connect the waitlist and the live data, and keep "temperature/power limits and pause-while-gaming" marked as planned until the app ships them.
 - **Not started yet (deliberately):** real miners and pools research, devnet token, backend, desktop app on Windows. See `docs/TECHNICAL-PLAN.md`.

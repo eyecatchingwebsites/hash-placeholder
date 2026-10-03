@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earnings calculator · Hashcoin</title>
+<meta name="description" content="Estimate what your GPU could earn with Hashcoin, by level and market scenario. Examples, not forecasts.">
+<meta name="theme-color" content="#0B0C0D">
+<meta property="og:title" content="Hashcoin ($HASH)">
+<meta property="og:description" content="Your GPU mines. Every $HASH trade adds to a chest shared among miners.">
+<meta property="og:image" content="brand/logo/hashcoin-1024.png">
+<link rel="icon" href="brand/logo/favicon.ico" sizes="any">
+<link rel="icon" href="brand/logo/hashcoin-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="index.html" aria-label="Hashcoin home">
+      <img src="brand/logo/hashcoin-mark.svg" alt="" width="30" height="30">
+      <span>Hashcoin</span><span class="tick">$HASH</span>
+    </a>
+    <nav aria-label="Main">
+      <ul class="nav-links">
+        <li><a href="index.html#how">How it works</a></li>
+        <li><a href="index.html#levels">Levels</a></li>
+        <li><a href="calculator.html" aria-current="page">Calculator</a></li>
+        <li><a href="index.html#token">Token</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+      </ul>
+    </nav>
+    <div class="nav-right">
+      <a class="icon-btn social" href="#" data-social="x" data-soon="Our X account goes live closer to launch." aria-label="Hashcoin on X (coming soon)">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg>
+      </a>
+      <a class="icon-btn social" href="#" data-social="discord" data-soon="The Discord opens closer to launch." aria-label="Hashcoin Discord (coming soon)">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.27 18.27 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.74 19.74 0 0 0-4.88 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .09-.03c.46-.63.87-1.3 1.22-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1 0-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1 0 .13c-.6.35-1.22.65-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.22 1.99a.08.08 0 0 0 .09.03 19.84 19.84 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42z"/></svg>
+      </a>
+      <button class="ca-btn" type="button" data-ca aria-label="Contract address: published on this site at launch">
+        <span>CA</span><b class="ca-value ca-long">At launch</b>
+      </button>
+      <a class="btn btn-gold btn-sm" href="index.html#waitlist"><span class="hide-sm">Join the waitlist</span><span class="show-sm">Waitlist</span></a>
+      <button class="icon-btn menu-btn" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
+    <ul>
+      <li><a href="index.html#how">How it works</a></li>
+      <li><a href="index.html#levels">Levels</a></li>
+      <li><a href="calculator.html" aria-current="page">Calculator</a></li>
+      <li><a href="index.html#token">Token</a></li>
+      <li><a href="faq.html">FAQ</a></li>
+    </ul>
+    <div class="mobile-extra">
+      <a class="btn btn-ghost btn-sm" href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X <span class="tag">Soon</span></a>
+      <a class="btn btn-ghost btn-sm" href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord <span class="tag">Soon</span></a>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Calculator</p>
+      <h1 style="font-size: clamp(2.2rem, 5vw, 3.6rem); margin-top: 16px;">Earnings calculator</h1>
+      <p class="lede">Mining revenue is real, from hashrate.no on Oct 3, 2026. The chest depends on how much $HASH is traded and how many people mine, which nobody knows before launch. Pick a scenario or set your own assumptions.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top: clamp(32px, 4vw, 48px);">
+    <div class="wrap calc-full">
+      <form class="calc-form" id="fc" onsubmit="return false;">
+        <fieldset class="fieldset">
+          <legend>Your rig</legend>
+          <div class="field">
+            <label for="fc-gpu">GPU</label>
+            <select class="select" id="fc-gpu"></select>
+          </div>
+          <div class="two">
+            <div class="field">
+              <label for="fc-rev">Mining revenue, $/day</label>
+              <input class="input mono" id="fc-rev" type="number" min="0" step="0.01" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="fc-watts">Power draw, watts</label>
+              <input class="input mono" id="fc-watts" type="number" min="0" step="5" inputmode="numeric">
+            </div>
+          </div>
+          <div class="range-row">
+            <div class="range-top"><label for="fc-elec">Electricity price</label><output id="fc-elec-o" for="fc-elec"></output></div>
+            <input type="range" id="fc-elec" min="0" max="0.5" step="0.01">
+          </div>
+          <div class="field">
+            <span class="flabel" id="fc-level-label">Your level</span>
+            <div class="seg" id="fc-level" role="group" aria-labelledby="fc-level-label">
+              <button type="button" data-l="1" aria-pressed="false">Level 1</button>
+              <button type="button" data-l="2" aria-pressed="false">Level 2</button>
+              <button type="button" data-l="3" aria-pressed="false">Level 3</button>
+            </div>
+            <p class="range-hint" id="fc-level-hint"></p>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend>Market assumptions</legend>
+          <div class="chips" id="fc-scen" role="group" aria-label="Scenario"></div>
+          <p class="scenario-desc" id="fc-scen-desc"></p>
+          <div class="range-row">
+            <div class="range-top"><label for="fc-vol">$HASH traded per day</label><output id="fc-vol-o" for="fc-vol"></output></div>
+            <input type="range" id="fc-vol" min="0" max="1000" step="1">
+          </div>
+          <div class="range-row">
+            <div class="range-top"><label for="fc-miners">Miners</label><output id="fc-miners-o" for="fc-miners"></output></div>
+            <input type="range" id="fc-miners" min="0" max="1000" step="1">
+          </div>
+          <div class="range-row">
+            <div class="range-top"><label for="fc-avg">Average miner earns, $/day</label><output id="fc-avg-o" for="fc-avg"></output></div>
+            <input type="range" id="fc-avg" min="0.25" max="8" step="0.05">
+          </div>
+          <div class="two">
+            <div class="range-row">
+              <div class="range-top"><label for="fc-p2">At Level 2</label><output id="fc-p2-o" for="fc-p2"></output></div>
+              <input type="range" id="fc-p2" min="0" max="100" step="5">
+            </div>
+            <div class="range-row">
+              <div class="range-top"><label for="fc-p3">At Level 3</label><output id="fc-p3-o" for="fc-p3"></output></div>
+              <input type="range" id="fc-p3" min="0" max="100" step="5">
+            </div>
+          </div>
+          <div><button class="btn btn-ghost btn-sm" type="button" id="fc-reset">Reset</button></div>
+        </fieldset>
+      </form>
+
+      <div class="card calc-out" aria-live="polite" aria-atomic="false">
+        <div class="calc-out-head">
+          <h2 style="font-size: 1.3rem;">Your estimate</h2>
+          <span class="label-example">Example, not a forecast</span>
+        </div>
+        <div class="results-wrap">
+          <table class="results five">
+            <thead><tr><th scope="col">Source</th><th scope="col">Hour</th><th scope="col">Day</th><th scope="col">Week</th><th scope="col">Month</th></tr></thead>
+            <tbody>
+              <tr><td>Mining</td><td data-o="m-h"></td><td data-o="m-d"></td><td data-o="m-w"></td><td data-o="m-m"></td></tr>
+              <tr><td>Chest share</td><td data-o="c-h"></td><td data-o="c-d"></td><td data-o="c-w"></td><td data-o="c-m"></td></tr>
+              <tr><td>Electricity</td><td data-o="p-h"></td><td data-o="p-d"></td><td data-o="p-w"></td><td data-o="p-m"></td></tr>
+              <tr class="total"><td>After power</td><td data-o="n-h"></td><td data-o="n-d"></td><td data-o="n-w"></td><td data-o="n-m"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="calc-meta meta3">
+          <div class="meta"><span>Chest per day</span><b id="fc-chest">—</b></div>
+          <div class="meta"><span>Your share</span><b id="fc-share">—</b></div>
+          <div class="meta"><span>vs mining alone</span><b id="fc-mult">—</b></div>
+        </div>
+        <div id="fc-flags"></div>
+        <div>
+          <p class="flabel" style="font: 500 .74rem/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;">Per day by level</p>
+          <div class="bars" id="fc-bars"></div>
+          <p class="note" style="margin-top: 12px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--line-2); vertical-align: -1px;"></span> Mining &nbsp; <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--gold); vertical-align: -1px;"></span> Chest share</p>
+        </div>
+        <p class="note">Values are in dollars of $HASH at payout prices, before pool fees and slippage. About 75% of mining is paid every ~10 minutes; the rest after the mined coin confirms and sells, trued up to the real price. The chest is 2.5% of all $HASH volume, including the platform's own buys for payouts. Only the rules are fixed (1 : 2 : 4 weights, square-root balancing, a 5% cap per wallet); the dollar amounts are not.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="index.html"><img src="brand/logo/hashcoin-mark.svg" alt="" width="30" height="30"><span>Hashcoin</span><span class="tick">$HASH</span></a>
+        <p>The coin your GPU mines. A Solana token with a 3% transfer fee that pays home miners.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul><li><a href="index.html#how">How it works</a></li><li><a href="index.html#levels">Levels</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="index.html#gpus">Supported GPUs</a></li></ul>
+      </div>
+      <div>
+        <h4>Docs</h4>
+        <ul><li><a href="faq.html">FAQ and docs</a></li><li><a href="index.html#token">Tokenomics</a></li><li><a href="index.html#safety">Safety</a></li><li><a href="index.html#roadmap">Roadmap</a></li></ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X (soon)</a></li>
+          <li><a href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord (soon)</a></li>
+          <li><a href="#" data-social="github" data-soon="The repository goes public before launch.">GitHub (soon)</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="disclaimer">
+      <p><b>Risk.</b> $HASH is a highly volatile token and may lose most or all of its value. Payouts depend on trading volume, the number of miners, coin prices and pool results, and can fall to near zero. Mining uses electricity and adds heat and wear to your hardware. Example figures on this site are illustrations, not forecasts or promises. Nothing here is financial, investment, tax or legal advice. Check the rules where you live before taking part.</p>
+      <p><b>Security.</b> We will never ask for your seed phrase or private key. The contract address is published only on this site.</p>
+      <p>© 2026 Hashcoin. Pre-launch preview.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/gpus.js"></script>
+<script src="assets/js/model.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/calculator.js"></script>
+</body>
+</html>

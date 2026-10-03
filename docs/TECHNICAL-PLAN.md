@@ -13,7 +13,7 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
-| Website design (landing, levels, earnings example, token, trust, waitlist, FAQ) | 🟡 static draft | `apps/web/index.html` |
+| Website (home, calculator, FAQ/docs; backend parts are placeholders) | 🟡 static front end | `apps/web` |
 | CI + Windows release workflow | 🟡 written, never run on GitHub | `.github/workflows` |
 | Simulation, calculators | ✅ (defaults still on the old 5% split) | `sim/`, `calculator/` |
 
@@ -101,7 +101,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 - Rate limiting on the API (per IP and per wallet).
 
 ## Phase 4: Website (`apps/web`)
-The static design draft exists. Next:
+The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README). Next:
 1. **Framework:** move to a small Next.js or Astro site on Vercel, keeping the current design (tokens, fonts, sections).
 2. **Pages:**
    - `/`: landing (done as a draft)
