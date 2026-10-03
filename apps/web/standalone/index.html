@@ -478,7 +478,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle-spoke.hot { opacity: 1; stroke-width: 3.5; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--gold) 60%, transparent)); animation-duration: .6s; }
 @keyframes spokeIn { to { stroke-dashoffset: 11; } }
 @keyframes spokeOut { to { stroke-dashoffset: -11; } }
-.spoke-tag { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: 4px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--gold-line); color: var(--gold); font: 700 .72rem/1 var(--font-display); white-space: nowrap; pointer-events: none;
+.spoke-tag { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: 5px 11px; border-radius: 999px; background: var(--bg); border: 1px solid var(--gold-line); color: var(--gold); font: 700 .72rem/1 var(--font-display); white-space: nowrap; pointer-events: none;
   transition: background .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease), transform .5s var(--ease), box-shadow .5s var(--ease); }
 .spoke-tag.hot { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 22px color-mix(in srgb, var(--gold) 45%, transparent); }
 .cycle.stack .spoke-tag { z-index: 3; }
@@ -1076,7 +1076,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 
         <!-- Flywheel 2: your bag compounding across levels (example in dollars) -->
         <div class="cycle bag" id="fw-bag" role="tabpanel" aria-labelledby="fw-bag-tab" data-level="1" hidden>
-          <p class="sr-only">Your bag flywheel, an example with an RTX 4070 at launch-week trading: 1, your GPU mines. 2, you get a miner bonus on top. 3, your whole bag earns holder rewards, mined $HASH included. 4, your bag grows. 5, a bigger bag held longer unlocks the next level and a bigger share. Then around again at the new level. An estimate, not a promise.</p>
+          <p class="sr-only">Your bag flywheel, an example with an RTX 5090 at launch-week trading: 1, your GPU mines. 2, you get a miner bonus on top. 3, your whole bag earns holder rewards, mined $HASH included. 4, your bag grows. 5, a bigger bag held longer unlocks the next level and a bigger share. Then around again at the new level. An estimate, not a promise.</p>
           <svg class="cycle-svg" aria-hidden="true" focusable="false"></svg>
 
           <article class="st" data-st="0" aria-hidden="true">
@@ -1085,7 +1085,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
                 <div class="scr">
                   <span class="scr-top"><i></i>Hashcoin</span>
                   <span class="fake-btn"><span class="l-start">Start</span><span class="l-on">Mining</span></span>
-                  <span class="scr-status" data-b="mine">RTX 4070 · $2.96 a day</span>
                 </div>
               </div>
               <div class="stand"></div>
@@ -1147,7 +1146,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             <button type="button" class="btn btn-ghost btn-sm" id="cycle-pause">Pause</button>
           </div>
         </div>
-        <p class="fly-note" id="fly-note" hidden>Example: RTX 4070 and a sample bag at each level, at launch-week trading. An estimate, not a promise.</p>
+        <p class="fly-note" id="fly-note" hidden>Example: RTX 5090 and a sample bag at each level, at launch-week trading. An estimate, not a promise.</p>
       </div>
     </div>
   </section>
@@ -1982,8 +1981,13 @@ window.HashModel = (function () {
       const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
       const fit = (k) => Math.min((Wd - BASE_W * k - 12) / (2 * cosB), (Hav - baseH * k - 20) / tall);
       // Largest scale that still leaves comfortable room between neighbors.
-      let sc = 0.9;
-      for (let k = sMax; k >= 0.9; k -= 0.01) if (fit(k) >= (BASE_W * k + 110 * k) / (2 * sinA)) { sc = k; break; }
+      // Prefer roomy gaps (space for the coin and bubbles); on short screens fall back to tighter ones.
+      let sc = 0;
+      for (const gap of [190, 150, 110]) {
+        for (let k = sMax; k >= 0.72; k -= 0.01) if (fit(k) >= (BASE_W * k + gap * k) / (2 * sinA)) { sc = k; break; }
+        if (sc) break;
+      }
+      sc = sc || 0.72;
       const cardW = BASE_W * sc, cardH = baseH * sc;
       root.style.setProperty("--s", sc.toFixed(3));
       const R = Math.max((cardW + 26) / (2 * sinA), fit(sc));
@@ -2001,9 +2005,9 @@ window.HashModel = (function () {
         return Math.min(c > 1e-6 ? tg.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? tg.offsetHeight * sc / 2 / s : Infinity);
       };
       const tagAt = {};
-      Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3 * sc));
-      const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6 * sc));
-      const coinD = Math.round(Math.min(230 * sc, Math.max(120, 2 * room)));
+      Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) * 1.1 - 12 * sc));
+      const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) * 1.1 - 12 * sc));
+      const coinD = Math.round(Math.min(230 * sc, Math.max(84, 2 * room)));
       core.style.left = cx + "px";
       core.style.top = cy + "px";
       core.style.width = core.style.height = coinD + "px";
@@ -2162,18 +2166,18 @@ window.HashModel = (function () {
   });
 
   // ---------- Flywheel 2: your bag, one loop per level ----------
-  // Example in dollars from the site's own estimate (assets/js/model.js): an RTX 4070 and a
+  // Example in dollars from the site's own estimate (assets/js/model.js): an RTX 5090 and a
   // sample bag at each level. Each loop: mining, miner bonus, holder rewards, a week of growth,
   // then the next level (a new color scheme for the whole wheel).
   const bagRoot = document.getElementById("fw-bag");
   const bagCore = bagRoot.querySelector("[data-core-lvl]").parentElement;
   const HM = window.HashModel;
-  const g4070 = (window.GPUS || []).find((g) => g.name === "RTX 4070") || { rev: 2.96 };
+  const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 10.71 };
   const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
   const EXAMPLE_BAG = [450, 2200, 6000];
   const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
   const bagNums = (L) => {
-    const r = HM ? HM.miner({ myRev: g4070.rev, level: L }) : { mining: 2.96, chestShare: 5.18 * L, mult: 2.8 };
+    const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L, mult: 1.9 };
     const bag = EXAMPLE_BAG[L - 1];
     const h = HM ? HM.holder(bag, L) : { perDay: bag * 0.0088 * L, yieldPct: 0.88 * L };
     return { r, bag, h, week: 7 * (r.total || r.mining + r.chestShare) + 7 * h.perDay };
@@ -2187,7 +2191,6 @@ window.HashModel = (function () {
   }
   function fillBag(L) {
     const n = bagNums(L);
-    B("mine").textContent = `RTX 4070 · ${usd(n.r.mining)} a day`;
     B("bonus").textContent = "+" + usd(n.r.chestShare);
     B("bonus-sub").textContent = `a day on top (${n.r.mult.toFixed(1)}× mining)`;
     B("hold").textContent = "+" + usd(n.h.perDay);
@@ -2272,10 +2275,12 @@ window.HashModel = (function () {
   bag.onLoop = () => {
     bagLoop++;
     if (bagLoop < 3) return true;
+    // Level 3 done: back to the coin wheel, and the two take turns again.
     bagLoop = 0;
-    if (auto) { show(0, true); return false; }
-    setBagLevel(1);
-    return true;
+    auto = !reduce;
+    if (auto) hero.classList.add("auto");
+    show(0, true);
+    return false;
   };
   const note = document.getElementById("fly-note");
   let swapTimer = 0;

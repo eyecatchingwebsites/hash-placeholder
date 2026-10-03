@@ -73,8 +73,13 @@
       const sMax = window.innerWidth >= 1180 ? 2 : 1.1;
       const fit = (k) => Math.min((Wd - BASE_W * k - 12) / (2 * cosB), (Hav - baseH * k - 20) / tall);
       // Largest scale that still leaves comfortable room between neighbors.
-      let sc = 0.9;
-      for (let k = sMax; k >= 0.9; k -= 0.01) if (fit(k) >= (BASE_W * k + 110 * k) / (2 * sinA)) { sc = k; break; }
+      // Prefer roomy gaps (space for the coin and bubbles); on short screens fall back to tighter ones.
+      let sc = 0;
+      for (const gap of [190, 150, 110]) {
+        for (let k = sMax; k >= 0.72; k -= 0.01) if (fit(k) >= (BASE_W * k + gap * k) / (2 * sinA)) { sc = k; break; }
+        if (sc) break;
+      }
+      sc = sc || 0.72;
       const cardW = BASE_W * sc, cardH = baseH * sc;
       root.style.setProperty("--s", sc.toFixed(3));
       const R = Math.max((cardW + 26) / (2 * sinA), fit(sc));
@@ -92,9 +97,9 @@
         return Math.min(c > 1e-6 ? tg.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? tg.offsetHeight * sc / 2 / s : Infinity);
       };
       const tagAt = {};
-      Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) - 3 * sc));
-      const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) - 6 * sc));
-      const coinD = Math.round(Math.min(230 * sc, Math.max(120, 2 * room)));
+      Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) * 1.1 - 12 * sc));
+      const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) * 1.1 - 12 * sc));
+      const coinD = Math.round(Math.min(230 * sc, Math.max(84, 2 * room)));
       core.style.left = cx + "px";
       core.style.top = cy + "px";
       core.style.width = core.style.height = coinD + "px";
@@ -253,18 +258,18 @@
   });
 
   // ---------- Flywheel 2: your bag, one loop per level ----------
-  // Example in dollars from the site's own estimate (assets/js/model.js): an RTX 4070 and a
+  // Example in dollars from the site's own estimate (assets/js/model.js): an RTX 5090 and a
   // sample bag at each level. Each loop: mining, miner bonus, holder rewards, a week of growth,
   // then the next level (a new color scheme for the whole wheel).
   const bagRoot = document.getElementById("fw-bag");
   const bagCore = bagRoot.querySelector("[data-core-lvl]").parentElement;
   const HM = window.HashModel;
-  const g4070 = (window.GPUS || []).find((g) => g.name === "RTX 4070") || { rev: 2.96 };
+  const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 10.71 };
   const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
   const EXAMPLE_BAG = [450, 2200, 6000];
   const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
   const bagNums = (L) => {
-    const r = HM ? HM.miner({ myRev: g4070.rev, level: L }) : { mining: 2.96, chestShare: 5.18 * L, mult: 2.8 };
+    const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L, mult: 1.9 };
     const bag = EXAMPLE_BAG[L - 1];
     const h = HM ? HM.holder(bag, L) : { perDay: bag * 0.0088 * L, yieldPct: 0.88 * L };
     return { r, bag, h, week: 7 * (r.total || r.mining + r.chestShare) + 7 * h.perDay };
@@ -278,7 +283,6 @@
   }
   function fillBag(L) {
     const n = bagNums(L);
-    B("mine").textContent = `RTX 4070 · ${usd(n.r.mining)} a day`;
     B("bonus").textContent = "+" + usd(n.r.chestShare);
     B("bonus-sub").textContent = `a day on top (${n.r.mult.toFixed(1)}× mining)`;
     B("hold").textContent = "+" + usd(n.h.perDay);
@@ -363,10 +367,12 @@
   bag.onLoop = () => {
     bagLoop++;
     if (bagLoop < 3) return true;
+    // Level 3 done: back to the coin wheel, and the two take turns again.
     bagLoop = 0;
-    if (auto) { show(0, true); return false; }
-    setBagLevel(1);
-    return true;
+    auto = !reduce;
+    if (auto) hero.classList.add("auto");
+    show(0, true);
+    return false;
   };
   const note = document.getElementById("fly-note");
   let swapTimer = 0;

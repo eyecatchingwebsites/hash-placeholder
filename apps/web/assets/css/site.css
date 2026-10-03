@@ -461,7 +461,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .cycle-spoke.hot { opacity: 1; stroke-width: 3.5; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--gold) 60%, transparent)); animation-duration: .6s; }
 @keyframes spokeIn { to { stroke-dashoffset: 11; } }
 @keyframes spokeOut { to { stroke-dashoffset: -11; } }
-.spoke-tag { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: 4px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--gold-line); color: var(--gold); font: 700 .72rem/1 var(--font-display); white-space: nowrap; pointer-events: none;
+.spoke-tag { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: 5px 11px; border-radius: 999px; background: var(--bg); border: 1px solid var(--gold-line); color: var(--gold); font: 700 .72rem/1 var(--font-display); white-space: nowrap; pointer-events: none;
   transition: background .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease), transform .5s var(--ease), box-shadow .5s var(--ease); }
 .spoke-tag.hot { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 22px color-mix(in srgb, var(--gold) 45%, transparent); }
 .cycle.stack .spoke-tag { z-index: 3; }
