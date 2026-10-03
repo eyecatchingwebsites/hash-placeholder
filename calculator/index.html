@@ -256,7 +256,7 @@ tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); fon
 
       <section class="card">
         <h2>Every GPU at today's settings</h2>
-        <p class="cap">Daily payout in $HASH (mining plus chest) and the multiplier, for each GPU at each level.</p>
+        <p class="cap">Daily payout in $HASH (mining plus chest) and the multiplier for popular GPUs at each level. Pick any of the 91 cards above to add it here.</p>
         <div class="tablewrap"><table id="tbl"></table></div>
       </section>
 
@@ -265,7 +265,7 @@ tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); fon
         <div class="formula" id="formula"></div>
         <p class="note">
           <b>Weights.</b> Each miner's weight is (mining $/day)<sup>exponent</sup> × level weight. Other miners are approximated as all earning the average, so a mix of very different GPUs would shift the result slightly.
-          <b>What's left out.</b> $HASH price changes after payout, slippage on conversions, and the platform's PPS fee. GPU revenue figures for the 3060 Laptop, 4060, 4070 and 5090 come from project notes. The 4090 figure and all power draws are estimates, so edit them for your card.
+          <b>What's left out.</b> $HASH price changes after payout, slippage on conversions, and the platform's PPS fee. GPU revenue comes from hashrate.no (24-hour revenue on each card's best coin, fetched October 3, 2026). Power draws are worked out from their figures at $0.10/kWh, so treat them as approximate. Mining revenue changes daily, so edit the numbers for your card.
           This is not financial advice, and nothing here is a promise of returns.
         </p>
       </section>
@@ -276,12 +276,100 @@ tr.mine td { background: color-mix(in srgb, var(--accent) 10%, transparent); fon
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const GPUS = [
-  { id: "3060L", name: "RTX 3060 Laptop", rev: 1.20, w: 115 },
-  { id: "4060",  name: "RTX 4060",        rev: 2.00, w: 110 },
-  { id: "4070",  name: "RTX 4070",        rev: 3.00, w: 200 },
-  { id: "4090",  name: "RTX 4090 (est.)", rev: 6.00, w: 400 },
-  { id: "5090",  name: "RTX 5090",        rev: 10.00, w: 500 },
-  { id: "custom", name: "Custom", rev: 2.50, w: 200 },
+// hashrate.no/gpus, 24h revenue on each card's highest-revenue coin, fetched 2026-10-03.
+// Power (W) derived from their revenue minus profit at $0.10/kWh, so approximate.
+  { id: "rtx5090", name: "RTX 5090", rev: 10.71, w: 515, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx409024gb", name: "RTX 4090 24GB", rev: 7.81, w: 325, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtxpro6000maxq", name: "RTX PRO 6000 MaxQ", rev: 7.68, w: 300, coin: "PRL", g: "Pro & mining cards" },
+  { id: "rtx5080", name: "RTX 5080", rev: 5.22, w: 245, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx5070ti", name: "RTX 5070 Ti", rev: 4.37, w: 215, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx4080", name: "RTX 4080", rev: 4.08, w: 255, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx4070tisuper", name: "RTX 4070 Ti Super", rev: 3.98, w: 215, coin: "PRL", g: "NVIDIA" },
+  { id: "cmp170hx8gb", name: "CMP 170HX 8GB", rev: 3.70, w: 195, coin: "PRL", g: "Pro & mining cards" },
+  { id: "cmp170hx10gb", name: "CMP 170HX 10GB", rev: 3.69, w: 205, coin: "PRL", g: "Pro & mining cards" },
+  { id: "rtx4070ti", name: "RTX 4070 Ti", rev: 3.65, w: 175, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx4070super", name: "RTX 4070 Super", rev: 3.39, w: 200, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx3090ti", name: "RTX 3090 Ti", rev: 2.99, w: 205, coin: "QUAN", g: "NVIDIA" },
+  { id: "rtx3080ti", name: "RTX 3080 Ti", rev: 2.98, w: 200, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx5070", name: "RTX 5070", rev: 2.96, w: 155, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx4070", name: "RTX 4070", rev: 2.96, w: 170, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx3090", name: "RTX 3090", rev: 2.82, w: 320, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx3080", name: "RTX 3080", rev: 2.70, w: 230, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "titanrtx", name: "TITAN RTX", rev: 2.49, w: 265, coin: "PRL", g: "Pro & mining cards" },
+  { id: "rx9070xt", name: "RX 9070 XT", rev: 2.37, w: 320, coin: "PRL", g: "AMD", f: 1 },
+  { id: "rtx4060ti16gb", name: "RTX 4060 Ti 16GB", rev: 2.32, w: 150, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx5060ti16gb", name: "RTX 5060 Ti 16GB", rev: 2.24, w: 115, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx2080ti", name: "RTX 2080 Ti", rev: 2.20, w: 200, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx3070ti", name: "RTX 3070 Ti", rev: 1.91, w: 110, coin: "PRL", g: "NVIDIA" },
+  { id: "rx9070", name: "RX 9070", rev: 1.88, w: 230, coin: "PRL", g: "AMD" },
+  { id: "rtx5060", name: "RTX 5060", rev: 1.85, w: 95, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx3070", name: "RTX 3070", rev: 1.82, w: 115, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "cmp50hx", name: "CMP 50HX", rev: 1.79, w: 165, coin: "QUAN", g: "Pro & mining cards" },
+  { id: "rtx2080super", name: "RTX 2080 Super", rev: 1.78, w: 160, coin: "PRL", g: "NVIDIA" },
+  { id: "cmp90hx", name: "CMP 90HX", rev: 1.73, w: 160, coin: "QUAN", g: "Pro & mining cards" },
+  { id: "rtx2080", name: "RTX 2080", rev: 1.70, w: 175, coin: "PRL", g: "NVIDIA" },
+  { id: "rx7900xtx", name: "RX 7900 XTX", rev: 1.56, w: 120, coin: "QTC", g: "AMD", f: 1 },
+  { id: "rtx3060ti", name: "RTX 3060 Ti", rev: 1.50, w: 135, coin: "PRL", g: "NVIDIA" },
+  { id: "rtxpro4000", name: "RTX PRO 4000", rev: 1.47, w: 105, coin: "QTC", g: "Pro & mining cards" },
+  { id: "rtx2070super", name: "RTX 2070 Super", rev: 1.47, w: 160, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx3070tilaptop", name: "RTX 3070 Ti Laptop", rev: 1.45, w: 120, coin: "QUAN", g: "NVIDIA" },
+  { id: "rtx3060tigddr6x", name: "RTX 3060 Ti GDDR6X", rev: 1.41, w: 100, coin: "PRL", g: "NVIDIA" },
+  { id: "rx7900xt", name: "RX 7900 XT", rev: 1.39, w: 110, coin: "QTC", g: "AMD" },
+  { id: "rx7900gre", name: "RX 7900 GRE", rev: 1.35, w: 115, coin: "QTC", g: "AMD" },
+  { id: "rtx3070laptop", name: "RTX 3070 Laptop", rev: 1.31, w: 110, coin: "QUAN", g: "NVIDIA" },
+  { id: "rtx4060", name: "RTX 4060", rev: 1.30, w: 105, coin: "QUAN", g: "NVIDIA", f: 1 },
+  { id: "rx6950xt", name: "RX 6950 XT", rev: 1.28, w: 115, coin: "QTC", g: "AMD" },
+  { id: "rx6900xt", name: "RX 6900 XT", rev: 1.27, w: 110, coin: "QTC", g: "AMD" },
+  { id: "rtx5050", name: "RTX 5050", rev: 1.26, w: 80, coin: "PRL", g: "NVIDIA" },
+  { id: "cmp100210", name: "CMP 100-210", rev: 1.25, w: 205, coin: "EPIC", g: "Pro & mining cards" },
+  { id: "rtx308012gb", name: "RTX 3080 12GB", rev: 1.25, w: 310, coin: "EPIC", g: "NVIDIA" },
+  { id: "rtx2070", name: "RTX 2070", rev: 1.22, w: 85, coin: "PRL", g: "NVIDIA" },
+  { id: "rx6800xt", name: "RX 6800 XT", rev: 1.15, w: 115, coin: "QTC", g: "AMD" },
+  { id: "rtx2060super", name: "RTX 2060 Super", rev: 1.11, w: 95, coin: "QUAN", g: "NVIDIA" },
+  { id: "cmp40hx", name: "CMP 40HX", rev: 1.11, w: 120, coin: "QUAN", g: "Pro & mining cards" },
+  { id: "rx9060xt16gb", name: "RX 9060 XT 16GB", rev: 1.10, w: 110, coin: "PRL", g: "AMD" },
+  { id: "rtx3060laptop", name: "RTX 3060 Laptop", rev: 1.09, w: 95, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx3060", name: "RTX 3060", rev: 1.08, w: 100, coin: "PRL", g: "NVIDIA", f: 1 },
+  { id: "rtx2060", name: "RTX 2060", rev: 1.06, w: 75, coin: "PRL", g: "NVIDIA" },
+  { id: "cmp70hx", name: "CMP 70HX", rev: 1.04, w: 120, coin: "QUAN", g: "Pro & mining cards" },
+  { id: "rtx206012gb", name: "RTX 2060 12GB", rev: 1.04, w: 130, coin: "PRL", g: "NVIDIA" },
+  { id: "rx7800xt", name: "RX 7800 XT", rev: 0.99, w: 85, coin: "QTC", g: "AMD" },
+  { id: "rx6800", name: "RX 6800", rev: 0.97, w: 105, coin: "QTC", g: "AMD" },
+  { id: "rx7700xt", name: "RX 7700 XT", rev: 0.91, w: 80, coin: "QTC", g: "AMD" },
+  { id: "rtxa5000", name: "RTX A5000", rev: 0.83, w: 210, coin: "AE", g: "Pro & mining cards" },
+  { id: "rtxa2000", name: "RTX A2000", rev: 0.80, w: 50, coin: "QUAN", g: "Pro & mining cards" },
+  { id: "gtx1660ti", name: "GTX 1660 Ti", rev: 0.78, w: 50, coin: "QUAN", g: "NVIDIA" },
+  { id: "rtx30508gb", name: "RTX 3050 8GB", rev: 0.77, w: 55, coin: "PRL", g: "NVIDIA" },
+  { id: "rtx4080super", name: "RTX 4080 Super", rev: 0.73, w: 230, coin: "CFX", g: "NVIDIA" },
+  { id: "arca770", name: "Arc A770", rev: 0.72, w: 175, coin: "QTC", g: "Intel", f: 1 },
+  { id: "gtx1660", name: "GTX 1660", rev: 0.71, w: 35, coin: "QUAN", g: "NVIDIA" },
+  { id: "gtx1660super", name: "GTX 1660 Super", rev: 0.71, w: 50, coin: "QUAN", g: "NVIDIA" },
+  { id: "cmp30hx", name: "CMP 30HX", rev: 0.71, w: 65, coin: "QUAN", g: "Pro & mining cards" },
+  { id: "rtxa4000", name: "RTX A4000", rev: 0.70, w: 135, coin: "EPIC", g: "Pro & mining cards" },
+  { id: "rx6750xt", name: "RX 6750 XT", rev: 0.65, w: 50, coin: "QTC", g: "AMD" },
+  { id: "arca750", name: "Arc A750", rev: 0.64, w: 160, coin: "QTC", g: "Intel" },
+  { id: "rx6700xt", name: "RX 6700 XT", rev: 0.62, w: 55, coin: "QTC", g: "AMD" },
+  { id: "gtx1080ti", name: "GTX 1080 Ti", rev: 0.58, w: 170, coin: "EPIC", g: "NVIDIA" },
+  { id: "rx6650xt", name: "RX 6650 XT", rev: 0.51, w: 45, coin: "QTC", g: "AMD" },
+  { id: "rx7600", name: "RX 7600", rev: 0.51, w: 65, coin: "QTC", g: "AMD" },
+  { id: "rx6600xt", name: "RX 6600 XT", rev: 0.50, w: 40, coin: "QTC", g: "AMD" },
+  { id: "rx5700xt", name: "RX 5700 XT", rev: 0.48, w: 85, coin: "QTC", g: "AMD" },
+  { id: "rx6600", name: "RX 6600", rev: 0.45, w: 40, coin: "QTC", g: "AMD" },
+  { id: "p102100", name: "P102-100", rev: 0.45, w: 135, coin: "AE", g: "Pro & mining cards" },
+  { id: "gtx1080", name: "GTX 1080", rev: 0.45, w: 150, coin: "EPIC", g: "NVIDIA" },
+  { id: "rx5700", name: "RX 5700", rev: 0.43, w: 95, coin: "QTC", g: "AMD" },
+  { id: "rx5600xt", name: "RX 5600 XT", rev: 0.42, w: 80, coin: "QTC", g: "AMD" },
+  { id: "vega64", name: "VEGA 64", rev: 0.42, w: 155, coin: "EPIC", g: "AMD" },
+  { id: "p104100", name: "P104-100", rev: 0.41, w: 150, coin: "EPIC", g: "Pro & mining cards" },
+  { id: "rx590", name: "RX 590", rev: 0.32, w: 75, coin: "QUAN", g: "AMD" },
+  { id: "rx580", name: "RX 580", rev: 0.31, w: 65, coin: "QUAN", g: "AMD" },
+  { id: "rx480", name: "RX 480", rev: 0.28, w: 80, coin: "QUAN", g: "AMD" },
+  { id: "rx570", name: "RX 570", rev: 0.28, w: 90, coin: "QUAN", g: "AMD" },
+  { id: "rx5500xt", name: "RX 5500 XT", rev: 0.27, w: 40, coin: "QTC", g: "AMD" },
+  { id: "rx470", name: "RX 470", rev: 0.27, w: 65, coin: "QUAN", g: "AMD" },
+  { id: "rx6500xt", name: "RX 6500 XT", rev: 0.26, w: 30, coin: "QTC", g: "AMD" },
+  { id: "p106100", name: "P106-100", rev: 0.25, w: 90, coin: "EPIC", g: "Pro & mining cards" },
+  { id: "custom", name: "Custom", rev: 2.50, w: 200, coin: "", g: "Custom" },
 ];
 // Stage presets. Market and miner inputs only; your rig and level stay as set.
 // Rough memecoin norms plus the 90-day simulation in sim/. Holders assume ~$1K of market cap per holder.
@@ -310,7 +398,7 @@ const PRESETS = [
 ];
 let preset = "hype";
 const DEFAULTS = {
-  gpu: "4070", myRev: 3.0, watts: 200, elec: 0.15, level: 2,
+  gpu: "rtx4070", myRev: 2.96, watts: 170, elec: 0.15, level: 2,
   vol: 300000, mcap: 1000000, fee: 5, chestPct: 3, creatorPct: 0.5, minerVol: true,
   miners: 400, avgRev: 2.5, p2: 50, p3: 0, m2: 2, m3: 4, alpha: 0.5, cap: 5, sellFee: false,
 };
@@ -323,7 +411,7 @@ const fromPos = (k, p) => { const [a, b] = LOGS[k]; return a * Math.pow(b / a, p
 const nice = (v) => { const m = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / m) * m; };
 
 let S = { ...DEFAULTS };
-try { const saved = JSON.parse(localStorage.getItem("hashcalc2") || "null"); if (saved) { S = { ...S, ...saved.S }; preset = saved.preset ?? null; } } catch (e) {}
+try { const saved = JSON.parse(localStorage.getItem("hashcalc3") || "null"); if (saved) { S = { ...S, ...saved.S }; preset = saved.preset ?? null; } } catch (e) {}
 const PRESET_KEYS = ["mcap", "vol", "miners", "avgRev", "p2", "p3"];
 
 const usd = (v, d) => {
@@ -368,7 +456,14 @@ function bind() {
   });
   $("form").addEventListener("input", e => { if (PRESET_KEYS.includes(e.target.id)) preset = null; }, true);
   const sel = $("gpu");
-  GPUS.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name + (g.id === "custom" ? "" : ` · $${g.rev.toFixed(2)}/day`); sel.append(o); });
+  const groups = {};
+  GPUS.forEach(g => {
+    if (!groups[g.g]) { groups[g.g] = document.createElement("optgroup"); groups[g.g].label = g.g; }
+    const o = document.createElement("option"); o.value = g.id;
+    o.textContent = g.name + (g.id === "custom" ? "" : ` · $${g.rev.toFixed(2)}/day · ${g.coin}`);
+    groups[g.g].append(o);
+  });
+  ["NVIDIA", "AMD", "Intel", "Pro & mining cards", "Custom"].forEach(k => groups[k] && sel.append(groups[k]));
   sel.addEventListener("change", () => {
     const g = GPUS.find(g => g.id === sel.value); S.gpu = g.id;
     if (g.id !== "custom") { S.myRev = g.rev; S.watts = g.w; }
@@ -502,8 +597,8 @@ function drawReadout() {
 
   const lvls = [1, 2, 3], cols = lvlColors();
   let h = `<thead><tr><th>GPU</th><th>Mining</th>${lvls.map(l => `<th><span class="pill" style="background:${cols[l - 1]}">L${l}</span> $/day</th><th>L${l} ×</th>`).join("")}</tr></thead><tbody>`;
-  GPUS.filter(g => g.id !== "custom").forEach(g => {
-    h += `<tr class="${g.id === S.gpu ? "mine" : ""}"><td>${g.name}</td><td>${usd(g.rev)}</td>`;
+  GPUS.filter(g => g.f || g.id === S.gpu).forEach(g => {
+    h += `<tr class="${g.id === S.gpu ? "mine" : ""}"><td>${g.name}${g.coin ? ` <span class="hint">${g.coin}</span>` : ""}</td><td>${usd(g.rev)}</td>`;
     lvls.forEach(l => { const m = model(S, { myRev: g.rev, watts: g.w, level: l }); h += `<td>${usd(m.gross)}</td><td>${m.mult.toFixed(1)}×</td>`; });
     h += "</tr>";
   });
@@ -522,7 +617,7 @@ function update(syncNumbers = true) {
   syncInputs(syncNumbers);
   drawReadout();
   drawCharts();
-  try { localStorage.setItem("hashcalc2", JSON.stringify({ S, preset })); } catch (e) {}
+  try { localStorage.setItem("hashcalc3", JSON.stringify({ S, preset })); } catch (e) {}
 }
 
 bind();

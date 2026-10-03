@@ -76,19 +76,18 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 - **Keys:** never in the repo or chat. Deploy secrets only, payout wallets hold only the float, and the treasury is in a multisig.
 
 ## 5. Mining and auto-switching (decided direction)
-- **Pearl (PRL)** faces competition from QUAN, QTC and EPIC (unverified), so auto-switching is needed.
+- **Pearl (PRL)** faces competition from QUAN, QTC and EPIC (confirmed on hashrate.no: each is the top coin for some cards), so auto-switching is needed.
 - **One coin for everyone, chosen centrally,** re-checked every few hours. Switch only when the gain is more than 10–15% and sustained.
 - **Score coins by revenue you can actually sell:** revenue × price − slippage at platform sell volume − confirmation-delay risk.
 - **Weights are in USD,** so different algorithms compare fairly. The float absorbs each chain's different confirmation times.
 - **Minimum version:** an existing pool with per-worker stats, with worker name = payout wallet. The miner must support every algorithm we might switch to.
 - **Open-source miner, published checksums, a VirusTotal link, and a code-signing certificate.**
-- **User's GPU figures (PRL revenue/day):**
-  - 5090: ~$10
-  - 4070: ~$3
-  - 4060: ~$2
-  - 3060 Laptop: ~$1.20
-  - 4090: ~$6 (my estimate)
-  - Datacenter cards and ASICs don't apply.
+- **GPU revenue data:** hashrate.no/gpus, fetched 2026-10-03. 91 cards, saved in `data/hashrate-no-gpus-2026-10-03.json` and loaded into the calculator. 24h revenue on each card's best coin:
+  - 5090 $10.71, 4090 $7.81, 5080 $5.22, 5070 Ti $4.37, 4080 $4.08, 4070 $2.96, 3090 $2.82, 3080 $2.70, 4060 $1.30, 3060 $1.08, 3060 Laptop $1.09.
+  - AMD: RX 9070 XT $2.37 (PRL), RX 7900 XTX $1.56 (QTC).
+  - The user's earlier figures for the 4060 ($2) and 3060 Laptop ($1.20) were higher than this.
+  - **Best coin differs by card:** PRL tops most newer NVIDIA cards and even some AMD (RX 9070/XT). QUAN tops many older NVIDIA cards (20/30-series, 4060). QTC tops most AMD and Intel cards. EPIC tops some older and pro cards.
+  - **AMD and Intel cards can mine too** (mostly QTC), so the platform isn't NVIDIA-only. One coin for everyone would leave AMD owners earning little. Consider per-brand or per-card coin choice (e.g. PRL for NVIDIA, QTC for AMD/Intel), or at least two pools.
 
 ## 6. Website (hashcoin .com, domain to be bought)
 - **For traders:** "The memecoin your GPU mines."
