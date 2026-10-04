@@ -37,6 +37,12 @@ export interface Rules {
      */
     hours: { 2: number; 3: number };
     windowDays: number;
+    /**
+     * An hour counts in full when the GPU earns at least this share of its expected rate (catalog
+     * revenue for its model on the assigned coin); below that it counts in proportion (0.8: at 40%,
+     * an hour counts as half an hour).
+     */
+    fullCreditAt: number;
     /** Holder level a wallet needs to unlock M2 / M3. */
     needsHolder: { 2: HolderLevel; 3: HolderLevel };
     /** Chest weight multiplier per miner level. */
@@ -68,6 +74,7 @@ export const DEFAULT_RULES: Rules = {
   miner: {
     hours: { 2: 48, 3: 120 },
     windowDays: 14,
+    fullCreditAt: 0.8,
     needsHolder: { 2: 1, 3: 2 },
     mult: { 1: 1, 2: 2, 3: 4 },
   },

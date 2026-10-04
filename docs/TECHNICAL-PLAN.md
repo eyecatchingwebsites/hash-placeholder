@@ -9,7 +9,7 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 ## 0. Where things stand
 | Area | State | Location |
 |---|---|---|
-| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 27 tests | `packages/engine` |
+| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 29 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
@@ -74,7 +74,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 
 | Job | Every | Does |
 |---|---|---|
-| collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet |
+| collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet. Each hour, credits mining hours per wallet with `creditedHours` (actual vs the catalog rate for the GPU's model; full at 80%+), keeps a rolling 14-day total for M levels, and flags GPUs running >150% of their claimed model |
 | chain-watch | live | Transfer indexer, then `WalletState` per wallet (`applyBalanceChange` with `clockStartTokens`), plus the level price (`levelPriceUsd` of the 1h and 7-day averages). Tags treasury and payout transfers so volume stats count outside trades only |
 | fee-watch | 10 min | Harvests the Token-2022 tax, then `splitTax` → dev / chest / holder-pot buckets |
 | holders | 1 h or 1 day | `runHolderPayout` over all wallets (excluding dev, treasury, pools, exchanges) → `sendBatch` |

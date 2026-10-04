@@ -9,7 +9,8 @@ export interface EpochInput {
   earnings: Map<string, number>;
   /**
    * Hours mined in the last `rules.miner.windowDays` days, per wallet: clock time with at least one
-   * GPU getting accepted shares (an epoch with shares counts as its length), not summed per GPU.
+   * GPU mining, not summed per GPU, each hour scaled by `creditedHours` (full at 80%+ of the GPU's
+   * expected rate, less below).
    */
   hoursMined: Map<string, number>;
   wallets: Map<string, WalletState>;

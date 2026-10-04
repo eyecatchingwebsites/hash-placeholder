@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DAY_MS, DEFAULT_RULES, HOUR_MS, advanceClock, applyBalanceChange, chestShares, clockSpeed, clockStartTokens,
-  computeHolderLevel, computeMinerLevel, holdClockMs, holderMinShare, holderProgress, levelPriceUsd, runEpoch,
+  computeHolderLevel, computeMinerLevel, creditedHours, holdClockMs, hourCredit, holderMinShare, holderProgress, levelPriceUsd, runEpoch,
   runHolderPayout, settle, splitTax, splitTokens, type WalletState, type WeightInput,
 } from "../src/index.js";
 
@@ -99,6 +99,23 @@ describe("holder levels", () => {
     expect(p.usdToNextHolder).toBeCloseTo(200);
     expect(p.msToNextHolder).toBe(14 * HOUR_MS);
     expect(p.speed).toBe(1);
+  });
+});
+
+describe("mining hours", () => {
+  it("an hour counts in full at 80%+ of the GPU's expected rate, less in proportion below", () => {
+    expect(hourCredit(0.12, 0.12, R)).toBe(1);
+    expect(hourCredit(0.096, 0.12, R)).toBeCloseTo(1); // exactly 80%
+    expect(hourCredit(0.072, 0.12, R)).toBeCloseTo(0.75); // 60% → 45 minutes
+    expect(hourCredit(0.048, 0.12, R)).toBeCloseTo(0.5); // 40% → half an hour
+    expect(hourCredit(0, 0.12, R)).toBe(0);
+  });
+
+  it("a wallet gets its best GPU's credit, since hours count while at least one GPU mines", () => {
+    const gpus = [{ actualUsd: 0.03, expectedUsd: 0.12 }, { actualUsd: 0.1, expectedUsd: 0.11 }];
+    expect(creditedHours(1, gpus, R)).toBe(1);
+    expect(creditedHours(1, [gpus[0]!], R)).toBeCloseTo(0.3125); // 25% of expected
+    expect(creditedHours(1, [], R)).toBe(0);
   });
 });
 

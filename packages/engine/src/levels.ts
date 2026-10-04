@@ -82,6 +82,26 @@ export function computeMinerLevel(hoursMined: number, holderLevel: HolderLevel, 
   return 1;
 }
 
+/**
+ * How much of a mining hour counts toward M2/M3 for one GPU: all of it at `fullCreditAt` (80%) or
+ * more of the GPU's expected rate, less in proportion below. Measure over a full hour so share
+ * luck evens out. `expectedUsd` should be the catalog rate for the reported model; a rig's own
+ * benchmark could be sandbagged, so use it only for cards the catalog doesn't know.
+ */
+export function hourCredit(actualUsd: number, expectedUsd: number, rules: Rules): number {
+  if (actualUsd <= 0) return 0;
+  if (expectedUsd <= 0) return 1;
+  return Math.min(1, actualUsd / expectedUsd / rules.miner.fullCreditAt);
+}
+
+/**
+ * Hours credited to a wallet for one period. Hours count while at least one GPU mines, so the
+ * wallet gets its best GPU's credit (an idle second card doesn't cost anything).
+ */
+export function creditedHours(hours: number, gpus: { actualUsd: number; expectedUsd: number }[], rules: Rules): number {
+  return hours * gpus.reduce((best, g) => Math.max(best, hourCredit(g.actualUsd, g.expectedUsd, rules)), 0);
+}
+
 /** Token amount (base units) worth the H1 bag at this price: the hold clock starts at this size. */
 export function clockStartTokens(p: PriceContext, rules: Rules): bigint {
   if (p.priceUsd <= 0) return 0n;
