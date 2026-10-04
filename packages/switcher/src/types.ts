@@ -18,6 +18,8 @@ export interface CoinInfo {
   /** Typical hours until mined coins are confirmed and sellable. */
   confirmHours: number;
   pools: PoolEndpoint[];
+  /** The platform's payout address on this coin's pool. A coin without one is never assigned. */
+  payoutAddress?: string;
   /** Miner id from the miner manifest to use for this coin, per vendor. */
   miner: Partial<Record<Vendor, string>>;
 }

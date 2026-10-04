@@ -17,6 +17,20 @@ export interface ApiDeps {
   signingKey: KeyObject;
   kid: string;
   now?: () => number;
+  /** Called for every assignment handed out, so the collector can map pool workers back to wallets. */
+  onAssign?: (w: WorkerRecord) => void;
+}
+
+/** One pool worker (one GPU) and the wallet it pays. */
+export interface WorkerRecord {
+  /** Worker name on the pool, after the payout address: `<workerId>-<gpuIndex>`. */
+  worker: string;
+  coin: string;
+  wallet: string;
+  rigId: string;
+  gpuIndex: number;
+  gpu: string;
+  at: number;
 }
 
 const MAX_BODY = 64 * 1024;
@@ -88,6 +102,10 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
         const key = `${wallet}:${rigId}:${g.index}`;
         const r = assignGpu({ wallet, rigId }, g, state.get(key) ?? null, t, ctx);
         state.set(key, r.state);
+        if (r.assignment) {
+          const worker = r.assignment.pool.user.slice(r.assignment.pool.user.lastIndexOf(".") + 1);
+          deps.onAssign?.({ worker, coin: r.assignment.coin, wallet, rigId, gpuIndex: g.index, gpu: g.name, at: t });
+        }
         results.push({ gpuIndex: g.index, reason: r.reason, assignment: r.assignment ? signPayload(r.assignment, deps.signingKey, deps.kid) : null });
       }
       return send(200, { serverTime: t, results });

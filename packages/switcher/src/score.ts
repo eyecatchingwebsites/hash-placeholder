@@ -17,7 +17,7 @@ export function scoreCoins(gpu: GpuReport, coins: CoinInfo[], quotes: RevenueQuo
   const key = gpuKey(gpu.name);
   const out: CoinScore[] = [];
   for (const c of coins) {
-    if (!c.enabled || !c.vendors.includes(gpu.vendor) || !c.miner[gpu.vendor] || c.pools.length === 0) continue;
+    if (!c.enabled || !c.payoutAddress || !c.vendors.includes(gpu.vendor) || !c.miner[gpu.vendor] || c.pools.length === 0) continue;
     const bench = gpu.benchmarks?.find((b) => b.coin === c.id);
     const quote = quotes.find((q) => q.coin === c.id && q.gpu === key);
     const gross = bench?.usdPerDay ?? quote?.usdPerDay;

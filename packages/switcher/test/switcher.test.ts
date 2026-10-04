@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   assignGpu, canonicalJson, decide, gpuKey, isSolanaAddress, loadSigningKey, newSigningKey, scoreCoins,
-  signPayload, vendorOf, verifyEnvelope, type CoinInfo, type GpuReport, type ScoreInputs, type SwitchPolicy,
+  signPayload, vendorOf, verifyEnvelope, workerId, type CoinInfo, type GpuReport, type ScoreInputs, type SwitchPolicy,
 } from "../src/index.js";
 import { createPublicKey } from "node:crypto";
 
 const coins: CoinInfo[] = [
   { id: "PRL", algo: "pearlhash", enabled: true, vendors: ["nvidia", "amd"], liquidityUsdPerDay: 50000, confirmHours: 10,
-    pools: [{ url: "stratum+tcp://prl.example:3333", region: "eu" }], miner: { nvidia: "prlminer", amd: "prlminer" } },
+    pools: [{ url: "stratum+tcp://prl.example:3333", region: "eu" }], payoutAddress: "prl1platform", miner: { nvidia: "prlminer", amd: "prlminer" } },
   { id: "QTC", algo: "qhash", enabled: true, vendors: ["amd", "intel", "nvidia"], liquidityUsdPerDay: 20000, confirmHours: 1,
     pools: [{ url: "stratum+tcp://qtc-us.example:4444", region: "us" }, { url: "stratum+tcp://qtc-eu.example:4444", region: "eu" }],
-    miner: { amd: "qminer", intel: "qminer", nvidia: "qminer" } },
+    payoutAddress: "qtcplatform", miner: { amd: "qminer", intel: "qminer", nvidia: "qminer" } },
   { id: "OFF", algo: "x", enabled: false, vendors: ["nvidia"], liquidityUsdPerDay: 1e9, confirmHours: 0,
-    pools: [{ url: "stratum+tcp://off:1", region: "us" }], miner: { nvidia: "m" } },
+    pools: [{ url: "stratum+tcp://off:1", region: "us" }], payoutAddress: "x", miner: { nvidia: "m" } },
 ];
 const quotes = [
   { gpu: "rtx4070", coin: "PRL", usdPerDay: 2.96 },
@@ -87,9 +87,20 @@ describe("hysteresis", () => {
 });
 
 describe("assignment + signing", () => {
-  it("builds a per-GPU assignment with wallet worker names and regional pool", () => {
+  it("builds a per-GPU assignment: platform payout address, short worker id, regional pool", () => {
     const r = assignGpu({ wallet: WALLET, rigId: "pc1" }, amd, null, 1000, { coins, quotes, score: S, policy: P, ttlMs: 900_000, region: "eu" });
-    expect(r.assignment).toMatchObject({ coin: "QTC", minerId: "qminer", pool: { url: "stratum+tcp://qtc-eu.example:4444", user: `${WALLET}.pc1-1` }, expiresAt: 901_000 });
+    expect(r.assignment).toMatchObject({ coin: "QTC", minerId: "qminer", pool: { url: "stratum+tcp://qtc-eu.example:4444", user: `qtcplatform.${workerId(WALLET, "pc1")}-1` }, expiresAt: 901_000 });
+  });
+
+  it("worker ids are short, stable and match the app's (apps/desktop/core/src/wallet.rs)", () => {
+    expect(workerId("4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF", "gamingpc")).toBe("hvrq3qmrph6");
+    expect(workerId("4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF", "pc1")).toBe("hwac5yjdrn2");
+    expect(workerId("4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF", "pc1")).toMatch(/^h[a-z2-7]{10}$/);
+  });
+
+  it("never assigns a coin without a platform payout address", () => {
+    const noPayout = coins.map((c) => ({ ...c, payoutAddress: undefined }));
+    expect(scoreCoins(amd, noPayout, quotes, { ...S, platformSellUsdPerDay: {} })).toEqual([]);
   });
 
   it("signs and verifies; tampering fails", () => {

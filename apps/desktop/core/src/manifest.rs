@@ -111,6 +111,8 @@ mod tests {
     #[test]
     fn parses_api_manifest() {
         let m: MinerManifest = serde_json::from_str(include_str!("../../../../services/api/config/miners.json")).unwrap();
-        assert!(m.find("prl-miner").unwrap().builds.contains_key("windows-x86_64"));
+        let forge = m.find("forgeminer").unwrap();
+        assert!(forge.algos.iter().any(|a| a == "pearlhash"));
+        assert_eq!(forge.builds["windows-x86_64"].sha256.len(), 64);
     }
 }

@@ -1,38 +1,101 @@
 {
-  "_note": "Pools from ForgeMiner 1.8.4's own Kryptex/LuckyPool samples (Oct 4). PRL and QUAN on Kryptex (PPS+, public per-worker API). QUAN is Quantus (Kryptex lists it as QTC); QTC here is QubitCoin (qhash). NVIDIA only for now: no AMD/Intel miner yet that Defender doesn't flag as a Trojan (SRBMiner 3.7.1 was). The pool login still needs the platform payout address + short worker id (see docs/PROJECT.md §5).",
+  "_note": "Pools from ForgeMiner 1.8.4's own Kryptex/LuckyPool samples (Oct 4). PRL and QUAN on Kryptex (PPS+, public per-worker API). QUAN is Quantus (Kryptex lists it as QTC); QTC here is QubitCoin (qhash). NVIDIA only for now: no AMD/Intel miner yet that Defender doesn't flag as a Trojan (SRBMiner 3.7.1 was). Pool login = payoutAddress + short worker id (see packages/switcher workerId). A coin without payoutAddress is never assigned. PRL's payoutAddress is the user's own PRL address for testing; replace it with the platform's before launch. QUAN and QTC have none yet.",
   "coins": [
     {
-      "id": "PRL", "name": "Pearl", "algo": "pearlhash", "enabled": true, "vendors": ["nvidia"],
-      "liquidityUsdPerDay": 50000, "confirmHours": 10,
-      "pools": [
-        { "url": "stratum+ssl://prl-us.kryptex.network:8048", "region": "us" },
-        { "url": "stratum+ssl://prl-eu.kryptex.network:8048", "region": "eu" }
+      "id": "PRL",
+      "name": "Pearl",
+      "algo": "pearlhash",
+      "enabled": true,
+      "vendors": [
+        "nvidia"
       ],
-      "miner": { "nvidia": "forgeminer" }
-    },
-    {
-      "id": "QUAN", "name": "Quantus", "algo": "quantus", "enabled": true, "vendors": ["nvidia"],
-      "liquidityUsdPerDay": 30000, "confirmHours": 2,
+      "liquidityUsdPerDay": 50000,
+      "confirmHours": 10,
       "pools": [
-        { "url": "stratum+ssl://qtc.kryptex.network:8049", "region": "us" },
-        { "url": "stratum+ssl://qtc-eu.kryptex.network:8049", "region": "eu" }
+        {
+          "url": "stratum+ssl://prl-us.kryptex.network:8048",
+          "region": "us"
+        },
+        {
+          "url": "stratum+ssl://prl-eu.kryptex.network:8048",
+          "region": "eu"
+        }
       ],
-      "miner": { "nvidia": "forgeminer" }
+      "miner": {
+        "nvidia": "forgeminer"
+      },
+      "payoutAddress": "prl1pgd7htaqjvw0x0vfwaqadprkht3l37wfw5chr82vpp5kmmpyuw4pq2zzx4h"
     },
     {
-      "id": "QTC", "name": "QubitCoin", "algo": "qhash", "enabled": true, "vendors": ["nvidia"],
-      "liquidityUsdPerDay": 20000, "confirmHours": 1,
-      "pools": [{ "url": "stratum+ssl://ca.luckypool.io:8610", "region": "us" }],
-      "miner": { "nvidia": "forgeminer" }
+      "id": "QUAN",
+      "name": "Quantus",
+      "algo": "quantus",
+      "enabled": true,
+      "vendors": [
+        "nvidia"
+      ],
+      "liquidityUsdPerDay": 30000,
+      "confirmHours": 2,
+      "pools": [
+        {
+          "url": "stratum+ssl://qtc.kryptex.network:8049",
+          "region": "us"
+        },
+        {
+          "url": "stratum+ssl://qtc-eu.kryptex.network:8049",
+          "region": "eu"
+        }
+      ],
+      "miner": {
+        "nvidia": "forgeminer"
+      }
     },
     {
-      "id": "EPIC", "name": "Epic Cash", "algo": "progpow-epic", "enabled": false, "vendors": [],
-      "liquidityUsdPerDay": 5000, "confirmHours": 3,
-      "pools": [{ "url": "stratum+tcp://epic.pool.invalid:6666", "region": "us" }],
+      "id": "QTC",
+      "name": "QubitCoin",
+      "algo": "qhash",
+      "enabled": true,
+      "vendors": [
+        "nvidia"
+      ],
+      "liquidityUsdPerDay": 20000,
+      "confirmHours": 1,
+      "pools": [
+        {
+          "url": "stratum+ssl://ca.luckypool.io:8610",
+          "region": "us"
+        }
+      ],
+      "miner": {
+        "nvidia": "forgeminer"
+      }
+    },
+    {
+      "id": "EPIC",
+      "name": "Epic Cash",
+      "algo": "progpow-epic",
+      "enabled": false,
+      "vendors": [],
+      "liquidityUsdPerDay": 5000,
+      "confirmHours": 3,
+      "pools": [
+        {
+          "url": "stratum+tcp://epic.pool.invalid:6666",
+          "region": "us"
+        }
+      ],
       "miner": {}
     }
   ],
-  "policy": { "minGain": 0.12, "sustainMs": 1800000, "minDwellMs": 7200000 },
-  "score": { "delayRiskPerHour": 0.002, "slippageK": 0.5, "slippageCap": 0.3 },
+  "policy": {
+    "minGain": 0.12,
+    "sustainMs": 1800000,
+    "minDwellMs": 7200000
+  },
+  "score": {
+    "delayRiskPerHour": 0.002,
+    "slippageK": 0.5,
+    "slippageCap": 0.3
+  },
   "ttlMs": 900000
 }

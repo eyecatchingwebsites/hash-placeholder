@@ -67,7 +67,9 @@ impl Assignment {
             return Err("assignment is for a different wallet, rig or GPU".into());
         }
         if now_ms >= self.expires_at { return Err("assignment expired".into()); }
-        if !self.pool.user.starts_with(&format!("{wallet}.")) {
+        // Login is "<platform payout address>.<worker id>-<gpu>"; the worker id is derived from this
+        // wallet and rig, so a login for anyone else's worker is refused.
+        if !self.pool.user.ends_with(&format!(".{}-{gpu_index}", crate::wallet::worker_id(wallet, rig_id))) {
             return Err("pool worker does not belong to this wallet".into());
         }
         if !(self.pool.url.starts_with("stratum+tcp://") || self.pool.url.starts_with("stratum+ssl://")) {
@@ -100,6 +102,11 @@ mod tests {
         a.check(&f.wallet, "gamingpc", 0, a.issued_at + 1).unwrap();
         assert!(a.check(&f.wallet, "gamingpc", 0, a.expires_at).is_err());
         assert!(a.check(&f.wallet, "otherpc", 0, a.issued_at).is_err());
+        // A login for someone else's worker id (or another GPU) is refused.
+        let mut other = a.clone();
+        other.pool.user = format!("prl1platformpayoutaddress.{}-0", crate::wallet::worker_id("SomeoneElse", "gamingpc"));
+        assert!(other.check(&f.wallet, "gamingpc", 0, a.issued_at + 1).is_err());
+        assert!(a.check(&f.wallet, "gamingpc", 1, a.issued_at + 1).is_err());
     }
 
     #[test]

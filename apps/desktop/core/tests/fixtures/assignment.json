@@ -1,10 +1,10 @@
 {
   "kid": "test",
-  "public_key": "RTkRB1S4ym+k+WLpWRDeR5bKE6HDO8fZH/GrC4PaHts=",
+  "public_key": "LCNAlzzs8txSHPzCpeQherE9rJB7yoYje889MPXIU3o=",
   "wallet": "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF",
   "envelope": {
     "kid": "test",
-    "payload": "{\"algo\":\"pearlhash\",\"coin\":\"PRL\",\"expectedUsdPerDay\":2.9,\"expiresAt\":1800000900000,\"gpu\":\"NVIDIA GeForce RTX 4070\",\"gpuIndex\":0,\"issuedAt\":1800000000000,\"minerId\":\"prl-miner\",\"pool\":{\"pass\":\"x\",\"url\":\"stratum+tcp://prl-us.pool.invalid:3333\",\"user\":\"4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF.gamingpc-0\"},\"reason\":\"start on PRL (best)\",\"rigId\":\"gamingpc\",\"v\":1,\"wallet\":\"4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF\"}",
-    "sig": "w1dQPQlbSQwdYSX60sq+Z/8m+PQC4VFSErecG4xyv902vvwdyToxTKUG4czl9O+s/tHYw5sSYF4V5ekMZDk2Ag=="
+    "payload": "{\"algo\":\"pearlhash\",\"coin\":\"PRL\",\"expectedUsdPerDay\":2.9,\"expiresAt\":1800000900000,\"gpu\":\"NVIDIA GeForce RTX 4070\",\"gpuIndex\":0,\"issuedAt\":1800000000000,\"minerId\":\"forgeminer\",\"pool\":{\"pass\":\"x\",\"url\":\"stratum+ssl://prl-us.kryptex.network:8048\",\"user\":\"prl1platformpayoutaddress.hvrq3qmrph6-0\"},\"reason\":\"start on PRL (best)\",\"rigId\":\"gamingpc\",\"v\":1,\"wallet\":\"4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF\"}",
+    "sig": "riRd2tW+6Fk5rmt8b1gTShCKv+OGqh9dHF83n5q1L73olVqPTupZEqd9Rfftdv3wUOtx8yifgXxNRtYGd0nBDw=="
   }
 }

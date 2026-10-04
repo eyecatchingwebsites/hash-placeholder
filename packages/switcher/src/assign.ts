@@ -1,5 +1,6 @@
 import { decide, type GpuSwitchState } from "./decide.js";
 import { scoreCoins } from "./score.js";
+import { poolUser } from "./wallet.js";
 import type { Assignment, CoinInfo, GpuReport, RevenueQuote, ScoreInputs, SwitchPolicy } from "./types.js";
 
 export interface AssignContext {
@@ -44,8 +45,9 @@ export function assignGpu(
       coin: coin.id,
       algo: coin.algo,
       minerId: coin.miner[gpu.vendor]!,
-      // Worker name = wallet.rig-gpu, so the pool's per-worker stats map straight to payouts.
-      pool: { url: pool.url, user: `${rig.wallet}.${rig.rigId}-${gpu.index}`, pass: "x" },
+      // Login = platform payout address + a short worker id derived from the wallet and rig;
+      // the server keeps the worker → wallet map, so per-worker stats map straight to payouts.
+      pool: { url: pool.url, user: poolUser(coin.payoutAddress!, rig.wallet, rig.rigId, gpu.index), pass: "x" },
       expectedUsdPerDay: Math.round(score.netUsdPerDay * 100) / 100,
       reason: d.reason,
       issuedAt: now,

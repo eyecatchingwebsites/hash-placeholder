@@ -289,7 +289,9 @@ mod e2e {
             std::thread::sleep(Duration::from_millis(100));
             if let Ok(a) = std::fs::read_to_string(dir.join("args.txt")) { args = a; break; }
         }
-        assert!(args.contains(&format!("--wallet {wallet}.e2e-0")), "{args}");
+        // Pool login: the platform payout address + this wallet's short worker id, never the wallet itself.
+        let worker = format!(".{}-0 ", hashcoin_core::wallet::worker_id(wallet, "e2e"));
+        assert!(args.contains(&worker) && !args.contains(wallet), "{args}");
         assert!(args.contains("--algorithm pearlhash"));
         assert!(args.contains("--temp-limit 83"));
 

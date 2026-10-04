@@ -3,8 +3,8 @@ import { createPublicKey } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
-import { loadSigningKey, newSigningKey, verifyEnvelope, type Assignment, type SignedEnvelope } from "@hashcoin/switcher";
-import { createApi } from "../src/server.js";
+import { loadSigningKey, newSigningKey, verifyEnvelope, workerId, type Assignment, type SignedEnvelope } from "@hashcoin/switcher";
+import { createApi, type WorkerRecord } from "../src/server.js";
 import { loadHashrateNoQuotes } from "../src/quotes.js";
 
 const cfg = JSON.parse(readFileSync(new URL("../config/coins.json", import.meta.url), "utf8"));
@@ -12,9 +12,12 @@ const quotes = loadHashrateNoQuotes(fileURLToPath(new URL("../../../data/hashrat
 const key = loadSigningKey(newSigningKey().privatePem);
 const WALLET = "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF";
 let clock = 1_800_000_000_000;
+const recorded: WorkerRecord[] = [];
+const PRL_PAYOUT = cfg.coins.find((c: { id: string }) => c.id === "PRL").payoutAddress as string;
 const api = createApi({
   coins: cfg.coins, quotes, policy: cfg.policy, score: cfg.score, ttlMs: cfg.ttlMs, platformSell: () => ({}),
   minerManifest: { version: 1, miners: [] }, signingKey: key, kid: "t1", now: () => clock,
+  onAssign: (w) => recorded.push(w),
 });
 let base = "";
 beforeAll(async () => { await new Promise<void>((r) => api.server.listen(0, r)); base = `http://127.0.0.1:${(api.server.address() as AddressInfo).port}`; });
@@ -29,7 +32,9 @@ describe("api", () => {
     expect(res.status).toBe(200);
     const body = await res.json() as { results: { assignment: SignedEnvelope | null }[] };
     const a = verifyEnvelope<Assignment>(body.results[0]!.assignment!, pub);
-    expect(a).toMatchObject({ coin: "PRL", algo: "pearlhash", minerId: "forgeminer", pool: { user: `${WALLET}.gamingpc-0` } });
+    expect(a).toMatchObject({ coin: "PRL", algo: "pearlhash", minerId: "forgeminer", pool: { user: `${PRL_PAYOUT}.${workerId(WALLET, "gamingpc")}-0` } });
+    // The collector maps the pool worker back to the wallet through this record.
+    expect(recorded).toEqual([expect.objectContaining({ worker: `${workerId(WALLET, "gamingpc")}-0`, coin: "PRL", wallet: WALLET, rigId: "gamingpc", gpuIndex: 0 })]);
     // No AMD miner yet that Windows Defender doesn't flag (see services/api/config/coins.json).
     expect(body.results[1]!.assignment).toBeNull();
     expect(a!.expiresAt - a!.issuedAt).toBe(cfg.ttlMs);
@@ -40,7 +45,8 @@ describe("api", () => {
     const res = await post({ wallet: WALLET, rigId: "gamingpc", gpus: [{ index: 0, name: "NVIDIA GeForce RTX 4070", benchmarks: [{ coin: "QTC", usdPerDay: 4 }] }] });
     const r = (await res.json() as { results: { reason: string; assignment: SignedEnvelope }[] }).results[0]!;
     expect(verifyEnvelope<Assignment>(r.assignment, pub).coin).toBe("PRL");
-    expect(r.reason).toMatch(/waiting/);
+    // QTC has no platform payout address yet, so it is never offered even with a better benchmark.
+    expect(r.reason).toMatch(/stay on PRL/);
   });
 
   it("rejects bad input", async () => {
