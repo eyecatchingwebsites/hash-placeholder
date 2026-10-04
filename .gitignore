@@ -6,3 +6,4 @@ apps/web/.artifact/
 apps/web/.shots/
 services/api/data/
 services/collector/data/
+packages/chain/data/

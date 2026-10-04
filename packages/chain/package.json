@@ -1,0 +1,17 @@
+{
+  "name": "@hashcoin/chain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "devnet": "tsx scripts/devnet-run.ts"
+  },
+  "dependencies": {
+    "@hashcoin/engine": "*",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0"
+  }
+}
