@@ -291,7 +291,7 @@ mod e2e {
         }
         assert!(args.contains(&format!("--wallet {wallet}.e2e-0")), "{args}");
         assert!(args.contains("--algorithm pearlhash"));
-        assert!(args.contains("--temp-limit 80"));
+        assert!(args.contains("--temp-limit 83"));
 
         rt.stop();
         assert_eq!(rt.status().gpus[0].state, "idle");

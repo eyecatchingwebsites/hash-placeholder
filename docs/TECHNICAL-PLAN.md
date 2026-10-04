@@ -74,7 +74,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 
 | Job | Every | Does |
 |---|---|---|
-| collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet. Each hour, credits mining hours per wallet with `creditedHours` (actual vs the catalog rate for the GPU's model; full at 80%+), keeps a rolling 14-day total for M levels, and flags GPUs running >150% of their claimed model |
+| collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet. Each hour, credits mining hours per wallet with `creditedHours` (actual vs the catalog rate for the GPU's model; full at 80%+, judged on a 3-hour average because a mid-range card sends only ~17 shares an hour on Kryptex), keeps a rolling 14-day total for M levels, and flags GPUs running >150% of their claimed model |
 | chain-watch | live | Transfer indexer (skips transfers inside a linked group: `isInternalTransfer`), then `WalletState` per wallet or linked group (`applyBalanceChange` with `clockStartTokens`), plus the level price (`levelPriceUsd` of the 1h and 7-day averages). Tags treasury and payout transfers so volume stats count outside trades only |
 | fee-watch | 10 min | Harvests the Token-2022 tax, then `splitTax` → dev / chest / holder-pot buckets |
 | holders | 1 h or 1 day | `runHolderPayout` over all wallets (excluding dev, treasury, pools, exchanges) → `sendBatch` |

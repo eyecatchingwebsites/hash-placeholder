@@ -1,5 +1,5 @@
 {
-  "_note": "ForgeMiner 1.8.4: official GitHub release, SHA-256 matches the one published in the release notes; Windows Defender doesn't flag it (SRBMiner 3.7.1 was quarantined as Trojan:Win32/Ravartar!rfn). Closed source: get the developer's OK for the app to download official releases (never rehosted) before launch. Flags from its README; confirm with `forge.exe --help`. devFee is per algorithm (%).",
+  "_note": "ForgeMiner 1.8.4: official GitHub release, SHA-256 matches the one published in the release notes; Windows Defender doesn't flag it (SRBMiner 3.7.1 was quarantined as Trojan:Win32/Ravartar!rfn). Closed source: get the developer's OK for the app to download official releases (never rehosted) before launch. Flags confirmed by a live run on the user's RTX 4070 SUPER on Kryptex (Oct 4): 122.9 TH/s at 196 W, share accepted, worker visible in Kryptex's public API. Temperature limit 83/75 C: an 80 C limit would cycle on a normal gaming card (it reached 79 C in 3 minutes). devFee is per algorithm (%).",
   "version": 1,
   "miners": [
     {
@@ -15,7 +15,7 @@
           "exe": "ForgeMiner-1.8.4-windows/forge.exe"
         }
       },
-      "args": ["--algorithm", "{algo}", "--pool", "{pool}", "--wallet", "{user}", "--gpu", "{device}", "--api-bind", "127.0.0.1:{apiPort}", "--temp-limit", "80", "--temp-resume", "70"]
+      "args": ["--algorithm", "{algo}", "--pool", "{pool}", "--wallet", "{user}", "--gpu", "{device}", "--api-bind", "127.0.0.1:{apiPort}", "--temp-limit", "83", "--temp-resume", "75"]
     }
   ]
 }
