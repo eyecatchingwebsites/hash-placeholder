@@ -679,7 +679,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .lv-table tr.on td { background: color-mix(in srgb, var(--c) 7%, transparent); }
 .lv-table tr[data-l] { cursor: pointer; }
 .lvb { display: inline-block; min-width: 40px; text-align: center; font: 800 .88rem/1 var(--font-display); padding: 7px 9px; border-radius: 6px; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
-.rules { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.rules { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .rules li { color: var(--muted); font-size: .92rem; }
 .rules b { display: block; color: var(--text); font-weight: 600; margin-bottom: 4px; }
 
@@ -1367,8 +1367,8 @@ window.HashModel = (function () {
   const TAX = 0.05, DEV = 0.005, CHEST_MAX = 0.035, TARGET = 5;
   const HOLDER_MIN = TAX - DEV - CHEST_MAX;
   const MULT = [1, 2, 4];
-  const HOLDER = { usd: [50, 500, 2500], hours: [0, 24, 72] };
-  const MINER = { days: [0, 2, 5], window: 7 };
+  const HOLDER = { usd: [50, 500, 2500], hours: [0, 24, 168] };
+  const MINER = { hours: [0, 48, 120], windowDays: 14 };
 
   // Payouts depend on the market only through daily volume per GPU mining (V / N).
   //   V / N = (volume ÷ market cap) × (market cap ÷ holders) ÷ (miners ÷ holders)
@@ -1646,8 +1646,8 @@ window.HashModel = (function () {
 
   const LEVEL_HINT = {
     1: "M1: just mine. Weight 1×.",
-    2: "M2: mined on 2 of the last 7 days, and at least H1 ($50 held). Weight 2×.",
-    3: "M3: mined on 5 of the last 7 days, and at least H2 ($500 held for 24 hours). Weight 4×.",
+    2: "M2: 48 hours mined in the last 14 days, and at least H1 ($50 held). Weight 2×.",
+    3: "M3: 120 hours mined in the last 14 days, and at least H2 ($500 held for 24 hours). Weight 4×.",
   };
   const money = (v) => (v > 0 && v < 0.01 ? "<$0.01" : F.usd(v));
   const whole = (v) => "$" + Math.round(v).toLocaleString("en-US");
@@ -1674,7 +1674,7 @@ window.HashModel = (function () {
     const hl = Math.min(S.hlevel, maxH);
     const hold = M.holder(S.bag, hl, mkInputs());
     $("#fc-hlevel-hint").textContent = hl > 0
-      ? `H${hl}: ${(100 * mk.yieldPerDay[hl - 1]).toFixed(2)}% of your bag a day at this volume.${M.HOLDER.hours[hl - 1] ? ` Needs ${M.HOLDER.hours[hl - 1]} hours on your hold clock.` : ""}`
+      ? `H${hl}: ${(100 * mk.yieldPerDay[hl - 1]).toFixed(2)}% of your bag a day at this volume.${M.HOLDER.hours[hl - 1] ? ` Needs ${M.HOLDER.hours[hl - 1] >= 48 ? `${M.HOLDER.hours[hl - 1] / 24} days` : `${M.HOLDER.hours[hl - 1]} hours`} on your hold clock (a bigger bag gets there faster).` : ""}`
       : "Below $50 a bag earns no holder rewards.";
     $("#fc-ratio-hint").textContent =
       `Miners reach 5× above ${whole(mk.targetVolPerGpu)} per GPU. ` +

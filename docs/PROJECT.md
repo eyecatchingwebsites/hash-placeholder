@@ -47,28 +47,34 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
   - **The dev wallet is excluded from the chest and the holder pot** (no self-dealing).
   - Dev holdings, the dev-fee wallet, and the treasury/float multisig are kept separate.
 
-## 3. Levels: two ladders (decided Oct 3, replaces the earlier L1–L3)
+## 3. Levels: two ladders (decided Oct 3, replaces the earlier L1–L3; clocks changed Oct 4)
 **Holder levels** (anyone holding $HASH, mining or not):
 
 | Level | Bag | Hold clock | Holder-pot weight |
 |---|---|---|---|
 | H1 | ≥ $50 | none | 1× |
 | H2 | ≥ $500 | ≥ 24 hours | 2× |
-| H3 | ≥ $2,500 | ≥ 72 hours | 4× |
+| H3 | ≥ $2,500 | ≥ 7 days (was 72 hours) | 4× |
 
 - **Holder pot share** = bag × holder multiplier, each wallet capped at 5% of the pot (excess shared out, rest carries). Linear in the bag, not √, so splitting one bag across wallets gains nothing.
-- **Hold clock:** starts when the bag first reaches the H1 size ($50) and keeps running through dips (changed Oct 4 from "when $HASH first lands", so a $1 dust buy can't pre-age a wallet for an instant H3 later; `clockStartTokens` in the engine). Pre-aging still works with $50 per wallet. **Selling shrinks it in proportion** (sell 25% of the bag → the clock drops 25%; sell everything → it resets). Buying never moves it. Short clocks because tokens move fast (user decision). Transfers out count as selling, including wallet-to-wallet moves, LP and CEX deposits.
+- **Hold clock:** starts when the bag first reaches the H1 size ($50) and keeps running through dips (changed Oct 4 from "when $HASH first lands", so a $1 dust buy can't pre-age a wallet for an instant H3 later; `clockStartTokens` in the engine). Pre-aging still works with $50 per wallet. Transfers out count as selling, including wallet-to-wallet moves, LP and CEX deposits.
+- **Clock speed and selling (user, Oct 4):** "buying more accelerates the hold clock and selling takes away time or resets it."
+  - **Bigger bags age faster:** clock speed = bag ÷ $2,500, from 1× to 3× ($5,000 → 2×, $7,500+ → 3×). H3's 7 days takes 7 days at $2,500, 3.5 at $5,000, ~2.3 at $7,500+. Buying speeds the clock up from then on and never jumps it, so there's no buy-then-sell trick. The engine keeps the clock as accumulated time (`clockMs`, `clockAt`) and brings it up to date at every balance change and payout check (`advanceClock`).
+  - **Selling costs 2.5× its share of the clock** (user: "5% takes 10% clock but selling 20% takes 50% clock or something similar"): sell 5% → lose 12.5%, 10% → 25%, 20% → 50%, 40%+ → reset. User's example: H3 for two weeks (a ~21-day clock), sell 30% → lose 75%, ~5 days left → back to H2 until the clock passes 7 days again, sooner if they buy back (bigger bag, faster clock).
+  - Was (Oct 3): selling shrank the clock in proportion, buying never moved it, H3 at 72 hours.
 - **Dips:** levels value the bag at the **higher of the ~1h and ~7-day average prices** (Oct 4, was ~1h only), so a crash takes about a week to drop anyone's level while a rise counts within the hour. This softens the crash spiral (price drops → H levels drop → M2/M3 drop too). Falling below a bag threshold drops the level; recovering restores it immediately, no new wait. Engine: `levelPriceUsd`.
 - **Excluded from the holder pot:** dev, treasury, payout, liquidity-pool and exchange wallets.
 - **Payout cadence:** hourly or daily (paying every holder every 10 minutes costs too much in transactions). Draft.
 
 **Miner levels** (chest weight = √(GPU USD earnings) × miner multiplier, 5% cap per wallet):
 
-| Level | Days mined (last 7) | Needs | Chest weight |
+| Level | Hours mined (last 14 days) | Needs | Chest weight |
 |---|---|---|---|
 | M1 | any | – | 1× |
-| M2 | ≥ 2 | H1 | 2× |
-| M3 | ≥ 5 | H2 | 4× |
+| M2 | ≥ 48 | H1 | 2× |
+| M3 | ≥ 120 | H2 | 4× |
+
+- **Hours mined (user, Oct 4; was 2 / 5 of the last 7 days):** clock time with at least one GPU getting accepted shares, not summed per GPU (so 10 GPUs don't reach M3 in 12 hours). The 14-day window lets an everyday PC that's off at night reach M3 (~8.6 h a day); stopping lets the hours age out over two weeks.
 
 - Gating M2/M3 on holder levels keeps the reason for miners to buy and hold (user decision); the sim found buying-in to level up is what lifts price most.
 - Miners who hold also earn from the holder pot on their own bag: doing both pays from both pots.
@@ -174,9 +180,12 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 | Current 3% fixed | 279% / 55% / 38% | – | $0 | – | – | 7.4% | 0.12× |
 | 5×, no holder minimum | 615% / 111% / 46% | 66% / 117% / 229% | $26K | ~0 | ~0 | 8.7% | 0.16× |
 | **5×, holders ≥ 1% (decided)** | 490% / 90% / 44% | 54% / 98% / 206% | **$66K** | 0.11% / 0.22% / 0.43% a day | 0.04% / 0.08% / 0.16% a day | 7.7% | 0.16× |
+| Same + Oct 4 levels (H3 7 days, clock speed 1–3×, selling 2.5×; `levels_oct4`) | 490% / 90% / 44% | 54% / 98% / 206% | $66K | same | same | 7.7% | 0.14× |
 | Same, if 5% cuts volume 30% | 368% / 74% / 43% | 44% / 79% / 164% | $50K | 0.07% / 0.14% / 0.29% | 0.03% / 0.06% / 0.12% | 7.0% | 0.17× |
 
 Miner "extra" includes holder rewards that home miners earn on their own bags. Yields are % of the bag paid per day.
+
+The Oct 4 level changes barely move the sim, and it can't judge them: its miners mine 24/7 (so 48h / 120h mined land on day 2 / day 5 as before), and non-mining holders are one aggregate that doesn't buy or sell in response to clocks. Whether "a bigger bag ages faster" draws in buyers is a judgment call the sim can't test.
 
 **Calculator presets (4070, L2, old 3% chest rate; outdated):**
 
@@ -235,14 +244,14 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 ## 10. Build status
 | Piece | Status |
 |---|---|
-| Payout engine (`packages/engine`): tax split (5× target, 3.5% cap, 1% holder minimum), holder levels with hold clock, miner levels, chest and holder-pot weights with caps, epoch, hybrid payout, settlement, token split | Done, 23 tests (Oct 4: clock starts at the H1 bag, level price, `buyUsd`) |
+| Payout engine (`packages/engine`): tax split (5× target, 3.5% cap, 1% holder minimum), holder levels with hold clock, miner levels, chest and holder-pot weights with caps, epoch, hybrid payout, settlement, token split | Done, 27 tests (Oct 4: clock starts at the H1 bag, level price, `buyUsd`, clock speed, 2.5× sell penalty, H3 7 days, hours mined over 14 days) |
 | Coin switcher (`packages/switcher`): per-card scoring (benchmarks or hashrate.no catalog, slippage and confirmation-delay penalties), hysteresis, Ed25519-signed assignments, wallet validation | Done, 11 tests |
 | Assignment API (`services/api`): `POST /v1/assignments`, signed miner list `GET /v1/miners`, `/v1/keys`, `/v1/health` | Done, 4 tests. Placeholder pools and miners in `config/` |
 | Desktop app (`apps/desktop`): Rust core (GPU detection, signature checks, hash-verified downloads, safe unzip, flag-injection guard, crash-restart supervisor) + Tauri 2 shell (wallet entry, Start/Stop, tray, background check-ins) | Core: 13 tests. App compiles. End-to-end test passes (API + app + stand-in miner). Not yet run on Windows |
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 5% token, fee collection, mock pool feed, batch payouts | Next |
-| Website (`apps/web`) | Static front end (home, calculator, FAQ/docs), reworked through Oct 4 from user feedback; current state in §13 "Current website (Oct 4)". Preview Version 22. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js`. Browser check: `apps/web/scripts/check_site.mjs` |
+| Website (`apps/web`) | Static front end (home, calculator, FAQ/docs), reworked through Oct 4 from user feedback; current state in §13 "Current website (Oct 4)". Preview Version 23. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js`. Browser check: `apps/web/scripts/check_site.mjs` |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | Done (`excluded` in `runEpoch` and `runHolderPayout`) |
@@ -284,7 +293,7 @@ It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and
 **Logo (decided Oct 3):** option C, an italic two-bar hash on a coin. Coin #EBB447, hash white. Final files in `apps/web/brand/logo/` (SVG master, PNGs 16–1024, favicon, wordmark lockups). Brand accent color = #EBB447.
 
 ## 13. Website direction (Oct 3)
-**Current website (Oct 4, preview Version 22).** The bullets further down are the dated history; where they disagree, this summary wins.
+**Current website (Oct 4, preview Version 23).** The bullets further down are the dated history; where they disagree, this summary wins.
 - **Hero, left:** title "The first token your GPU gets paid to buy." (no tag above it), lede "Spare power on everyday PCs becomes nonstop buying of $HASH. Then 5% of every trade flows back: a bonus that lifts miners' average pay up to 5× what they mine, and rewards for everyone holding." (Oct 4: was "tops miners up to 5×", which isn't true for each miner), bullets Hold it (no GPU needed) / Mine it (no buying needed) / Or both, buttons "Join the waitlist (Coming soon)" and "What would I make?".
 - **Hero, right:** two flywheels with tabs. The coin flywheel (Miners buy in → Holders hold → Trades fill the pot → Both get paid → More people join) plays three times, then the bag flywheel once per level (Get $HASH: buy, mine or both → Trades pay you → Your bag grows → Level up → Bigger share; mint/violet/gold per level), then back. A framed caption bar under the wheel with step buttons and Pause.
 - **Topic explorer** (seven tiles, one topic at a time, fills the screen on big monitors): What you'd make (level cards; Holding "No GPU needed", Mining "No buying needed", Hold + mine), How it works (5% pot, holder rewards, miner bonus, the self-balancing split slider, tax-pot simulation and math behind toggles), Levels, Tokenomics, Mining (your PC works like normal), Launch (waitlist placeholder, countdown, status), FAQ.

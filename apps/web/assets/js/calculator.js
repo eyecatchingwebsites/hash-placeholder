@@ -49,8 +49,8 @@
 
   const LEVEL_HINT = {
     1: "M1: just mine. Weight 1×.",
-    2: "M2: mined on 2 of the last 7 days, and at least H1 ($50 held). Weight 2×.",
-    3: "M3: mined on 5 of the last 7 days, and at least H2 ($500 held for 24 hours). Weight 4×.",
+    2: "M2: 48 hours mined in the last 14 days, and at least H1 ($50 held). Weight 2×.",
+    3: "M3: 120 hours mined in the last 14 days, and at least H2 ($500 held for 24 hours). Weight 4×.",
   };
   const money = (v) => (v > 0 && v < 0.01 ? "<$0.01" : F.usd(v));
   const whole = (v) => "$" + Math.round(v).toLocaleString("en-US");
@@ -77,7 +77,7 @@
     const hl = Math.min(S.hlevel, maxH);
     const hold = M.holder(S.bag, hl, mkInputs());
     $("#fc-hlevel-hint").textContent = hl > 0
-      ? `H${hl}: ${(100 * mk.yieldPerDay[hl - 1]).toFixed(2)}% of your bag a day at this volume.${M.HOLDER.hours[hl - 1] ? ` Needs ${M.HOLDER.hours[hl - 1]} hours on your hold clock.` : ""}`
+      ? `H${hl}: ${(100 * mk.yieldPerDay[hl - 1]).toFixed(2)}% of your bag a day at this volume.${M.HOLDER.hours[hl - 1] ? ` Needs ${M.HOLDER.hours[hl - 1] >= 48 ? `${M.HOLDER.hours[hl - 1] / 24} days` : `${M.HOLDER.hours[hl - 1]} hours`} on your hold clock (a bigger bag gets there faster).` : ""}`
       : "Below $50 a bag earns no holder rewards.";
     $("#fc-ratio-hint").textContent =
       `Miners reach 5× above ${whole(mk.targetVolPerGpu)} per GPU. ` +

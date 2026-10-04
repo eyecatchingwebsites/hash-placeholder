@@ -1,27 +1,28 @@
 import { describe, expect, it } from "vitest";
 import {
-  DAY_MS, DEFAULT_RULES, HOUR_MS, applyBalanceChange, chestShares, clockStartTokens, computeHolderLevel,
-  computeMinerLevel, holdClockMs, holderMinShare, holderProgress, levelPriceUsd, runEpoch, runHolderPayout, settle, splitTax, splitTokens,
-  type WalletState, type WeightInput,
+  DAY_MS, DEFAULT_RULES, HOUR_MS, advanceClock, applyBalanceChange, chestShares, clockSpeed, clockStartTokens,
+  computeHolderLevel, computeMinerLevel, holdClockMs, holderMinShare, holderProgress, levelPriceUsd, runEpoch,
+  runHolderPayout, settle, splitTax, splitTokens, type WalletState, type WeightInput,
 } from "../src/index.js";
 
 const price = { priceUsd: 0.001, decimals: 6 }; // $0.001 per token
 const tokensFor = (usd: number) => BigInt(Math.round((usd / price.priceUsd) * 1e6));
 const T0 = Date.UTC(2026, 9, 1);
 const R = DEFAULT_RULES;
+const EMPTY: WalletState = { address: "w", balance: 0n, clockMs: null, clockAt: T0 };
 
 function wallet(usd: number, clockHours: number, address = "w"): WalletState {
-  return { address, balance: tokensFor(usd), clockStartAt: usd > 0 ? T0 - clockHours * HOUR_MS : null };
+  return { address, balance: tokensFor(usd), clockMs: usd > 0 ? clockHours * HOUR_MS : null, clockAt: T0 };
 }
 
 describe("holder levels", () => {
-  it("H1 at $50 with no clock, H2 at $500 + 24h, H3 at $2,500 + 72h", () => {
+  it("H1 at $50 with no clock, H2 at $500 + 24h, H3 at $2,500 + 7 days", () => {
     expect(computeHolderLevel(wallet(49, 999), price, T0, R)).toBe(0);
     expect(computeHolderLevel(wallet(50, 0), price, T0, R)).toBe(1);
     expect(computeHolderLevel(wallet(500, 23.9), price, T0, R)).toBe(1);
     expect(computeHolderLevel(wallet(500, 24), price, T0, R)).toBe(2);
-    expect(computeHolderLevel(wallet(2500, 71), price, T0, R)).toBe(2);
-    expect(computeHolderLevel(wallet(2500, 72), price, T0, R)).toBe(3);
+    expect(computeHolderLevel(wallet(2500, 167), price, T0, R)).toBe(2);
+    expect(computeHolderLevel(wallet(2500, 168), price, T0, R)).toBe(3);
   });
 
   it("a dip drops the level and recovering restores it with no new wait", () => {
@@ -30,30 +31,61 @@ describe("holder levels", () => {
     expect(computeHolderLevel(w, price, T0, R)).toBe(2);
   });
 
-  it("selling shrinks the hold clock in proportion; buying never moves it", () => {
-    let w: WalletState = { address: "w", balance: 0n, clockStartAt: null };
-    w = applyBalanceChange(w, tokensFor(1000), T0);
-    expect(w.clockStartAt).toBe(T0);
-    w = applyBalanceChange(w, tokensFor(1000), T0 + 10 * HOUR_MS); // buying more
-    expect(holdClockMs(w, T0 + 100 * HOUR_MS)).toBe(100 * HOUR_MS);
-    w = applyBalanceChange(w, -tokensFor(500), T0 + 100 * HOUR_MS); // sell 25% of the bag
-    expect(holdClockMs(w, T0 + 100 * HOUR_MS)).toBeCloseTo(75 * HOUR_MS);
-    w = applyBalanceChange(w, -w.balance, T0 + 101 * HOUR_MS); // sell everything
-    expect(w.clockStartAt).toBeNull();
-    expect(holdClockMs(w, T0 + 200 * HOUR_MS)).toBe(0);
+  it("a bigger bag ticks faster: 1x up to $2,500, 2x at $5,000, at most 3x", () => {
+    expect(clockSpeed(tokensFor(500), price, R)).toBe(1);
+    expect(clockSpeed(tokensFor(2500), price, R)).toBe(1);
+    expect(clockSpeed(tokensFor(5000), price, R)).toBeCloseTo(2);
+    expect(clockSpeed(tokensFor(50000), price, R)).toBe(3);
+    // $5,000 reaches H3's 7-day clock in 3.5 days, $7,500+ in about 2.3
+    expect(computeHolderLevel(wallet(5000, 0), price, T0 + 3.5 * DAY_MS, R)).toBe(3);
+    expect(computeHolderLevel(wallet(7500, 0), price, T0 + 2.3 * DAY_MS, R)).toBe(2);
+    expect(computeHolderLevel(wallet(7500, 0), price, T0 + 2.34 * DAY_MS, R)).toBe(3);
+  });
+
+  it("buying more speeds the clock up from then on, never with a jump", () => {
+    let w = applyBalanceChange(EMPTY, tokensFor(2500), T0, price, R);
+    expect(holdClockMs(w, T0 + DAY_MS, price, R)).toBe(DAY_MS);
+    w = applyBalanceChange(w, tokensFor(2500), T0 + DAY_MS, price, R); // now $5,000
+    expect(w.clockMs).toBe(DAY_MS);
+    expect(holdClockMs(w, T0 + 2 * DAY_MS, price, R)).toBeCloseTo(3 * DAY_MS);
+  });
+
+  it("selling takes 2.5x its share of the clock: 20% sold loses half, 40%+ resets", () => {
+    const sell = (fraction: number) => {
+      const w = wallet(4000, 100);
+      return applyBalanceChange(w, -tokensFor(4000 * fraction), T0, price, R).clockMs;
+    };
+    expect(sell(0.05)).toBeCloseTo(87.5 * HOUR_MS);
+    expect(sell(0.2)).toBeCloseTo(50 * HOUR_MS);
+    expect(sell(0.4)).toBe(0);
+    expect(sell(1)).toBeNull();
+  });
+
+  it("H3 for two weeks, sell 30%: back to H2 until the clock climbs past 7 days again", () => {
+    let w = wallet(2500, 21 * 24); // H3 reached on day 7, held two more weeks
+    expect(computeHolderLevel(w, price, T0, R)).toBe(3);
+    w = applyBalanceChange(w, -tokensFor(750), T0, price, R); // sell 30% (bag now $1,750)
+    expect(holdClockMs(w, T0, price, R)).toBeCloseTo(5.25 * DAY_MS); // lost 75%
+    expect(computeHolderLevel(w, price, T0, R)).toBe(2);
+    w = applyBalanceChange(w, tokensFor(1750), T0, price, R); // buy back to $3,500: bag is H3-sized
+    expect(computeHolderLevel(w, price, T0, R)).toBe(2); // ...but the clock still needs 1.75 days
+    expect(holderProgress(w, price, T0, R).msToNextHolder).toBeCloseTo((1.75 * DAY_MS) / 1.4); // at 1.4x
   });
 
   it("the clock only starts once the bag reaches the H1 size, so dust can't pre-age a wallet", () => {
-    const min = clockStartTokens(price, R);
-    expect(min).toBe(tokensFor(50));
-    let w: WalletState = { address: "w", balance: 0n, clockStartAt: null };
-    w = applyBalanceChange(w, tokensFor(1), T0, min); // park $1 early
-    expect(w.clockStartAt).toBeNull();
-    w = applyBalanceChange(w, tokensFor(2500), T0 + 100 * HOUR_MS, min); // the real buy, days later
-    expect(w.clockStartAt).toBe(T0 + 100 * HOUR_MS);
-    expect(computeHolderLevel(w, price, T0 + 100 * HOUR_MS, R)).toBe(1); // not H3 straight away
-    w = applyBalanceChange(w, tokensFor(1000), T0 + 120 * HOUR_MS, min); // topping up still never moves it
-    expect(w.clockStartAt).toBe(T0 + 100 * HOUR_MS);
+    expect(clockStartTokens(price, R)).toBe(tokensFor(50));
+    let w = applyBalanceChange(EMPTY, tokensFor(1), T0, price, R); // park $1 early
+    expect(w.clockMs).toBeNull();
+    w = applyBalanceChange(w, tokensFor(2500), T0 + 100 * HOUR_MS, price, R); // the real buy, days later
+    expect(w.clockMs).toBe(0);
+    expect(computeHolderLevel(w, price, T0 + 100 * HOUR_MS, R)).toBe(1);
+  });
+
+  it("advancing at each check lets the speed follow the price", () => {
+    let w = applyBalanceChange(EMPTY, tokensFor(2500), T0, price, R);
+    w = advanceClock(w, T0 + DAY_MS, price, R); // 1 day at 1x
+    const doubled = { ...price, priceUsd: 0.002 }; // bag now worth $5,000 → 2x
+    expect(holdClockMs(w, T0 + 2 * DAY_MS, doubled, R)).toBeCloseTo(3 * DAY_MS);
   });
 
   it("levels use the higher of the 1h and 7-day prices, so a crash doesn't drop levels at once", () => {
@@ -66,19 +98,22 @@ describe("holder levels", () => {
     expect(p.holderLevel).toBe(1);
     expect(p.usdToNextHolder).toBeCloseTo(200);
     expect(p.msToNextHolder).toBe(14 * HOUR_MS);
+    expect(p.speed).toBe(1);
   });
 });
 
 describe("miner levels", () => {
-  it("M2 needs 2 days mined and H1; M3 needs 5 days and H2", () => {
-    expect(computeMinerLevel(7, 0, R)).toBe(1);
-    expect(computeMinerLevel(1, 3, R)).toBe(1);
-    expect(computeMinerLevel(2, 1, R)).toBe(2);
-    expect(computeMinerLevel(7, 1, R)).toBe(2);
-    expect(computeMinerLevel(4, 3, R)).toBe(2);
-    expect(computeMinerLevel(5, 2, R)).toBe(3);
+  it("M2 needs 48 hours mined and H1; M3 needs 120 hours and H2 (last 14 days)", () => {
+    expect(R.miner.windowDays).toBe(14);
+    expect(computeMinerLevel(300, 0, R)).toBe(1);
+    expect(computeMinerLevel(47, 3, R)).toBe(1);
+    expect(computeMinerLevel(48, 1, R)).toBe(2);
+    expect(computeMinerLevel(300, 1, R)).toBe(2);
+    expect(computeMinerLevel(119, 3, R)).toBe(2);
+    expect(computeMinerLevel(120, 2, R)).toBe(3);
   });
 });
+
 
 describe("tax split", () => {
   it("dev 0.5%, miners get what reaches 5x, holders get the rest", () => {
@@ -167,13 +202,13 @@ describe("epoch", () => {
     ["c", wallet(800, 480, "c")],      // H2
   ]);
   const earnings = new Map([["a", 0.05], ["b", 0.05], ["c", 0.05]]);
-  const daysMined = new Map([["a", 7], ["b", 3], ["c", 7]]);
-  const base = { epochId: "e1", now: T0, earnings, daysMined, wallets, price, chestUsd: 70, floatAvailableUsd: 1000, rules: { ...R, walletCap: 0 } };
+  const hoursMined = new Map([["a", 300], ["b", 60], ["c", 300]]);
+  const base = { epochId: "e1", now: T0, earnings, hoursMined, wallets, price, chestUsd: 70, floatAvailableUsd: 1000, rules: { ...R, walletCap: 0 } };
 
   it("pays 75% of mining now, holds 25%, and splits the chest by miner level", () => {
     const r = runEpoch(base);
     const byAddr = Object.fromEntries(r.lines.map((l) => [l.address, l]));
-    expect(byAddr.a!.level).toBe(1); // mined 7 days but holds nothing
+    expect(byAddr.a!.level).toBe(1); // mined 300 hours but holds nothing
     expect(byAddr.b!.level).toBe(2);
     expect(byAddr.c!.level).toBe(3);
     expect(byAddr.c!.holderLevel).toBe(2);

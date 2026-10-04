@@ -9,7 +9,7 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 ## 0. Where things stand
 | Area | State | Location |
 |---|---|---|
-| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 23 tests | `packages/engine` |
+| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 27 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
@@ -109,7 +109,7 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
 2. **Pages:**
    - `/`: landing (done as a draft)
    - `/dashboard`: live totals, chest, burn of fees, recent payouts with Solscan links, coin mix, GPUs online
-   - `/wallet/[address]`: miner and holder level, progress ("$12 to H1", "18h to H2", "3 more days to M3"), paid / pending, payout history
+   - `/wallet/[address]`: miner and holder level, progress ("$12 to H1", "18h to H2", "40 more hours mined to M3"), paid / pending, payout history
    - `/download`: signed installer, SHA-256, VirusTotal link, antivirus FAQ
    - `/calculator`: the full calculator (`calculator/index.html`), fed live inputs at launch
 3. **Waitlist backend:** a `waitlist` table, a POST endpoint, and a live counter. Store an X handle or email, the GPU model, and an optional public wallet. Rate-limit and validate.

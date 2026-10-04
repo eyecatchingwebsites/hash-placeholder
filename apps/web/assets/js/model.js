@@ -7,8 +7,8 @@ window.HashModel = (function () {
   const TAX = 0.05, DEV = 0.005, CHEST_MAX = 0.035, TARGET = 5;
   const HOLDER_MIN = TAX - DEV - CHEST_MAX;
   const MULT = [1, 2, 4];
-  const HOLDER = { usd: [50, 500, 2500], hours: [0, 24, 72] };
-  const MINER = { days: [0, 2, 5], window: 7 };
+  const HOLDER = { usd: [50, 500, 2500], hours: [0, 24, 168] };
+  const MINER = { hours: [0, 48, 120], windowDays: 14 };
 
   // Payouts depend on the market only through daily volume per GPU mining (V / N).
   //   V / N = (volume ÷ market cap) × (market cap ÷ holders) ÷ (miners ÷ holders)

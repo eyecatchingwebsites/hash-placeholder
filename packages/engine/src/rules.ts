@@ -15,16 +15,27 @@ export interface Rules {
   holder: {
     /** Bag (USD) needed for H1 / H2 / H3. */
     usd: [number, number, number];
-    /** Hold clock needed for H1 / H2 / H3 (ms). Selling shrinks the clock in proportion. */
+    /** Hold clock needed for H1 / H2 / H3 (ms of clock time, which can run faster than real time). */
     clockMs: [number, number, number];
+    /**
+     * Clock speed = bag USD ÷ `speedPerUsd`, between 1× and `maxSpeed`×. A bigger bag ages faster;
+     * buying more speeds the clock up from then on, never with an instant jump.
+     */
+    speedPerUsd: number;
+    maxSpeed: number;
+    /** Selling a fraction s of the bag takes `sellPenalty` × s of the clock (2.5: sell 20%, lose 50%; 40%+ resets). */
+    sellPenalty: number;
     /** Holder-pot weight multiplier per holder level. */
     mult: Record<1 | 2 | 3, number>;
     /** Max share of one holder pot a single wallet can take (0..1). */
     walletCap: number;
   };
   miner: {
-    /** Days with accepted shares needed for M2 / M3, counted over the last `windowDays`. */
-    days: { 2: number; 3: number };
+    /**
+     * Hours mined needed for M2 / M3, counted over the last `windowDays`. An hour counts when the
+     * wallet had at least one GPU with accepted shares (clock time, not summed per GPU).
+     */
+    hours: { 2: number; 3: number };
     windowDays: number;
     /** Holder level a wallet needs to unlock M2 / M3. */
     needsHolder: { 2: HolderLevel; 3: HolderLevel };
@@ -47,13 +58,16 @@ export const DEFAULT_RULES: Rules = {
   minerTargetMult: 5,
   holder: {
     usd: [50, 500, 2500],
-    clockMs: [0, 24 * HOUR_MS, 72 * HOUR_MS],
+    clockMs: [0, 24 * HOUR_MS, 7 * 24 * HOUR_MS],
+    speedPerUsd: 2500,
+    maxSpeed: 3,
+    sellPenalty: 2.5,
     mult: { 1: 1, 2: 2, 3: 4 },
     walletCap: 0.05,
   },
   miner: {
-    days: { 2: 2, 3: 5 },
-    windowDays: 7,
+    hours: { 2: 48, 3: 120 },
+    windowDays: 14,
     needsHolder: { 2: 1, 3: 2 },
     mult: { 1: 1, 2: 2, 3: 4 },
   },

@@ -108,6 +108,10 @@ class Params:
     h_days: tuple = (0.0, 1.0, 3.0)        # H1 / H2 / H3 hold clock (days); selling shrinks the clock
     h_mults: tuple = (1.0, 2.0, 4.0)
     m_days: tuple = (0, 2, 5)              # M1 / M2 / M3 days mined; M2 needs H1, M3 needs H2
+                                           # (sim miners mine 24/7, so 48h / 120h mined = day 2 / day 5)
+    h_speed_per_usd: float = 0.0           # 0 = off; else clock speed = bag / this, from 1x to h_max_speed
+    h_max_speed: float = 1.0
+    sell_penalty: float = 1.0              # selling a fraction s of the bag takes sell_penalty x s of the clock
     m_mults: tuple = (1.0, 2.0, 4.0)
     home_targets_dual: tuple = (0.0, 50.0, 500.0, 2500.0)
     home_target_probs_dual: tuple = (0.35, 0.35, 0.22, 0.08)
@@ -259,7 +263,10 @@ def run(p: Params):
         # --- hold clocks tick for anyone holding
         for m in alive:
             if m.hash_tokens > 0:
-                m.clock += 1
+                speed = 1.0
+                if p.h_speed_per_usd > 0:
+                    speed = min(p.h_max_speed, max(1.0, m.hash_tokens * pool.price / p.h_speed_per_usd))
+                m.clock += speed
 
         # --- stakes: miners buy up to their target (renters too, then sell it on exit)
         stake_buys = 0.0
@@ -433,7 +440,7 @@ def run(p: Params):
                 if sell_t > 0:
                     m.hold_start = day  # selling resets holding time
                     m.ever_sold = True
-                    m.clock *= (1 - sell_t / held) if held else 0
+                    m.clock *= max(0.0, 1 - p.sell_penalty * sell_t / held) if held else 0
                 if day - m.joined >= p.renter_stays_days:
                     avg = statistics.mean(m.trailing) if m.trailing else 0
                     if m.rev * (1 + avg) < m.cost + p.rent_hurdle * (m.rev / p.rent_rev_day):
@@ -561,6 +568,12 @@ SCENARIOS = {
     "dual_target5x_hmin1": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
                                 target_total_mult=5.0, chest_max=0.035,
                                 home_target_probs_dual=(0.45, 0.35, 0.20, 0.0)),
+    # Level changes (Oct 4): H3 needs 7 days; bigger bags tick faster (bag / $2,500, 1x-3x);
+    # selling a fraction s takes 2.5 x s of the clock. M2 / M3 = 48h / 120h mined (same days here).
+    "levels_oct4": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
+                        target_total_mult=5.0, chest_max=0.035,
+                        home_target_probs_dual=(0.45, 0.35, 0.20, 0.0),
+                        h_days=(0.0, 1.0, 7.0), h_speed_per_usd=2500.0, h_max_speed=3.0, sell_penalty=2.5),
     "dual_target5x_hmin1_vol70": dict(dual=True, hold_ramp_days=0, min_stake_usd=0, holder_burn_frac=0.0,
                                       target_total_mult=5.0, chest_max=0.035,
                                       home_target_probs_dual=(0.45, 0.35, 0.20, 0.0),

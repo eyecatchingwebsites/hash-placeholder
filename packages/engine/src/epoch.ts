@@ -7,8 +7,11 @@ export interface EpochInput {
   now: number;
   /** Estimated mining earnings per wallet this epoch (USD), from accepted shares. */
   earnings: Map<string, number>;
-  /** Days with accepted shares in the last `rules.miner.windowDays` days, per wallet (including today). */
-  daysMined: Map<string, number>;
+  /**
+   * Hours mined in the last `rules.miner.windowDays` days, per wallet: clock time with at least one
+   * GPU getting accepted shares (an epoch with shares counts as its length), not summed per GPU.
+   */
+  hoursMined: Map<string, number>;
   wallets: Map<string, WalletState>;
   price: PriceContext;
   /** Chest for this epoch (USD, from splitTax), plus anything carried from earlier epochs. */
@@ -62,7 +65,7 @@ export interface EpochResult {
   };
 }
 
-const EMPTY_WALLET = (address: string): WalletState => ({ address, balance: 0n, clockStartAt: null });
+const EMPTY_WALLET = (address: string): WalletState => ({ address, balance: 0n, clockMs: null, clockAt: 0 });
 
 export function runEpoch(input: EpochInput): EpochResult {
   const { rules, price, now } = input;
@@ -71,7 +74,7 @@ export function runEpoch(input: EpochInput): EpochResult {
     .map(([address, earningsUsd]) => {
       const w = input.wallets.get(address) ?? EMPTY_WALLET(address);
       const holderLevel = computeHolderLevel(w, price, now, rules);
-      const level = computeMinerLevel(input.daysMined.get(address) ?? 0, holderLevel, rules);
+      const level = computeMinerLevel(input.hoursMined.get(address) ?? 0, holderLevel, rules);
       return { address, earningsUsd, level, holderLevel };
     });
 

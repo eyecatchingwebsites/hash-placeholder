@@ -183,15 +183,15 @@
               <tbody>
                 <tr><td>H1</td><td>Hold at least $50 of $HASH</td><td class="mono">1×</td></tr>
                 <tr><td>H2</td><td>Hold at least $500, with 24 hours on your hold clock</td><td class="mono">2×</td></tr>
-                <tr><td>H3</td><td>Hold at least $2,500, with 72 hours on your hold clock</td><td class="mono">4×</td></tr>
+                <tr><td>H3</td><td>Hold at least $2,500, with 7 days on your hold clock</td><td class="mono">4×</td></tr>
               </tbody>
             </table>
             <table>
               <thead><tr><th>Miner level</th><th>Requirement</th><th>Weight</th></tr></thead>
               <tbody>
                 <tr><td>M1</td><td>Mining</td><td class="mono">1×</td></tr>
-                <tr><td>M2</td><td>Mined on 2 of the last 7 days, and at least H1</td><td class="mono">2×</td></tr>
-                <tr><td>M3</td><td>Mined on 5 of the last 7 days, and at least H2</td><td class="mono">4×</td></tr>
+                <tr><td>M2</td><td>48 hours mined in the last 14 days, and at least H1</td><td class="mono">2×</td></tr>
+                <tr><td>M3</td><td>120 hours mined in the last 14 days, and at least H2</td><td class="mono">4×</td></tr>
               </tbody>
             </table>
             <p>Holder pot share = <b>bag × holder weight</b>. Miner chest share = <b>√(your GPU's USD earnings) × miner weight</b>; the square root means a small card gets a bigger boost relative to what it mines. No wallet can take more than 5% of one payout; any excess goes to everyone else.</p>
@@ -203,7 +203,7 @@
             </details>
             <details>
               <summary>What is the hold clock?</summary>
-              <div class="a"><p>It starts once your bag first reaches $50 and keeps running, even through price dips. <b>Selling shrinks it in proportion:</b> sell 25% of your bag and the clock drops by 25%; sell everything and it restarts from zero. Buying never moves it. Any transfer out counts as selling, including sending to another wallet, a liquidity pool or an exchange.</p></div>
+              <div class="a"><p>It starts once your bag first reaches $50 and keeps running, even through price dips. <b>Bigger bags age faster:</b> the clock runs at 1× up to $2,500, 2× at $5,000 and 3× at $7,500 or more, so buying more speeds it up from then on. <b>Selling costs 2.5× its share:</b> sell 10% of your bag and the clock loses 25%; sell 40% or more and it restarts from zero. Any transfer out counts as selling, including sending to another wallet, a liquidity pool or an exchange.</p></div>
             </details>
             <details>
               <summary>Does mined $HASH count toward the thresholds?</summary>
@@ -287,7 +287,7 @@
               <li><b>$HASH is volatile.</b> Like any new token, it can lose most or all of its value.</li>
               <li><b>Payouts vary.</b> They depend on coin prices, pool results, how much $HASH is traded and how many people mine. They can fall to near zero.</li>
               <li><b>Costs are yours.</b> Electricity, heat and hardware wear. The 5% tax applies when you buy, sell or move $HASH.</li>
-              <li><b>Selling costs you level time.</b> Selling shrinks your hold clock in proportion, so taking profit can drop you a holder level, and with it a miner level.</li>
+              <li><b>Selling costs you level time.</b> Selling takes 2.5× its share off your hold clock, so taking profit can drop you a holder level, and with it a miner level.</li>
               <li><b>New software.</b> Bugs are possible. The code is open so anyone can check it.</li>
               <li><b>Rules where you live.</b> Mining and tokens are regulated differently by country. Check yours.</li>
             </ul>

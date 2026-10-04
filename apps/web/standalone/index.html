@@ -679,7 +679,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .lv-table tr.on td { background: color-mix(in srgb, var(--c) 7%, transparent); }
 .lv-table tr[data-l] { cursor: pointer; }
 .lvb { display: inline-block; min-width: 40px; text-align: center; font: 800 .88rem/1 var(--font-display); padding: 7px 9px; border-radius: 6px; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
-.rules { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.rules { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .rules li { color: var(--muted); font-size: .92rem; }
 .rules b { display: block; color: var(--text); font-weight: 600; margin-bottom: 4px; }
 
@@ -1265,12 +1265,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             <button type="button" class="lv-card" role="radio" data-lv="2" aria-checked="false">
               <span class="lv-top"><span class="lv-name">Level 2</span><b class="lv-x">2×</b></span>
               <span class="lv-req"><i>Hold</i>$500+ for a day</span>
-              <span class="lv-req"><i>Mine</i>2 days a week</span>
+              <span class="lv-req"><i>Mine</i>48h in 2 weeks</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="3" aria-checked="false">
               <span class="lv-top"><span class="lv-name">Level 3</span><b class="lv-x">4×</b></span>
-              <span class="lv-req"><i>Hold</i>$2,500+ for 3 days</span>
-              <span class="lv-req"><i>Mine</i>5 days a week</span>
+              <span class="lv-req"><i>Hold</i>$2,500+ for 7 days</span>
+              <span class="lv-req"><i>Mine</i>120h in 2 weeks</span>
             </button>
           </div>
 
@@ -1412,7 +1412,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
               <tbody>
                 <tr class="lvrow l1"><td><span class="lvb">H1</span></td><td>Hold <b>$50</b>+</td><td class="usd" data-lvh="1">—</td></tr>
                 <tr class="lvrow l2"><td><span class="lvb">H2</span></td><td>Hold <b>$500</b>+ for <b>a day</b></td><td class="usd" data-lvh="2">—</td></tr>
-                <tr class="lvrow l3"><td><span class="lvb">H3</span></td><td>Hold <b>$2,500</b>+ for <b>3 days</b></td><td class="usd" data-lvh="3">—</td></tr>
+                <tr class="lvrow l3"><td><span class="lvb">H3</span></td><td>Hold <b>$2,500</b>+ for <b>7 days</b></td><td class="usd" data-lvh="3">—</td></tr>
               </tbody>
             </table>
           </div>
@@ -1421,14 +1421,15 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             <table class="lv-table" id="lvm">
               <tbody>
                 <tr class="lvrow l1" data-l="1"><td><span class="lvb">M1</span></td><td>Mine</td><td class="usd" data-lvm="1">—</td></tr>
-                <tr class="lvrow l2" data-l="2"><td><span class="lvb">M2</span></td><td>Mine <b>2 of 7 days</b>, be <b>H1</b></td><td class="usd" data-lvm="2">—</td></tr>
-                <tr class="lvrow l3" data-l="3"><td><span class="lvb">M3</span></td><td>Mine <b>5 of 7 days</b>, be <b>H2</b></td><td class="usd" data-lvm="3">—</td></tr>
+                <tr class="lvrow l2" data-l="2"><td><span class="lvb">M2</span></td><td>Mine <b>48h</b> in 14 days, be <b>H1</b></td><td class="usd" data-lvm="2">—</td></tr>
+                <tr class="lvrow l3" data-l="3"><td><span class="lvb">M3</span></td><td>Mine <b>120h</b> in 14 days, be <b>H2</b></td><td class="usd" data-lvm="3">—</td></tr>
               </tbody>
             </table>
           </div>
         </div>
         <ul class="rules">
-          <li><b>Selling shrinks your hold clock.</b> Sell 25%, lose 25% of it. Buying never does.</li>
+          <li><b>Bigger bags age faster.</b> Your hold clock runs up to 3× as fast at $7,500+.</li>
+          <li><b>Selling costs clock time.</b> Sell 20%, lose half of it. Sell 40%+ and it resets.</li>
           <li><b>Dips don't reset you.</b> Back above the line, your level comes straight back.</li>
           <li><b>No whale games.</b> One wallet gets at most 5% of a payout.</li>
         </ul>
@@ -1555,7 +1556,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             <details><summary>Why buy if I can just mine it?</summary><div class="a"><p>Mining alone stays at Level 1. The 2× and 4× miner bonus need a bag, and the bag itself earns holder rewards. Mining fills your bag slowly; buying gets you to the higher levels sooner.</p></div></details>
             <details><summary>Does the $HASH I mine earn holder rewards?</summary><div class="a"><p>Yes. Mined $HASH lands in your wallet and counts as your bag, so you get the miner bonus and holder rewards at the same time.</p></div></details>
             <details><summary>How is the tax split between miners and holders?</summary><div class="a"><p>It adjusts itself every payout. Miners get what lifts their average pay to 5× what their GPUs mine (up to 3.5%). Holders get the rest, never less than 1%.</p></div></details>
-            <details><summary>What happens if I sell?</summary><div class="a"><p>You pay the 5% tax, and your hold clock shrinks by the share you sold.</p></div></details>
+            <details><summary>What happens if I sell?</summary><div class="a"><p>You pay the 5% tax, and your hold clock loses 2.5× the share you sold: sell 20% and lose half of it, sell 40% or more and it resets.</p></div></details>
             <details><summary>How much will I make?</summary><div class="a"><p>It depends on trading volume and how many GPUs mine. The estimate uses launch-week trading. After launch, the site shows what each level was actually paid.</p></div></details>
             <details><summary>Will mining slow down my PC?</summary><div class="a"><p>No. The miner only uses GPU power you aren't using. When a game or render needs the GPU, mining steps back and only your hashrate drops.</p></div></details>
             <details><summary>Does it work on laptops and workstations?</summary><div class="a"><p>Yes. Any PC with an NVIDIA, AMD or Intel graphics card: gaming PCs, gaming laptops, AI rigs, editing and render machines.</p></div></details>
@@ -1758,8 +1759,8 @@ window.HashModel = (function () {
   const TAX = 0.05, DEV = 0.005, CHEST_MAX = 0.035, TARGET = 5;
   const HOLDER_MIN = TAX - DEV - CHEST_MAX;
   const MULT = [1, 2, 4];
-  const HOLDER = { usd: [50, 500, 2500], hours: [0, 24, 72] };
-  const MINER = { days: [0, 2, 5], window: 7 };
+  const HOLDER = { usd: [50, 500, 2500], hours: [0, 24, 168] };
+  const MINER = { hours: [0, 48, 120], windowDays: 14 };
 
   // Payouts depend on the market only through daily volume per GPU mining (V / N).
   //   V / N = (volume ÷ market cap) × (market cap ÷ holders) ÷ (miners ÷ holders)
@@ -2262,7 +2263,7 @@ window.HashModel = (function () {
   const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 10.71 };
   const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
   const EXAMPLE_BAG = [450, 2200, 6000];
-  const NEXT_NEEDS = { 2: "$500+ for a day", 3: "$2,500+ for 3 days" };
+  const NEXT_NEEDS = { 2: "$500+ for a day", 3: "$2,500+ for 7 days" };
   const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
   const bagNums = (L) => {
     const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L };

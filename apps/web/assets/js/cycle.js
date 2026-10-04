@@ -274,7 +274,7 @@
   const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 10.71 };
   const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
   const EXAMPLE_BAG = [450, 2200, 6000];
-  const NEXT_NEEDS = { 2: "$500+ for a day", 3: "$2,500+ for 3 days" };
+  const NEXT_NEEDS = { 2: "$500+ for a day", 3: "$2,500+ for 7 days" };
   const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
   const bagNums = (L) => {
     const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L };

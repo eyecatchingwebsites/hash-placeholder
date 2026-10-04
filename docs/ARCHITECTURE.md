@@ -25,7 +25,7 @@ Status: draft. Chain assumed to be **Solana** (Solscan links, ~13s finality, che
 
 ## Payout cycle (every 10 minutes)
 1. **Collector:** sums each wallet's accepted shares × revenue per share = `earnings` (USD).
-2. **Chain-watch:** gives the current `WalletState` per wallet (balance and hold clock `clockStartAt`, which starts at the H1 bag and which selling shrinks in proportion) and the level price (`levelPriceUsd`: the higher of the 1h and 7-day averages).
+2. **Chain-watch:** gives the current `WalletState` per wallet (balance and hold clock `clockMs`, which starts at the H1 bag, runs 1–3× faster for bigger bags, and loses 2.5× the share sold) and the level price (`levelPriceUsd`: the higher of the 1h and 7-day averages).
 3. **Engine:** `splitTax` divides the epoch's 5% tax into dev (0.5%), miner chest (what reaches 5× mining, max 3.5%) and holder pot (the rest, min 1%). `runEpoch` computes holder and miner levels, √ × miner-level weights, the 5% cap and water-filling, then the immediate 75% of mining (scaled to the float), the pending 25%, the chest split and the carry. `runHolderPayout` splits the holder pot by bag × holder level (hourly or daily).
 4. **Treasury:** buys $HASH on the market only for the mining part (`totals.buyUsd`); the chest and holder pot are paid from the harvested tax, which is already $HASH. Then `splitTokens` produces the transfers. Dust is deferred. Transfers are sent in batches of about 20 per transaction.
 5. **Ledger:** writes everything. The dashboard shows Paid / Pending.
