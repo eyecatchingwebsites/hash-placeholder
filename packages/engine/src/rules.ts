@@ -5,11 +5,18 @@ export type HolderLevel = 0 | 1 | 2 | 3;
 
 export interface Rules {
   /**
-   * The Token-2022 transfer tax and its split, as fractions of trade value.
-   * Dev is fixed. Miners get what reaches the target, up to chestMax. Holders get the rest,
-   * which is at least total - dev - chestMax.
+   * The Token-2022 transfer tax: a rate between `minRate` and `maxRate` (set by `targetTaxRate` in
+   * `step`s), split as shares of the tax: dev 5–10% (falls as the rate rises), miners 45–75% (what
+   * reaches the 5× target), holders the rest (at least `holderShareMin`).
    */
-  tax: { total: number; dev: number; chestMax: number };
+  tax: {
+    minRate: number;
+    maxRate: number;
+    step: number;
+    devShare: { atMinRate: number; atMaxRate: number };
+    minerShare: { min: number; max: number };
+    holderShareMin: number;
+  };
   /** Miners' total pay target as a multiple of what their GPUs mined (5 = mining + 4× from the chest). */
   minerTargetMult: number;
   holder: {
@@ -56,7 +63,14 @@ export const HOUR_MS = 60 * 60 * 1000;
 export const DAY_MS = 24 * HOUR_MS;
 
 export const DEFAULT_RULES: Rules = {
-  tax: { total: 0.05, dev: 0.005, chestMax: 0.035 },
+  tax: {
+    minRate: 0.02,
+    maxRate: 0.05,
+    step: 0.0025,
+    devShare: { atMinRate: 0.10, atMaxRate: 0.05 },
+    minerShare: { min: 0.45, max: 0.75 },
+    holderShareMin: 0.20,
+  },
   minerTargetMult: 5,
   holder: {
     usd: [50, 500, 2500],
@@ -76,8 +90,3 @@ export const DEFAULT_RULES: Rules = {
   alpha: 0.5,
   immediateShare: 0.75,
 };
-
-/** Smallest share of the tax that always goes to holders. */
-export function holderMinShare(rules: Rules): number {
-  return Math.max(0, rules.tax.total - rules.tax.dev - rules.tax.chestMax);
-}

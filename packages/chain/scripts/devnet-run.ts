@@ -19,7 +19,8 @@ const DATA = here("../data");
 const RPC = process.env.SOLANA_RPC ?? "https://api.devnet.solana.com";
 const DECIMALS = 6;
 const SUPPLY = 21_000_000n; // user, Oct 4
-const FEE = { bps: 500, max: SUPPLY * 10n ** BigInt(DECIMALS) }; // cap = whole supply, so the 5% always applies
+// Devnet runs at the 5% maximum; on mainnet the rate moves between 2% and 5% (engine `targetTaxRate`).
+const FEE = { bps: 500, max: SUPPLY * 10n ** BigInt(DECIMALS) }; // cap = whole supply, so the fee always applies
 /** Devnet has no market, so assume a price: $1M market cap at 21M supply. */
 const PRICE_USD = 1_000_000 / 21_000_000;
 /** Test holders' bags in USD: below H1, H1, H2-sized, H3-sized (no hold clock has run yet, so all pay as H1). */
@@ -120,7 +121,7 @@ async function main() {
   const minedUsd = miners.reduce((a, w) => a + w.minedUsd, 0);
 
   // --- Split the tax and run the engine.
-  const split = splitTax({ taxUsd, minedUsd }, DEFAULT_RULES);
+  const split = splitTax({ taxUsd, rate: FEE.bps / 10_000, minedUsd }, DEFAULT_RULES);
   const price = { priceUsd: PRICE_USD, decimals: DECIMALS };
   const now = Date.now();
   const walletState = async (owner: PublicKey): Promise<WalletState> =>

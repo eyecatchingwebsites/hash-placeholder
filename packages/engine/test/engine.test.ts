@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   DAY_MS, DEFAULT_RULES, HOUR_MS, advanceClock, applyBalanceChange, chestShares, clockSpeed, clockStartTokens,
-  computeHolderLevel, computeMinerLevel, creditedHours, holdClockMs, hourCredit, isInternalTransfer, linkWallet, unlinkWallet, holderMinShare, holderProgress, levelPriceUsd, runEpoch,
-  runHolderPayout, settle, splitTax, splitTokens, type WalletState, type WeightInput,
+  computeHolderLevel, computeMinerLevel, creditedHours, holdClockMs, hourCredit, isInternalTransfer, linkWallet, unlinkWallet, holderProgress, levelPriceUsd, runEpoch,
+  runHolderPayout, settle, splitTax, splitTokens, devShareAt, minerMaxShareAt, targetTaxRate, type WalletState, type WeightInput,
 } from "../src/index.js";
 
 const price = { priceUsd: 0.001, decimals: 6 }; // $0.001 per token
@@ -170,28 +170,44 @@ describe("miner levels", () => {
 
 
 describe("tax split", () => {
-  it("dev 0.5%, miners get what reaches 5x, holders get the rest", () => {
-    // $10,000 of trades -> $500 tax. Miners mined $50, so they need $200 more to reach 5x.
-    const s = splitTax({ taxUsd: 500, minedUsd: 50 }, R);
-    expect(s.devUsd).toBeCloseTo(50);
-    expect(s.chestUsd).toBeCloseTo(200);
-    expect(s.holderUsd).toBeCloseTo(250);
-    expect(s.chestRate).toBeCloseTo(0.02);
+  it("dev 10% at a 2% tax, 5% at a 5% tax, so dev's cut of volume stays ~0.2-0.25%", () => {
+    expect(devShareAt(0.02, R)).toBeCloseTo(0.10);
+    expect(devShareAt(0.05, R)).toBeCloseTo(0.05);
+    expect(devShareAt(0.035, R)).toBeCloseTo(0.075);
+    expect(minerMaxShareAt(0.05, R)).toBeCloseTo(0.75);
+    expect(minerMaxShareAt(0.02, R)).toBeCloseTo(0.70); // holders keep their 20%
+  });
+
+  it("miners get what reaches 5x (between 45% and their max), holders the rest", () => {
+    // $10,000 traded at 5% -> $500 tax. Miners mined $75, so they need $300 (60%) to reach 5x.
+    const s = splitTax({ taxUsd: 500, rate: 0.05, minedUsd: 75 }, R);
+    expect(s.shares.dev).toBeCloseTo(0.05);
+    expect(s.shares.miners).toBeCloseTo(0.60);
+    expect(s.shares.holders).toBeCloseTo(0.35);
+    expect(s.devUsd + s.chestUsd + s.holderUsd).toBeCloseTo(500);
     expect(s.targetMet).toBe(true);
   });
 
-  it("caps the chest at 3.5% so holders always get at least 1%", () => {
-    const s = splitTax({ taxUsd: 500, minedUsd: 1000 }, R);
-    expect(s.chestUsd).toBeCloseTo(350);
-    expect(s.holderUsd).toBeCloseTo(100);
-    expect(s.targetMet).toBe(false);
-    expect(holderMinShare(R)).toBeCloseTo(0.01);
+  it("never gives miners under 45% or holders under 20%", () => {
+    const busy = splitTax({ taxUsd: 500, rate: 0.02, minedUsd: 1 }, R);
+    expect(busy.shares.miners).toBeCloseTo(0.45);
+    expect(busy.shares.holders).toBeCloseTo(0.45);
+    const quiet = splitTax({ taxUsd: 500, rate: 0.05, minedUsd: 10_000 }, R);
+    expect(quiet.shares.miners).toBeCloseTo(0.75);
+    expect(quiet.shares.holders).toBeCloseTo(0.20);
+    expect(quiet.targetMet).toBe(false);
   });
 
   it("counts chest carried from earlier epochs toward the target", () => {
-    const s = splitTax({ taxUsd: 500, minedUsd: 50, chestCarryUsd: 150 }, R);
-    expect(s.chestUsd).toBeCloseTo(50);
-    expect(s.holderUsd).toBeCloseTo(400);
+    const s = splitTax({ taxUsd: 500, rate: 0.05, minedUsd: 75, chestCarryUsd: 100 }, R);
+    expect(s.chestUsd).toBeCloseTo(225); // needs 300 - 100 = 200 (40%), floored at 45%
+  });
+
+  it("sets the tax to the lowest rate that lets miners reach 5x: busy -> 2%, quiet -> up to 5%", () => {
+    // 1,000 GPUs mining $2.50/day need $10,000/day of bonus.
+    expect(targetTaxRate({ volumeUsd: 1_000_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.02, 6); // 2% x 70% = $14,000
+    expect(targetTaxRate({ volumeUsd: 400_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.035, 6); // 3.5% x 72.5% = $10,150; 3.25% falls short
+    expect(targetTaxRate({ volumeUsd: 100_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.05, 6); // can't reach 5x: max rate
   });
 });
 
