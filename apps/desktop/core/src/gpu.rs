@@ -49,6 +49,14 @@ pub fn parse_nvidia_smi(out: &str) -> Vec<Gpu> {
 /// `Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name` (one per line),
 /// keeping AMD and Intel Arc cards. NVIDIA cards come from nvidia-smi instead, which gives
 /// the device index the miners use. AMD/Intel indexes count per vendor, in listed order.
+/// Graphics built into the processor ("AMD Radeon(TM) Graphics", "AMD Radeon 780M Graphics"):
+/// too weak to be worth mining, and not what a user means by their GPU. Discrete AMD cards carry
+/// an RX / Pro / Instinct model name.
+pub fn is_integrated(name: &str) -> bool {
+    let n = name.to_ascii_lowercase();
+    n.contains("radeon") && n.trim_end().ends_with("graphics") && ![" rx ", " rx", "pro ", "instinct"].iter().any(|k| n.contains(k))
+}
+
 pub fn parse_video_controllers(out: &str) -> Vec<Gpu> {
     let mut amd = 0;
     let mut intel = 0;
@@ -57,6 +65,7 @@ pub fn parse_video_controllers(out: &str) -> Vec<Gpu> {
         .filter(|l| !l.is_empty())
         .filter_map(|name| {
             let vendor = vendor_of(name)?;
+            if is_integrated(name) { return None; }
             let index = match vendor {
                 Vendor::Nvidia => return None,
                 Vendor::Amd => { amd += 1; amd - 1 }
@@ -84,5 +93,16 @@ mod tests {
         let g = parse_video_controllers("NVIDIA GeForce RTX 4070\r\nAMD Radeon RX 7900 XTX\r\nIntel(R) UHD Graphics 770\r\nIntel(R) Arc(TM) A770 Graphics\r\n");
         assert_eq!(g.iter().map(|g| g.vendor).collect::<Vec<_>>(), vec![Vendor::Amd, Vendor::Intel]);
         assert_eq!(g[0].index, 0);
+    }
+
+    #[test]
+    fn skips_graphics_built_into_the_processor() {
+        let g = parse_video_controllers("AMD Radeon(TM) Graphics
+AMD Radeon 780M Graphics
+AMD Radeon RX 6800M
+AMD Radeon Pro W7900
+");
+        assert_eq!(g.iter().map(|g| g.name.as_str()).collect::<Vec<_>>(), vec!["AMD Radeon RX 6800M", "AMD Radeon Pro W7900"]);
+        assert!(!is_integrated("Intel(R) Arc(TM) A770 Graphics"));
     }
 }

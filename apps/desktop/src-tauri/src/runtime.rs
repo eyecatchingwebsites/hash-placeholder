@@ -43,6 +43,10 @@ pub struct Status {
 }
 
 struct Slot {
+    /// Unique per GPU on this rig, used with the server (assignments, pool worker names). `gpu.index`
+    /// is the miner's device number, which counts per vendor, so an NVIDIA and an AMD card can
+    /// both be device 0.
+    id: u32,
     gpu: Gpu,
     assignment: Option<Assignment>,
     supervisor: Option<Supervisor>,
@@ -97,7 +101,7 @@ impl Runtime {
 
     pub fn set_gpus(&mut self, gpus: Vec<Gpu>) {
         self.stop();
-        self.slots = gpus.into_iter().map(|gpu| Slot { gpu, assignment: None, supervisor: None, reason: "not started".into() }).collect();
+        self.slots = gpus.into_iter().enumerate().map(|(id, gpu)| Slot { id: id as u32, gpu, assignment: None, supervisor: None, reason: "not started".into() }).collect();
     }
 
     pub fn start(&mut self) -> Result<(), String> {
@@ -157,7 +161,7 @@ impl Runtime {
                 .into_json().map_err(|e| e.to_string())?;
             self.manifest = Some(self.get_signed(env)?);
         }
-        let gpus: Vec<_> = self.slots.iter().map(|s| serde_json::json!({ "index": s.gpu.index, "name": s.gpu.name })).collect();
+        let gpus: Vec<_> = self.slots.iter().map(|s| serde_json::json!({ "index": s.id, "name": s.gpu.name })).collect();
         let body = serde_json::json!({ "wallet": self.settings.wallet, "rigId": self.settings.rig_id, "gpus": gpus });
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -173,7 +177,7 @@ impl Runtime {
                 None => Err(r.reason.clone()),
                 Some(env) => self.get_signed::<Assignment>(env).and_then(|a| a.check(&wallet, &rig, r.gpu_index, now_ms()).map(|_| a)),
             };
-            let Some(i) = self.slots.iter().position(|s| s.gpu.index == r.gpu_index) else { continue };
+            let Some(i) = self.slots.iter().position(|s| s.id == r.gpu_index) else { continue };
             match plan(self.slots[i].assignment.as_ref(), next) {
                 Action::Keep(a) => {
                     // Same target: refresh the expiry without restarting the miner.
@@ -187,7 +191,7 @@ impl Runtime {
                 }
                 Action::Run(a) => {
                     if let Some(mut sup) = self.slots[i].supervisor.take() { sup.stop(); }
-                    let started = self.launch(&a, self.slots[i].gpu.index);
+                    let started = self.launch(&a, self.slots[i].id, self.slots[i].gpu.index);
                     match started {
                         Ok(sup) => { self.slots[i].supervisor = Some(sup); self.slots[i].reason = r.reason; self.slots[i].assignment = Some(a); }
                         Err(e) => { self.slots[i].assignment = None; self.slots[i].reason = e; }
@@ -198,7 +202,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn launch(&self, a: &Assignment, device: u32) -> Result<Supervisor, String> {
+    fn launch(&self, a: &Assignment, slot: u32, device: u32) -> Result<Supervisor, String> {
         let manifest = self.manifest.as_ref().ok_or("no miner list")?;
         let spec = manifest.find(&a.miner_id).ok_or_else(|| format!("miner {} not in signed list", a.miner_id))?;
         let build = spec.builds.get(&platform_key()).ok_or_else(|| format!("{} has no build for {}", spec.id, platform_key()))?;
@@ -207,9 +211,9 @@ impl Runtime {
         if !exe.exists() {
             download_verified(&build.url, &build.sha256, &dir)?;
         }
-        let args = render_args(&spec.args, a, device, 4067 + device as u16)?;
+        let args = render_args(&spec.args, a, device, 4067 + slot as u16)?;
         // One log per GPU next to the miner, kept small: started fresh on each launch.
-        let log = dir.join(format!("gpu-{device}.log"));
+        let log = dir.join(format!("gpu-{slot}.log"));
         let _ = std::fs::write(&log, format!("--- {} {}
 ", exe.display(), args.join(" ")));
         let mut sup = Supervisor::new(exe, args).with_log(log);
@@ -281,13 +285,20 @@ mod e2e {
 
         let wallet = "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF";
         let mut rt = Runtime::new(Settings { wallet: wallet.into(), rig_id: "e2e".into(), api_base: api }, keys, data.clone());
-        rt.set_gpus(vec![Gpu { index: 0, name: "NVIDIA GeForce RTX 4070".into(), vendor: Vendor::Nvidia, memory_mb: Some(12282) }]);
+        // An NVIDIA and an AMD card are both device 0 to their miners; the app must keep them apart
+        // (this used to apply the AMD card's "no coin" answer to the NVIDIA card and stop it).
+        rt.set_gpus(vec![
+            Gpu { index: 0, name: "NVIDIA GeForce RTX 4070".into(), vendor: Vendor::Nvidia, memory_mb: Some(12282) },
+            Gpu { index: 0, name: "AMD Radeon RX 7900 XTX".into(), vendor: Vendor::Amd, memory_mb: None },
+        ]);
         rt.start().unwrap();
         rt.tick();
         let st = rt.status();
         assert_eq!(st.error, None);
         assert_eq!(st.gpus[0].coin.as_deref(), Some("PRL"));
         assert_eq!(st.gpus[0].state, "mining");
+        assert_eq!(st.gpus[1].state, "idle");
+        assert_eq!(st.gpus[1].coin, None);
         let mut args = String::new();
         for _ in 0..50 {
             std::thread::sleep(Duration::from_millis(100));
