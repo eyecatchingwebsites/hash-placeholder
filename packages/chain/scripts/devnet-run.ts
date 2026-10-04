@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { DEFAULT_RULES, runEpoch, runHolderPayout, splitTax, type WalletState } from "@hashcoin/engine";
-import { createHashMint, harvestFees, sendBatch, tokenBalance, type Transfer } from "../src/token.js";
+import { ata, createHashMint, harvestFees, sendBatch, tokenBalance, type Transfer } from "../src/token.js";
 import { usdToBaseUnits } from "../src/fees.js";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -29,6 +29,12 @@ const solscan = (sig: string) => `https://solscan.io/tx/${sig}?cluster=devnet`;
 const tokens = (base: bigint) => Number(base) / 10 ** DECIMALS;
 const readJson = <T>(path: string, fallback: T): T => { try { return JSON.parse(readFileSync(path, "utf8")) as T; } catch { return fallback; } };
 const kp = (secret: number[]) => Keypair.fromSecretKey(Uint8Array.from(secret));
+
+/** Miner wallets from the collector's last run (their token accounts may hold withheld fees from earlier payouts). */
+function minerOwners(): PublicKey[] {
+  const c = readJson<{ PRL?: { wallets?: { wallet: string }[] } }>(here("../../../services/collector/data/latest.json"), {});
+  return (c.PRL?.wallets ?? []).map((w) => new PublicKey(w.wallet));
+}
 
 async function main() {
   mkdirSync(DATA, { recursive: true });
@@ -51,7 +57,11 @@ async function main() {
       await conn.confirmTransaction(sig, "confirmed");
       sol = await conn.getBalance(treasury.publicKey);
     } catch (e) {
-      throw new Error(`devnet faucet refused (${(e as Error).message}). Fund ${treasury.publicKey.toBase58()} at https://faucet.solana.com (devnet), then run again.`);
+      // A later round only needs rent for a couple of new token accounts plus fees.
+      if (sol < 0.006 * LAMPORTS_PER_SOL) {
+        throw new Error(`devnet faucet refused (${(e as Error).message.split("\n")[0]}). Fund ${treasury.publicKey.toBase58()} at https://faucet.solana.com (devnet), then run again.`);
+      }
+      console.log("faucet refused; carrying on with what's left");
     }
   }
   console.log(`treasury SOL ${sol / LAMPORTS_PER_SOL}`);
@@ -96,7 +106,10 @@ async function main() {
   console.log(`test trades: ${tokens(volume).toLocaleString()} $HASH of volume`);
 
   // --- Harvest the tax into the treasury.
-  const { harvested, signatures } = await harvestFees(conn, treasury, mint, treasury, treasury.publicKey);
+  // The public RPC won't scan Token-2022, so check the token accounts this round touched (on mainnet
+  // the transfer indexer supplies every account it has seen).
+  const known = [treasury.publicKey, dev.publicKey, ...holders.map((h) => h.publicKey), ...minerOwners()].map((o) => ata(o, mint));
+  const { harvested, signatures } = await harvestFees(conn, treasury, mint, treasury, treasury.publicKey, known);
   txs.push(...signatures);
   const taxUsd = tokens(harvested) * PRICE_USD;
   console.log(`tax harvested: ${tokens(harvested).toLocaleString()} $HASH ($${taxUsd.toFixed(2)})`);

@@ -1,7 +1,7 @@
 // On-chain actions for $HASH: a Token-2022 mint with the transfer-fee extension, fee harvesting,
 // and batched payouts. Devnet first (packages/chain/scripts/devnet-run.ts).
 import {
-  type Connection, Keypair, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction,
+  type AccountInfo, type Connection, Keypair, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction,
   type TransactionSignature,
 } from "@solana/web3.js";
 import {
@@ -78,11 +78,26 @@ export async function sendBatch(
   return out;
 }
 
-/** Token accounts for this mint that hold withheld fees. */
-export async function accountsWithWithheldFees(conn: Connection, mint: PublicKey): Promise<{ address: PublicKey; withheld: bigint }[]> {
-  const accounts = await conn.getProgramAccounts(P, { filters: [{ memcmp: { offset: 0, bytes: mint.toBase58() } }] });
+/**
+ * Token accounts for this mint that hold withheld fees. Pass `candidates` (the token accounts the
+ * transfer indexer has seen) on RPCs that don't allow scanning the Token-2022 program, such as
+ * Solana's public endpoints; without it, every account of the mint is scanned.
+ */
+export async function accountsWithWithheldFees(conn: Connection, mint: PublicKey, candidates?: PublicKey[]): Promise<{ address: PublicKey; withheld: bigint }[]> {
+  let accounts: { pubkey: PublicKey; account: AccountInfo<Buffer> }[];
+  if (candidates) {
+    accounts = [];
+    for (const group of chunk(candidates, 100)) {
+      const infos = await conn.getMultipleAccountsInfo(group);
+      infos.forEach((account, i) => { if (account) accounts.push({ pubkey: group[i]!, account }); });
+    }
+  } else {
+    accounts = [...await conn.getProgramAccounts(P, { filters: [{ memcmp: { offset: 0, bytes: mint.toBase58() } }] })];
+  }
   return accounts.flatMap(({ pubkey, account }) => {
+    if (!account.owner.equals(P)) return [];
     const parsed = unpackAccount(pubkey, account, P);
+    if (!parsed.mint.equals(mint)) return [];
     const withheld = getTransferFeeAmount(parsed)?.withheldAmount ?? 0n;
     return withheld > 0n ? [{ address: pubkey, withheld }] : [];
   });
@@ -92,8 +107,10 @@ export async function accountsWithWithheldFees(conn: Connection, mint: PublicKey
  * Collect the tax: move withheld fees from token accounts into the mint (anyone may), then the
  * withdraw authority moves them from the mint to the treasury's token account.
  */
-export async function harvestFees(conn: Connection, payer: Keypair, mint: PublicKey, withdrawAuthority: Keypair, treasury: PublicKey): Promise<{ harvested: bigint; signatures: TransactionSignature[] }> {
-  const sources = await accountsWithWithheldFees(conn, mint);
+export async function harvestFees(
+  conn: Connection, payer: Keypair, mint: PublicKey, withdrawAuthority: Keypair, treasury: PublicKey, candidates?: PublicKey[],
+): Promise<{ harvested: bigint; signatures: TransactionSignature[] }> {
+  const sources = await accountsWithWithheldFees(conn, mint, candidates);
   const signatures: TransactionSignature[] = [];
   for (const group of chunk(sources.map((s) => s.address), 20)) {
     signatures.push(await harvestWithheldTokensToMint(conn, payer, mint, group, undefined, P));

@@ -54,6 +54,8 @@ These block real mining. Each one is research plus a decision from the user.
 ## Phase 2: Devnet token and money flow
 Goal: prove fee → chest → payouts on devnet with fake miners.
 
+**Status (Oct 4): first round done** with `packages/chain` (`npx tsx packages/chain/scripts/devnet-run.ts`): mint, test trades, harvest, engine split with real collector data, payouts, public round report. Still to do: a real pool and market buys (devnet has none; the mining part is paid from treasury supply), the transfer indexer (hold clocks from real transfers), and running rounds on a schedule.
+
 1. `packages/chain` (TypeScript, `@solana/web3.js` + `@solana/spl-token`):
    - `createHashMint()`: Token-2022 mint with the transfer-fee extension at 500 bps, a high max fee, and both fee authorities set to a multisig. Mint and freeze authorities revoked after minting; no other extensions. Devnet: a throwaway keypair from env, never committed.
    - `harvestFees()`: collect withheld fees from token accounts (`harvestWithheldTokensToMint` + `withdrawWithheldTokensFromMint`), then split with `splitTax` into dev, chest and holder-pot wallets.
