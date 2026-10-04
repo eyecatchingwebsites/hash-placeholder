@@ -47,7 +47,13 @@ python3 apps/web/scripts/artifact_page.py            # make the artifact page in
 - **Decisions get recorded** in `docs/PROJECT.md` with the date and the user's words where useful.
 - Use they/them for the user.
 
-## 5. Cloud-session leftovers that don't carry over
+## 5. The user's Windows PC (set up Oct 4, 2026)
+
+- **Project lives at `C:\Users\LukeW\dev\hash-placeholder`**, not the old `OneDrive\Documents\GitHub` copy. Windows Security's *Controlled folder access* (ransomware protection) is on and blocks Python, Node, Git and PowerShell from writing anywhere under `Documents`, which shows up as "Bad file descriptor", "No such file" or a hanging `npm install`. Don't work in the old folder.
+- Installed: Python 3.14 (`python`, also `py`), Node 24, npm 11, Git, Playwright + Chromium (global; `check_site.mjs` finds it). Rust/Tauri not installed yet.
+- `.gitattributes` keeps `*.svg` at LF line endings so `build_standalone.py` gives the same bytes on Windows and Linux.
+
+## 6. Cloud-session leftovers that don't carry over
 
 - The artifact "watch" subscription (republish/comment notifications) was tied to the cloud session.
 - Scratch screenshots and test scripts lived in the session scratchpad; the useful parts are now `apps/web/scripts/check_site.mjs` and `artifact_page.py`.

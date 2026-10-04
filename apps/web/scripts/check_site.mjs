@@ -12,12 +12,16 @@
 // Options: BASE=http://localhost:8123  SIZES=1440x900,2560x1300  SHOTS=0 (skip screenshots)
 import { createRequire } from "module";
 import { mkdirSync } from "fs";
+import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import path from "path";
 
 const require = createRequire(import.meta.url);
+// Node doesn't search the global npm folder on its own, so try it explicitly.
+let globalPw;
+try { globalPw = path.join(execSync("npm root -g", { encoding: "utf8" }).trim(), "playwright"); } catch { /* npm not on PATH */ }
 let pw;
-for (const where of [process.env.PLAYWRIGHT_PATH, "playwright", "/opt/node-tools/node_modules/playwright"]) {
+for (const where of [process.env.PLAYWRIGHT_PATH, "playwright", globalPw, "/opt/node-tools/node_modules/playwright"]) {
   if (!where) continue;
   try { pw = require(where); break; } catch { /* try the next one */ }
 }

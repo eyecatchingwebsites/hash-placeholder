@@ -2,12 +2,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createPublicKey } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { AddressInfo } from "node:net";
+import { fileURLToPath } from "node:url";
 import { loadSigningKey, newSigningKey, verifyEnvelope, type Assignment, type SignedEnvelope } from "@hashcoin/switcher";
 import { createApi } from "../src/server.js";
 import { loadHashrateNoQuotes } from "../src/quotes.js";
 
 const cfg = JSON.parse(readFileSync(new URL("../config/coins.json", import.meta.url), "utf8"));
-const quotes = loadHashrateNoQuotes(new URL("../../../data/hashrate-no-gpus-2026-10-03.json", import.meta.url).pathname);
+const quotes = loadHashrateNoQuotes(fileURLToPath(new URL("../../../data/hashrate-no-gpus-2026-10-03.json", import.meta.url)));
 const key = loadSigningKey(newSigningKey().privatePem);
 const WALLET = "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF";
 let clock = 1_800_000_000_000;

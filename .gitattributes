@@ -1,0 +1,2 @@
+# Keep SVGs byte-identical on every OS (they are embedded as base64 in apps/web/standalone).
+*.svg text eol=lf
