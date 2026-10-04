@@ -60,6 +60,19 @@ describe("collector", () => {
     expect(b.wallets[0]!.gpus).toHaveLength(2);
   });
 
+  it("gives a new session full credit for its first hour, then judges it (live test: 51 TH/s reported for 125)", () => {
+    const opened = T0 - 10 * MIN;
+    const young = (now: number, ths: number): KryptexWorker => ({ ...worker("habc-0", ths, now), opened_at: opened });
+    const a = run(T0, [young(T0, 0)], null); // no shares yet
+    const b = run(T0 + 5 * MIN, [young(T0 + 5 * MIN, 51)], a.state); // pool's noisy early estimate
+    expect(b.wallets[0]!.gpus[0]!.credit).toBe(1);
+    expect(b.state.workers["PRL:habc-0"]!.samples).toHaveLength(0); // early samples aren't kept
+    let state = b.state;
+    for (let m = 10; m <= 70; m += 5) state = run(T0 + m * MIN, [young(T0 + m * MIN, 53)], state).state;
+    const late = run(T0 + 75 * MIN, [young(T0 + 75 * MIN, 53)], state);
+    expect(late.wallets[0]!.gpus[0]!.credit).toBeCloseTo(0.5, 1); // after the first hour, 40% of the benchmark counts half
+  });
+
   it("lists unregistered workers and flags a card far faster than its claimed model", () => {
     const a = run(T0, [worker("hashcoin-test", 120, T0), worker("habc-1", 300, T0)], null);
     expect(a.unknownWorkers).toEqual(["hashcoin-test"]);

@@ -19,8 +19,16 @@ git checkout claude/vibrant-cray-fpbieb
 ## 2. Where things stand
 
 - **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 25 as of the Oct 4 local session). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
-- **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). The desktop app builds and passes its end-to-end test on Windows (Oct 4), against the local API with a stand-in miner; no real miner or pool yet.
-- **Next in the build plan**: the devnet test run (Token-2022 token, fee collection, mock pool feed, batch payouts), then real miners and pools research. See `docs/TECHNICAL-PLAN.md`.
+- **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). **Oct 4: the app mined for real on the user's RTX 4070 SUPER**: local API → signed assignment → the app downloaded and verified ForgeMiner 1.8.4 → mining PRL on Kryptex (~124 TH/s) under the platform address + short worker id → the collector (`services/collector`) mapped the Kryptex worker back to the user's Solana wallet and credited mining hours and PRL. Miner, pool and decisions: `docs/PROJECT.md` §5.
+- **Next in the build plan**: the devnet test run (Token-2022 token, fee collection, batch payouts), feeding the collector into `runEpoch`, truing the collector up to Kryptex's actual balance, and a platform payout address (PRL currently pays the user's own address for testing). See `docs/TECHNICAL-PLAN.md`.
+
+### Run the whole loop locally (Windows, PowerShell)
+1. API (prints a throwaway dev public key; never commit a real one): `cd services\api; npx tsx src/main.ts`
+2. App, in a second window (rebuilds first; the key works with or without its trailing `=`):
+   `cd apps\desktop; cargo build -p hashcoin-miner --features dev-key; $env:HASHCOIN_API = "http://127.0.0.1:8787"; $env:HASHCOIN_DEV_PUBKEY = "<key>"; & .\target\debug\hashcoin-miner.exe` → paste a Solana address → Start mining. Quit from the tray before rebuilding (a running app locks the exe).
+3. Collector: `npx tsx services/collector/src/main.ts --once` (run twice, minutes apart; the first run is a baseline).
+- Logs: each GPU's miner output and exit code go to `%LOCALAPPDATA%\com.hashcoin.miner\miners\<miner>\<version>\gpu-<n>.log`; the app prints its settings file and server address at startup.
+- Claude's permission system blocks Claude from running downloaded miners itself; the user starts them (Start in the app, or a command).
 - **Open decisions**: `docs/PROJECT.md` §11 (holder payout cadence, hold clocks, launchpad, legal review, etc.).
 
 ## 3. Working on the website

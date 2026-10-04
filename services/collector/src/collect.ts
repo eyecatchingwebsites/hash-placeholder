@@ -17,7 +17,7 @@ export interface WorkerRecord {
 export interface CollectorState {
   at: number;
   /** Per worker ("COIN:worker"): recent hashrate samples and its best 3-hour average this week. */
-  workers: Record<string, { samples: { at: number; hs: number }[]; best: { at: number; hs: number }[] }>;
+  workers: Record<string, { since: number; samples: { at: number; hs: number }[]; best: { at: number; hs: number }[] }>;
   /** Per wallet: credited mining hours by run, kept for the M-level window. */
   hours: Record<string, { at: number; h: number }[]>;
 }
@@ -54,6 +54,12 @@ export interface CollectResult {
 }
 
 const SAMPLE_WINDOW_MS = 3 * HOUR_MS;
+/**
+ * A session's first hour gets full credit without being judged: a mid-range card sends only a few
+ * shares in that time, so the pool's estimate is mostly luck (live test: 51 TH/s reported for a card
+ * doing 125). Samples from that hour aren't kept either.
+ */
+const WARMUP_MS = HOUR_MS;
 const BEST_WINDOW_MS = 7 * DAY_MS;
 const FLAG_ABOVE_CATALOG = 1.5;
 /** Longest gap one run may credit, so a collector outage doesn't hand out hours nobody earned. */
@@ -97,18 +103,21 @@ export function collect(x: CollectInput): CollectResult {
 
     const hs = sessionHashrate(w, x.now);
     const old = x.prev?.workers[key];
-    const samples = [...(old?.samples ?? []), { at: x.now, hs }].filter((s) => s.at > x.now - SAMPLE_WINDOW_MS);
-    const avg3h = samples.reduce((a, s) => a + s.hs, 0) / samples.length;
-    const best = [...(old?.best ?? []), { at: x.now, hs: avg3h }].filter((s) => s.at > x.now - BEST_WINDOW_MS);
-    state.workers[key] = { samples, best };
+    // Start of this worker's current mining streak: kept across runs, reset when it goes offline.
+    const since = hs > 0 ? Math.min(old?.since ?? x.now, w.opened_at || x.now) : x.now;
+    const warmingUp = x.now - since < WARMUP_MS;
+    const samples = [...(old?.samples ?? []), ...(warmingUp || hs <= 0 ? [] : [{ at: x.now, hs }])].filter((s) => s.at > x.now - SAMPLE_WINDOW_MS);
+    const avg3h = samples.length ? samples.reduce((a, s) => a + s.hs, 0) / samples.length : hs;
+    const best = [...(old?.best ?? []), ...(samples.length ? [{ at: x.now, hs: avg3h }] : [])].filter((s) => s.at > x.now - BEST_WINDOW_MS);
+    state.workers[key] = { since, samples, best };
 
     // Expected rate: the card's own best 3-hour average this week, or the catalog benchmark for its
     // model if that's higher (so a card throttled from day one isn't its own yardstick).
     const catalogHs = x.catalog?.[gpuKey(rec.gpu)];
-    const ownBest = Math.max(...best.map((s) => s.hs));
+    const ownBest = best.length ? Math.max(...best.map((s) => s.hs)) : avg3h;
     const expected = Math.max(ownBest, catalogHs ?? 0);
     const mining = hs > 0 && w.last_share > prevAt - 30 * 60 * 1000;
-    const credit = mining ? hourCredit(avg3h, expected, x.rules) : 0;
+    const credit = !mining ? 0 : warmingUp || !samples.length ? 1 : hourCredit(avg3h, expected, x.rules);
     const flagged = catalogHs && avg3h > FLAG_ABOVE_CATALOG * catalogHs
       ? `runs at ${(avg3h / catalogHs).toFixed(1)}x the ${rec.gpu} benchmark: likely a different card` : undefined;
 
