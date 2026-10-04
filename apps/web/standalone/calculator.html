@@ -915,6 +915,63 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .hero-ring[data-active="bag"][data-bag-level="2"] .cycle-bar { --gold: var(--l2); }
 .cycle-steps button[aria-pressed="true"] { transition: background .9s var(--ease), border-color .9s var(--ease); }
 
+/* ---------- Round 5: bigger hero text, framed caption, explorer fits the screen ---------- */
+@media (min-width: 1600px) {
+  .hero-split { grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); }
+}
+@media (min-width: 1180px) {
+  .hero h1 { font-size: clamp(2.8rem, min(4.7vw, 8.6vh), 8rem); }
+  .hero-points { font-size: clamp(1.05rem, calc(.62vw + .4rem), 1.85rem); max-width: 28em; gap: clamp(12px, 1.9vh, 26px); margin-top: clamp(24px, 3.6vh, 48px); }
+  .hero-points li { font-size: 1em; padding-left: 1.6em; }
+  .hero-points li::before { width: .58em; height: .3em; left: .15em; }
+  .devices { margin-top: clamp(24px, 3.6vh, 48px); gap: .6em; }
+  .devices li { font-size: clamp(.82rem, calc(.38vw + .4rem), 1.2rem); }
+  .hero-ctas { margin-top: clamp(28px, 4vh, 52px); gap: clamp(12px, .8vw, 18px); }
+  .hero-ctas .btn { min-height: clamp(48px, 6.2vh, 72px); padding: 0 clamp(20px, 1.6vw, 36px); font-size: clamp(.98rem, calc(.38vw + .55rem), 1.35rem); border-radius: 12px; }
+
+  /* The caption sits in a framed bar under the wheel, centered on it, always two lines tall. */
+  .cycle-bar { max-width: 1040px; margin: 20px auto 0; padding: 12px 14px 12px clamp(18px, 1.4vw, 26px); gap: clamp(16px, 1.6vw, 28px);
+    border: 1px solid var(--line-2); border-radius: 14px; background: color-mix(in srgb, var(--panel) 85%, transparent); }
+  .cycle-caption { font-size: clamp(.98rem, calc(.32vw + .55rem), 1.28rem); line-height: 1.45; min-height: 2.9em; display: flex; align-items: center; }
+  .cycle-caption b { margin-right: .35em; }
+  .fly-note { text-align: center; }
+}
+@media (min-width: 1180px) and (max-height: 820px) {
+  .hero h1 { font-size: 3.1rem; }
+  .hero-points { font-size: 1.02rem; }
+  .cycle-bar { margin-top: 12px; padding-top: 6px; padding-bottom: 6px; }
+}
+
+/* Explorer on big screens: as wide as the hero, scaled up as a whole (home.js sets --xz) and at
+   least one screen tall, so the open topic fills the page down to the bottom. */
+@media (min-width: 1180px) {
+  .explore { zoom: var(--xz, 1); display: flex; flex-direction: column; }
+  .explore .wrap { max-width: var(--xmax, 1200px); padding: 0 var(--xpad, 32px); }
+  .explore .xpanels { flex: 1 0 auto; min-height: 0; padding-top: 36px; padding-bottom: 56px; display: flex; flex-direction: column; justify-content: center; }
+  .xbar { padding-top: 36px; }
+  .xhead { max-width: 760px; }
+}
+.xhead { align-content: start; }
+@media (min-width: 1800px) {
+  .nav-links a { font-size: clamp(.92rem, calc(.5vw + .2rem), 1.12rem); padding: 8px 12px; }
+  .brand { font-size: clamp(1.15rem, calc(.35vw + .6rem), 1.4rem); }
+}
+/* Narrower hero columns: the caption can need three lines; keep the bar a fixed height so the wheel never jumps. */
+@media (min-width: 1180px) and (max-width: 1439px) {
+  .cycle-caption { min-height: 4.35em; }
+}
+@media (min-width: 1180px) and (max-height: 820px) {
+  .cycle-caption { font-size: .92rem; }
+}
+/* Short screens (e.g. 1280×720): compact controls so the caption fits in two lines and the wheel keeps its room. */
+@media (min-width: 1180px) and (max-height: 820px) {
+  .cycle-caption { font-size: .88rem; min-height: 2.9em; }
+  .cycle-steps { gap: 4px; }
+  .cycle-steps button { width: 24px; height: 24px; font-size: .72rem; }
+  .cycle-controls { gap: 8px; }
+  #cycle-pause { min-height: 32px; padding: 0 12px; }
+}
+
 </style>
 </head>
 <body>

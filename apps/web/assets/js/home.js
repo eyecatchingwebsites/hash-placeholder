@@ -34,9 +34,26 @@
       $("#" + t.getAttribute("aria-controls")).hidden = !on;
     });
   }
+  // Big screens: the explorer matches the hero's width and scales up as a whole, so a topic
+  // fills the screen instead of sitting in a narrow column (see .explore in site.css).
+  function fitExplore() {
+    const W = window.innerWidth, H = window.innerHeight;
+    if (W < 1180) { explore.style.removeProperty("--xz"); explore.style.minHeight = ""; return; }
+    const pad = Math.min(72, Math.max(32, W * 0.03));
+    const outer = Math.min(W, 2240);
+    const z = Math.max(1, Math.min((outer - 2 * pad) / 1240, (H - 64) / 800, 1.45));
+    explore.style.setProperty("--xz", z.toFixed(3));
+    explore.style.setProperty("--xmax", (outer / z).toFixed(1) + "px");
+    explore.style.setProperty("--xpad", (pad / z).toFixed(1) + "px");
+    explore.style.minHeight = ((H - 64) / z).toFixed(1) + "px";
+  }
+  fitExplore();
+  let fitT = 0;
+  window.addEventListener("resize", () => { clearTimeout(fitT); fitT = setTimeout(fitExplore, 120); });
   function scrollToEl(el) {
     const offset = 64 + 12;
-    const top = el === explore ? explore.offsetTop - 40 : el.getBoundingClientRect().top + window.scrollY - offset;
+    // getBoundingClientRect, not offsetTop: the explorer is zoomed on big screens.
+    const top = el.getBoundingClientRect().top + window.scrollY - (el === explore ? 40 : offset);
     window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
   }
   // Returns true when the hash names a topic (or something inside one).

@@ -350,7 +350,7 @@
   function setCaption(html) {
     clearTimeout(capTimer);
     caption.classList.add("swap");
-    capTimer = setTimeout(() => { caption.innerHTML = html; caption.classList.remove("swap"); }, 220);
+    capTimer = setTimeout(() => { caption.innerHTML = "<span>" + html + "</span>"; caption.classList.remove("swap"); }, 220);
   }
   const pick = () => { auto = false; hero.classList.remove("auto"); };
   wheels.forEach((w, wi) => {
@@ -409,9 +409,9 @@
     if (reduce) {
       w.static();
       stepBtns.forEach((b) => (b.hidden = true));
-      caption.innerHTML = i === 0
+      caption.innerHTML = "<span>" + (i === 0
         ? "Miners buy in → holders hold → trades fill the reward pot → miners and holders get paid → more people join."
-        : "You mine → miner bonus → holder rewards on your whole bag → your bag grows → level up, then around again.";
+        : "You mine → miner bonus → holder rewards on your whole bag → your bag grows → level up, then around again.") + "</span>";
     } else w.start();
     if (fade) requestAnimationFrame(() => requestAnimationFrame(() => w.root.classList.remove("entering")));
   }
