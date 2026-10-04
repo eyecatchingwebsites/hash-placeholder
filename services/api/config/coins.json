@@ -1,5 +1,5 @@
 {
-  "_note": "Pools from ForgeMiner 1.8.4's own Kryptex/LuckyPool samples (Oct 4). PRL and QUAN on Kryptex (PPS+, public per-worker API). QUAN is Quantus (Kryptex lists it as QTC); QTC here is QubitCoin (qhash). NVIDIA only for now: no AMD/Intel miner yet that Defender doesn't flag as a Trojan (SRBMiner 3.7.1 was). Pool login = payoutAddress + short worker id (see packages/switcher workerId). A coin without payoutAddress is never assigned. PRL's payoutAddress is the user's own PRL address for testing; replace it with the platform's before launch. QUAN and QTC have none yet.",
+  "_note": "Pools from ForgeMiner 1.8.4's own Kryptex/LuckyPool samples (Oct 4). PRL and QUAN on Kryptex (PPS+, public per-worker API). QUAN is Quantus (Kryptex lists it as QTC); QTC here is QubitCoin (qhash). AMD and Intel: Quantus with BzMiner (Defender-clean); SRBMiner and WildRig are flagged as Trojans. PRL and QubitCoin stay NVIDIA-only. Pool login = payoutAddress + short worker id (see packages/switcher workerId). A coin without payoutAddress is never assigned. PRL's payoutAddress is the user's own PRL address for testing; replace it with the platform's before launch. QUAN and QTC have none yet.",
   "coins": [
     {
       "id": "PRL",
@@ -32,7 +32,9 @@
       "algo": "quantus",
       "enabled": true,
       "vendors": [
-        "nvidia"
+        "nvidia",
+        "amd",
+        "intel"
       ],
       "liquidityUsdPerDay": 30000,
       "confirmHours": 2,
@@ -47,7 +49,9 @@
         }
       ],
       "miner": {
-        "nvidia": "forgeminer"
+        "nvidia": "forgeminer",
+        "amd": "bzminer",
+        "intel": "bzminer"
       }
     },
     {

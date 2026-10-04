@@ -1,13 +1,21 @@
 {
-  "_note": "ForgeMiner 1.8.4: official GitHub release, SHA-256 matches the one published in the release notes; Windows Defender doesn't flag it (SRBMiner 3.7.1 was quarantined as Trojan:Win32/Ravartar!rfn). Closed source: get the developer's OK for the app to download official releases (never rehosted) before launch. Flags confirmed by a live run on the user's RTX 4070 SUPER on Kryptex (Oct 4): 122.9 TH/s at 196 W, share accepted, worker visible in Kryptex's public API. Temperature limit 83/75 C: an 80 C limit would cycle on a normal gaming card (it reached 79 C in 3 minutes). devFee is per algorithm (%).",
+  "_note": "ForgeMiner 1.8.4: official GitHub release, SHA-256 matches the one published in the release notes; Windows Defender doesn't flag it (SRBMiner 3.7.1 was quarantined as Trojan:Win32/Ravartar!rfn). Closed source: get the developer's OK for the app to download official releases (never rehosted) before launch. Flags confirmed by a live run on the user's RTX 4070 SUPER on Kryptex (Oct 4): 122.9 TH/s at 196 W, share accepted, worker visible in Kryptex's public API. Temperature limit 83/75 C: an 80 C limit would cycle on a normal gaming card (it reached 79 C in 3 minutes). devFee is per algorithm (%). BzMiner v100.45 (Oct 4): official GitHub release, SHA-256 matches GitHub's digest, not flagged by Defender on download or unpack (WildRig 0.51.3 was: Trojan:Script/CoinMiner!rfn). Used for Quantus on AMD and Intel Arc. Not yet run: its dev fee is only printed at startup, and --devices numbering (it counts every device it finds) and --set http_port need a live check on an AMD PC.",
   "version": 1,
   "miners": [
     {
       "id": "forgeminer",
       "version": "1.8.4",
-      "algos": ["pearlhash", "quantus", "qhash"],
+      "algos": [
+        "pearlhash",
+        "quantus",
+        "qhash"
+      ],
       "devFee": 2,
-      "devFeeByAlgo": { "pearlhash": 2, "quantus": 2, "qhash": 1 },
+      "devFeeByAlgo": {
+        "pearlhash": 2,
+        "quantus": 2,
+        "qhash": 1
+      },
       "builds": {
         "windows-x86_64": {
           "url": "https://github.com/0xHashRaptor/ForgeMiner/releases/download/v1.8.4/ForgeMiner-1.8.4-windows.zip",
@@ -15,7 +23,53 @@
           "exe": "ForgeMiner-1.8.4-windows/forge.exe"
         }
       },
-      "args": ["--algorithm", "{algo}", "--pool", "{pool}", "--wallet", "{user}", "--gpu", "{device}", "--api-bind", "127.0.0.1:{apiPort}", "--temp-limit", "83", "--temp-resume", "75"]
+      "args": [
+        "--algorithm",
+        "{algo}",
+        "--pool",
+        "{pool}",
+        "--wallet",
+        "{user}",
+        "--gpu",
+        "{device}",
+        "--api-bind",
+        "127.0.0.1:{apiPort}",
+        "--temp-limit",
+        "83",
+        "--temp-resume",
+        "75"
+      ]
+    },
+    {
+      "id": "bzminer",
+      "version": "100.45",
+      "algos": [
+        "quantus"
+      ],
+      "builds": {
+        "windows-x86_64": {
+          "url": "https://github.com/bzminer/bzminer/releases/download/v100.45/bzminer_v100.45_windows.zip",
+          "sha256": "f925f0fb03b1244ea0182296acba8dd7fef9aee655483a08ecc3f6a948abfc91",
+          "exe": "bzminer_v100.45_windows/bzminer.exe"
+        }
+      },
+      "args": [
+        "-a",
+        "{algo}",
+        "-p",
+        "{pool}",
+        "-w",
+        "{user}",
+        "--pass",
+        "{pass}",
+        "--devices",
+        "{device}",
+        "--set",
+        "http_port={apiPort}",
+        "--set",
+        "safety.max_temp_c=83"
+      ],
+      "devFeeNote": "unknown: BzMiner prints each algorithm's fee at startup; check before launch"
     }
   ]
 }
