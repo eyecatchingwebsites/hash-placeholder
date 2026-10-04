@@ -19,7 +19,7 @@ git checkout claude/vibrant-cray-fpbieb
 ## 2. Where things stand
 
 - **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 25 as of the Oct 4 local session). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
-- **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). The desktop app has not been run on Windows yet.
+- **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). The desktop app builds and passes its end-to-end test on Windows (Oct 4), against the local API with a stand-in miner; no real miner or pool yet.
 - **Next in the build plan**: the devnet test run (Token-2022 token, fee collection, mock pool feed, batch payouts), then real miners and pools research. See `docs/TECHNICAL-PLAN.md`.
 - **Open decisions**: `docs/PROJECT.md` §11 (holder payout cadence, hold clocks, launchpad, legal review, etc.).
 
@@ -50,10 +50,10 @@ python3 apps/web/scripts/artifact_page.py            # make the artifact page in
 ## 5. The user's Windows PC (set up Oct 4, 2026)
 
 - **Project lives at `C:\Users\LukeW\dev\hash-placeholder`**, not the old `OneDrive\Documents\GitHub` copy. Windows Security's *Controlled folder access* (ransomware protection) is on and blocks Python, Node, Git and PowerShell from writing anywhere under `Documents`, which shows up as "Bad file descriptor", "No such file" or a hanging `npm install`. Don't work in the old folder.
-- Installed: Python 3.14 (`python`, also `py`), Node 24, npm 11, Git, Playwright + Chromium (global; `check_site.mjs` finds it). Rust/Tauri not installed yet.
+- Installed: Python 3.14 (`python`, also `py`), Node 24, npm 11, Git, Playwright + Chromium (global; `check_site.mjs` finds it). Rust 1.99 (rustup, MSVC toolchain) and Visual Studio Build Tools 2022 (C++ workload), installed Oct 4. `cargo` lives in `%USERPROFILE%\.cargo\bin`; restart the terminal after installing so it's on PATH.
 - `.gitattributes` keeps `*.svg` and the generated site files at LF, and the site scripts read and write UTF-8 with LF explicitly (Windows Python otherwise defaults to cp1252 and CRLF), so `build_standalone.py` and `artifact_page.py` give the same bytes on Windows and Linux.
 - `python` is 3.14; `python3` is a separate Microsoft Store 3.13. Both run the scripts.
-- **Verified locally (Oct 4):** `npm test` (engine 21, now 33; switcher 11; API 4) and `npm run typecheck` pass; `python sim/hashsim.py` reproduces the PROJECT.md §8 numbers; the standalone build is byte-identical to the repo; `check_site.mjs` passes at all six sizes; the artifact build matches the published preview byte for byte, and this local session can read the preview (so it can republish). Not run: `apps/desktop` (no Rust yet).
+- **Verified locally (Oct 4):** `npm test` (engine 21, now 33; switcher 11; API 4) and `npm run typecheck` pass; `python sim/hashsim.py` reproduces the PROJECT.md §8 numbers; the standalone build is byte-identical to the repo; `check_site.mjs` passes at all six sizes; the artifact build matches the published preview byte for byte, and this local session can read the preview (so it can republish). Desktop: `cargo test -p hashcoin-core` (12) and the end-to-end test pass on Windows; the app window launches against the local API. If a build fails with "invalid metadata files" after a crash or power cut, run `cargo clean` in `apps/desktop` and rebuild.
 
 ## 6. Cloud-session leftovers that don't carry over
 

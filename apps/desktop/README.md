@@ -17,7 +17,14 @@ ui/          the single-page UI
    `HASHCOIN_DEV_PUBKEY=<key> cargo run -p hashcoin-miner --features dev-key`, and set `apiBase` to
    `http://127.0.0.1:8787` in the settings file (app config dir `settings.json`).
 
-End-to-end test (API + app runtime + stand-in miner): see the `e2e` module in `src-tauri/src/runtime.rs`.
+   On Windows the settings file is `%APPDATA%\com.hashcoin.miner\settings.json`, and in PowerShell the
+   key is set with `$env:HASHCOIN_DEV_PUBKEY = "<key>"` before `cargo run`. Until real miners are configured,
+   copy `target\debug\examples\stand_in_miner.exe` to
+   `%LOCALAPPDATA%\com.hashcoin.miner\miners\prl-miner\0.0.0\prl-miner.exe` so Start has something to run.
+
+End-to-end test (API + app runtime + stand-in miner, runs on Windows, Linux and Mac): with the API running,
+`HASHCOIN_E2E_API=http://127.0.0.1:8787 HASHCOIN_E2E_PUBKEY=<key> cargo test -p hashcoin-miner --features dev-key -- --ignored`.
+The stand-in miner is `src-tauri/examples/stand_in_miner.rs`; `cargo test` builds it.
 
 ## Safety and trust rules built in
 - Only the public wallet address is ever requested. Never a seed phrase or private key.
