@@ -42,9 +42,9 @@ async function main() {
   const treasury = kp(keys.treasury), dev = kp(keys.dev), holders = keys.holders.map(kp);
   console.log(`treasury ${treasury.publicKey.toBase58()}`);
 
-  // --- SOL for fees and token-account rent (~0.05 SOL per run).
+  // --- SOL for rent and fees: ~0.02 SOL for the first round (mint + 7 token accounts), much less after.
   let sol = await conn.getBalance(treasury.publicKey);
-  if (sol < 0.2 * LAMPORTS_PER_SOL) {
+  if (sol < 0.02 * LAMPORTS_PER_SOL) {
     console.log("asking the devnet faucet for 1 SOL ...");
     try {
       const sig = await conn.requestAirdrop(treasury.publicKey, LAMPORTS_PER_SOL);
