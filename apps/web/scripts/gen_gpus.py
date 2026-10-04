@@ -19,7 +19,7 @@ from pathlib import Path
 
 src = Path(sys.argv[1] if len(sys.argv) > 1 else "data/hashrate-no-gpus-2026-10-03.json")
 date = re.search(r"(\d{4}-\d{2}-\d{2})", src.name)
-rows = json.loads(src.read_text())
+rows = json.loads(src.read_text(encoding="utf-8"))
 PRO = re.compile(r"^(CMP |RTX PRO |RTX A\d|TITAN|P10\d)")
 
 # (laptop name, desktop reference on hashrate.no, factor, approx. mining watts)
@@ -113,5 +113,5 @@ lines = [
 ]
 lines += ["  " + json.dumps(g, separators=(", ", ": ")) + "," for g in out]
 lines.append("];")
-dest.write_text("\n".join(lines) + "\n")
+dest.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 print(f"wrote {len(out)} GPUs ({sum(1 for g in out if g['group'] == 'Laptops')} laptops) to {dest}")

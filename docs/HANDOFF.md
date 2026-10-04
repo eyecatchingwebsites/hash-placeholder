@@ -12,7 +12,7 @@ git fetch origin
 git checkout claude/vibrant-cray-fpbieb
 ```
 
-- All website work is on **`claude/vibrant-cray-fpbieb`**. It is **not merged into `main`** and has no pull request yet. Merge it (or open a PR) before starting unrelated work, or keep working on this branch.
+- All website work is on **`claude/vibrant-cray-fpbieb`**. There is no `main` branch: the repo's default branch is `claude/lucid-fermat-16svvo`. This branch is **not merged into it** and has no pull request yet. Merge it (or open a PR) before starting unrelated work, or keep working on this branch.
 - Earlier branch: `claude/lucid-fermat-16svvo` (engine, switcher, API, desktop app; already the base of this branch).
 - Tools: Python 3 (site scripts and `sim/`, stdlib only), Node 20+ (`npm test`, `npm run typecheck` from the repo root), Rust + Tauri 2 for `apps/desktop`. Playwright is optional (browser checks, below).
 
@@ -28,7 +28,7 @@ git checkout claude/vibrant-cray-fpbieb
 ```sh
 cd apps/web && python3 -m http.server 8123          # serve it; open http://localhost:8123
 python3 apps/web/scripts/build_standalone.py         # after any change: rebuild the single-file pages
-node apps/web/scripts/check_site.mjs                 # browser check at 6 sizes (needs Playwright)
+node apps/web/scripts/check_site.mjs                 # browser check at 6 sizes (needs Playwright and the server above running)
 python3 apps/web/scripts/artifact_page.py            # make the artifact page in apps/web/.artifact/
 ```
 
@@ -51,7 +51,9 @@ python3 apps/web/scripts/artifact_page.py            # make the artifact page in
 
 - **Project lives at `C:\Users\LukeW\dev\hash-placeholder`**, not the old `OneDrive\Documents\GitHub` copy. Windows Security's *Controlled folder access* (ransomware protection) is on and blocks Python, Node, Git and PowerShell from writing anywhere under `Documents`, which shows up as "Bad file descriptor", "No such file" or a hanging `npm install`. Don't work in the old folder.
 - Installed: Python 3.14 (`python`, also `py`), Node 24, npm 11, Git, Playwright + Chromium (global; `check_site.mjs` finds it). Rust/Tauri not installed yet.
-- `.gitattributes` keeps `*.svg` at LF line endings so `build_standalone.py` gives the same bytes on Windows and Linux.
+- `.gitattributes` keeps `*.svg` and the generated site files at LF, and the site scripts read and write UTF-8 with LF explicitly (Windows Python otherwise defaults to cp1252 and CRLF), so `build_standalone.py` and `artifact_page.py` give the same bytes on Windows and Linux.
+- `python` is 3.14; `python3` is a separate Microsoft Store 3.13. Both run the scripts.
+- **Verified locally (Oct 4):** `npm test` (engine 21, switcher 11, API 4) and `npm run typecheck` pass; `python sim/hashsim.py` reproduces the PROJECT.md §8 numbers; the standalone build is byte-identical to the repo; `check_site.mjs` passes at all six sizes; the artifact build matches the published preview byte for byte, and this local session can read the preview (so it can republish). Not run: `apps/desktop` (no Rust yet).
 
 ## 6. Cloud-session leftovers that don't carry over
 

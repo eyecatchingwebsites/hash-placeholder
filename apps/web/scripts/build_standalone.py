@@ -22,12 +22,12 @@ def data_uri(path: Path) -> str:
 
 
 def build(name: str) -> str:
-    html = (WEB / name).read_text()
-    css = (WEB / "assets/css/site.css").read_text()
+    html = (WEB / name).read_text(encoding="utf-8")
+    css = (WEB / "assets/css/site.css").read_text(encoding="utf-8")
     html = html.replace('<link rel="stylesheet" href="assets/css/site.css">', f"<style>\n{css}\n</style>")
 
     def inline_script(m):
-        js = (WEB / m.group(1)).read_text()
+        js = (WEB / m.group(1)).read_text(encoding="utf-8")
         return "<script>\n" + js.replace("</script", "<\\/script") + "\n</script>"
 
     html = re.sub(r'<script src="(assets/js/[^"]+)"></script>', inline_script, html)
@@ -46,7 +46,8 @@ def main():
     for name in PAGES:
         html = build(name)
         leftovers = re.findall(r'(?:src|href)="(?:assets|brand)/[^"]+"', html)
-        (OUT / name).write_text(html)
+        # Explicit UTF-8 and LF so Windows builds the same bytes as Linux.
+        (OUT / name).write_text(html, encoding="utf-8", newline="\n")
         print(f"wrote standalone/{name} ({len(html) // 1024} KB)" + (f"  unresolved: {leftovers}" if leftovers else ""))
 
 

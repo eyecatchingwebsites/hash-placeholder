@@ -34,7 +34,7 @@ def main() -> None:
     h = re.sub(r'<meta name="viewport"[^>]*>', "", h)
     h = re.sub(r"<title>.*?</title>", "<title>Hashcoin Website</title>", h, count=1, flags=re.S)
     h = h.replace("</style>", ".reveal { opacity: 1 !important; transform: none !important; }\n</style>", 1)
-    (out / "main.html").write_text(h, encoding="utf-8")
+    (out / "main.html").write_text(h, encoding="utf-8", newline="\n")
     for name in ("calculator.html", "faq.html"):
         shutil.copyfile(SRC / name, out / name)
     print(f"wrote {out / 'main.html'} ({len(h) // 1024} KB), calculator.html, faq.html")
