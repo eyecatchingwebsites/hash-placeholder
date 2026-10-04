@@ -144,7 +144,7 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 - **Never say** "pays for itself," "free," "earn 10x," or "guaranteed." Show real numbers once they exist.
 
 ## 7. Launch plan (decided)
-- **Launch day is expected to be the big day (user, Oct 4):** "I expect launch day to be really high if not the only day with lots of volume because we will be hyping it up the previous week on X." So launch-day payouts matter most. Consequence: on launch day nobody can have a hold clock or mining hours yet (the token didn't exist), so **everyone is H1/M1 on the day that pays the most**; levels only start mattering on day 2 (H2 after 24h) and later (M2 after 48h of mining, H3 after up to 7 days). See the open decision on pre-launch mining.
+- **Launch day is expected to be the big day (user, Oct 4):** "I expect launch day to be really high if not the only day with lots of volume because we will be hyping it up the previous week on X." So launch-day payouts matter most. On launch day nobody has a hold clock or mining hours yet, so everyone is H1/M1, which just means equal weight: holders split by bag, miners by √(mining), and nobody gets less (user, Oct 4: "everyone being level 1 just means its all equal weight"). Levels start separating people from day 2.
 - **Nothing goes on X until the website and tech are basically finished and proven.**
 - **No paid SOL beta** (boring, costs money, adds little).
 - **Proof:**
@@ -299,7 +299,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 - Payout cadence (10 min vs hourly) vs transaction cost.
 - Coins to support for switching, and which pools have per-worker APIs.
 - Legal review (payouts funded by other people's fees, custody, marketing language). The holder pot (passive rewards from other people's trading, run by us) is the part most likely to look like a security.
-- **Pre-launch mining (idea, Oct 4, not decided):** let GPUs mine through the hype week before launch. Their hours count toward M2/M3 from minute one, and everything they mined is paid in $HASH at launch, which puts a week of mining revenue into market buys on launch day (on top of the hype volume). Needs: the float or a launch-day buy of the accumulated mining, and clear wording that nothing is promised before launch.
+- **Pre-launch mining (idea, Oct 4, not decided):** let GPUs mine through the hype week before launch; everything they mined is paid in $HASH at launch, which puts a week of mining revenue into market buys on launch day (on top of the hype volume). Needs: the float or a launch-day buy of the accumulated mining, and clear wording that nothing is promised before launch.
 - **Launch token setup: recommendation (Claude, Oct 4; the user is unsure, nothing decided):**
   - **Supply (decided, user Oct 4): 21,000,000 $HASH**, 6 decimals, all minted once; then the mint authority is revoked (no more can ever be made) and there is no freeze authority.
   - **Allocation:** 98% into the liquidity pool, 1% dev (bought openly, locked/vested as decided in §2), 1% treasury float in the multisig (fronts the "paid now" share of mining before the mined coin sells; shown publicly). No team, marketing or presale allocation: payouts come from the tax and from mining, so none is needed.
