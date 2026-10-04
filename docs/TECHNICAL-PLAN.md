@@ -102,7 +102,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 - Rate limiting on the API (per IP and per wallet).
 
 ## Phase 4: Website (`apps/web`)
-The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README). Next:
+The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `docs/HANDOFF.md`). Its current state is in `docs/PROJECT.md` §13. Next:
 1. **Framework:** move to a small Next.js or Astro site on Vercel, keeping the current design (tokens, fonts, sections).
 2. **Pages:**
    - `/`: landing (done as a draft)

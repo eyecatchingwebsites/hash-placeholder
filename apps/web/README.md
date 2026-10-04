@@ -20,13 +20,15 @@ python3 apps/web/scripts/build_standalone.py
 
 Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex Mono only in the math formulas) load from Google Fonts. Offline, the site falls back to system fonts and still works.
 
-**Preview link:** https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc (private claude.ai artifact, republished after each change from the `standalone/` files).
+**Preview link:** https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc (private claude.ai artifact, republished after each change). `python3 apps/web/scripts/artifact_page.py` turns `standalone/` into the artifact files in `.artifact/` (publish steps in its docstring and in `docs/HANDOFF.md`).
+
+**Check it in a browser:** serve the folder on port 8123, then `node apps/web/scripts/check_site.mjs` (needs Playwright). It checks the hero fits the window, the flywheel caption never changes height, and there's no horizontal scroll or page error at six sizes from phone to 2560 wide, and saves screenshots to `.shots/`.
 
 ## Pages
 
 | File | What it is |
 |---|---|
-| `index.html` | Home, written for traders: hero with a mining / holding estimate, a simulated tax pot (trades → tax → split to miners and holders), the estimate math, why the tax pays out, holder and miner level tables, the miner app, tokenomics, status, waitlist with countdown, FAQ |
+| `index.html` | Home: hero ("The first token your GPU gets paid to buy.", hold it / mine it / or both) beside two animated flywheels (the coin, your bag), then a topic explorer showing one topic at a time: what you'd make, how it works, levels, tokenomics, mining, launch, FAQ |
 | `calculator.html` | Full calculator: GPU, power, electricity, miner level, bag and holder level, volume per GPU, average GPU and miner level mix |
 | `faq.html` | FAQ and docs: getting started, mining, payouts, levels, token, safety, risks |
 
@@ -42,6 +44,8 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic. Home: topic tabs (one section shown at a time, `#hash` links open tabs), earnings with auto-cycling levels, GPU meter, tax-pot simulation; on big screens `fitExplore` scales the explorer to fill the screen |
 | `assets/js/cycle.js` | Hero flywheels: two rings (the coin, your bag) built from one `makeWheel` engine, with a controller for the tabs, shared caption, step buttons and pause |
 | `assets/js/gpus.js` | **Generated** GPU list (133 cards: 91 from `data/hashrate-no-gpus-2026-10-03.json`, plus 42 laptop GPUs estimated from desktop siblings and marked `est`) |
+| `scripts/build_standalone.py`, `scripts/artifact_page.py` | Build the single-file pages; turn them into the artifact files |
+| `scripts/check_site.mjs` | Browser check at six screen sizes (Playwright) |
 | `scripts/gen_gpus.py` | Regenerates `gpus.js`: `python3 apps/web/scripts/gen_gpus.py data/<file>.json` (from the repo root) |
 | `brand/` | Logo files, logo explorations and the website questionnaire |
 

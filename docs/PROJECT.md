@@ -1,6 +1,6 @@
 # $HASH / Hashcoin: Project File (v3)
 
-Last updated: October 3, 2026. Stage: design, simulation, and early build. Numbers are scenario assumptions, not forecasts. Not financial or legal advice.
+Last updated: October 4, 2026. Stage: design, simulation, and early build. Numbers are scenario assumptions, not forecasts. Not financial or legal advice.
 
 - Original v1 notes (from the earlier chat): `docs/PROJECT-v1-original.md`
 - Architecture: `docs/ARCHITECTURE.md`
@@ -13,7 +13,7 @@ Last updated: October 3, 2026. Stage: design, simulation, and early build. Numbe
 - Logo: `apps/web/brand/logo/` · logo explorations: https://claude.ai/artifact/JTubhyKEYFEAsCWrdL9jF9 · color picker: https://claude.ai/artifact/H4h9afZLydLLgRYaXWqFnd
 - **Website (static front end): `apps/web`** (`index.html`, `calculator.html`, `faq.html`; how to run: `apps/web/README.md`). **Live preview link (always the latest version): https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc**. Republish it after every website change (from `apps/web/standalone/`). The old draft artifact (https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ) is outdated.
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
-- Work happens in a Claude Code cloud session (the user has $100 of gifted cloud credits). Branches so far: `claude/lucid-fermat-16svvo`, then `claude/vibrant-cray-fpbieb` (website build).
+- **Resuming in a new or local session: `docs/HANDOFF.md`.** Work so far happened in Claude Code cloud sessions. Branches: `claude/lucid-fermat-16svvo`, then `claude/vibrant-cray-fpbieb` (website build; all work pushed, not yet merged into `main`).
 
 ---
 
@@ -239,7 +239,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 3% token, fee collection, mock pool feed, batch payouts | Next |
-| Website (`apps/web`) | Updated Oct 3 for the 5% two-ladder design (mining/holding estimate, both level tables, new math, tokenomics, FAQ). Static front end built Oct 3 from the questionnaire answers: home, calculator, FAQ/docs pages. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js` |
+| Website (`apps/web`) | Static front end (home, calculator, FAQ/docs), reworked through Oct 4 from user feedback; current state in §13 "Current website (Oct 4)". Preview Version 21. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js`. Browser check: `apps/web/scripts/check_site.mjs` |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | Done (`excluded` in `runEpoch` and `runHolderPayout`) |
@@ -272,6 +272,13 @@ It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and
 **Logo (decided Oct 3):** option C, an italic two-bar hash on a coin. Coin #EBB447, hash white. Final files in `apps/web/brand/logo/` (SVG master, PNGs 16–1024, favicon, wordmark lockups). Brand accent color = #EBB447.
 
 ## 13. Website direction (Oct 3)
+**Current website (Oct 4, preview Version 21).** The bullets further down are the dated history; where they disagree, this summary wins.
+- **Hero, left:** title "The first token your GPU gets paid to buy." (no tag above it), lede "Spare power on everyday PCs becomes nonstop buying of $HASH. Then 5% of every trade flows back: a bonus that tops miners up to 5× what they mine, and rewards for everyone holding.", bullets Hold it (no GPU needed) / Mine it (no buying needed) / Or both, buttons "Join the waitlist (Coming soon)" and "What would I make?".
+- **Hero, right:** two flywheels with tabs. The coin flywheel (Miners buy in → Holders hold → Trades fill the pot → Both get paid → More people join) plays three times, then the bag flywheel once per level (Get $HASH: buy, mine or both → Trades pay you → Your bag grows → Level up → Bigger share; mint/violet/gold per level), then back. A framed caption bar under the wheel with step buttons and Pause.
+- **Topic explorer** (seven tiles, one topic at a time, fills the screen on big monitors): What you'd make (level cards; Holding "No GPU needed", Mining "No buying needed", Hold + mine), How it works (5% pot, holder rewards, miner bonus, the self-balancing split slider, tax-pot simulation and math behind toggles), Levels, Tokenomics, Mining (your PC works like normal), Launch (waitlist placeholder, countdown, status), FAQ.
+- **Header:** Earnings, How it works, Levels, Tokenomics, Mining, FAQ; X, Discord, CA (at launch), Join the waitlist.
+- Still to verify before launch: the "first" claim (re-search), the "your PC works like normal" claim on every coin the app switches to, and the holder payout cadence (the site must not say holders are paid every 10 minutes until decided).
+
 - **Positioning (user, Oct 3; audience order updated Oct 4, see "Traders first"): not a memecoin.** Present $HASH as a token with real tech: any PC with a GPU mines, every payout is a market buy of $HASH, holders are rewarded, and a 5% tax pays it all back out. **Audience: traders who already own a PC with a GPU**: gaming PCs, gaming laptops, AI rigs, editing and render workstations (user, Oct 3: "it's not just gaming PCs"). A few clicks to start. Don't market to existing GPU miners: they'd flood the chest without caring about the coin.
 - **Hero (Oct 3, revised):** title "Your GPU buys $HASH for you." with four short bullets (Press Start / every payout is a buy / every trade pays you / your PC works like normal, it only uses spare GPU power) and device chips (gaming PCs, laptops, AI rigs, editing & render). No ticker strip. Right side: the looping five-station ring (Press Start → your GPU mines → it buys $HASH → paid to your wallet → every trade pays 5%) around a large coin, one step at a time, with the chain link to the next station drawing itself in gold. Four spokes to the coin stay visible the whole time with labels ("Buy inflow", "5% tax" in; "Pays miners", "Pays holders" out); the ones that matter for the current step glow. Transitions are smoothed: finished stations keep their last frame, links and captions fade, a station's picture fades out before it rewinds. The hero fills one screen on desktop (sized to the window height).
 - **Positioning:** a platform with a real function, not a joke memecoin. Look like a real product company. References: usepaid.app, usehotbot.com, boneronlong.xyz (plus octoprotocol.io).
