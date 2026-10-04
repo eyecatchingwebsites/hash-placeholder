@@ -29,6 +29,11 @@ fn load_settings(dir: &Path) -> Settings {
         s.rig_id = wallet::rig_id_from_hostname(&host);
     }
     if s.api_base.is_empty() { s.api_base = DEFAULT_API.into(); }
+    // Development only: point a debug build at a local API without editing the settings file.
+    #[cfg(all(debug_assertions, feature = "dev-key"))]
+    if let Ok(api) = std::env::var("HASHCOIN_API") {
+        s.api_base = api;
+    }
     s
 }
 
@@ -92,7 +97,9 @@ fn main() {
         .setup(|app| {
             let config_dir = app.path().app_config_dir()?;
             let data_dir = app.path().app_local_data_dir()?;
-            let mut rt = Runtime::new(load_settings(&config_dir), key_ring(), data_dir);
+            let settings = load_settings(&config_dir);
+            eprintln!("Hashcoin Miner: settings {} | server {}", settings_path(&config_dir).display(), settings.api_base);
+            let mut rt = Runtime::new(settings, key_ring(), data_dir);
             rt.set_gpus(detect_gpus());
             let shared: Shared = Arc::new(Mutex::new(rt));
             app.manage(shared.clone());
