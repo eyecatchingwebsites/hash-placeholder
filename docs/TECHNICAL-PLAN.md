@@ -9,7 +9,7 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 ## 0. Where things stand
 | Area | State | Location |
 |---|---|---|
-| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 29 tests | `packages/engine` |
+| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 33 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
@@ -75,7 +75,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 | Job | Every | Does |
 |---|---|---|
 | collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet. Each hour, credits mining hours per wallet with `creditedHours` (actual vs the catalog rate for the GPU's model; full at 80%+), keeps a rolling 14-day total for M levels, and flags GPUs running >150% of their claimed model |
-| chain-watch | live | Transfer indexer, then `WalletState` per wallet (`applyBalanceChange` with `clockStartTokens`), plus the level price (`levelPriceUsd` of the 1h and 7-day averages). Tags treasury and payout transfers so volume stats count outside trades only |
+| chain-watch | live | Transfer indexer (skips transfers inside a linked group: `isInternalTransfer`), then `WalletState` per wallet or linked group (`applyBalanceChange` with `clockStartTokens`), plus the level price (`levelPriceUsd` of the 1h and 7-day averages). Tags treasury and payout transfers so volume stats count outside trades only |
 | fee-watch | 10 min | Harvests the Token-2022 tax, then `splitTax` → dev / chest / holder-pot buckets |
 | holders | 1 h or 1 day | `runHolderPayout` over all wallets (excluding dev, treasury, pools, exchanges) → `sendBatch` |
 | epoch | 10 min | `runEpoch` → buy $HASH → `splitTokens` → `sendBatch` → write the ledger |
@@ -109,7 +109,7 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
 2. **Pages:**
    - `/`: landing (done as a draft)
    - `/dashboard`: live totals, chest, burn of fees, recent payouts with Solscan links, coin mix, GPUs online
-   - `/wallet/[address]`: miner and holder level, progress ("$12 to H1", "18h to H2", "40 more hours mined to M3"), paid / pending, payout history
+   - `/wallet/[address]`: wallet linking (connect each wallet and sign a plain, free message that says it moves nothing; `linkWallet` / `unlinkWallet`), miner and holder level, progress ("$12 to H1", "18h to H2", "40 more hours mined to M3"), paid / pending, payout history
    - `/download`: signed installer, SHA-256, VirusTotal link, antivirus FAQ
    - `/calculator`: the full calculator (`calculator/index.html`), fed live inputs at launch
 3. **Waitlist backend:** a `waitlist` table, a POST endpoint, and a live counter. Store an X handle or email, the GPU model, and an optional public wallet. Rate-limit and validate.

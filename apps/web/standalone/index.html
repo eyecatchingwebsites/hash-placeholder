@@ -1260,17 +1260,17 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             <button type="button" class="lv-card" role="radio" data-lv="1" aria-checked="true">
               <span class="lv-top"><span class="lv-name">Level 1</span><b class="lv-x">1×</b></span>
               <span class="lv-req"><i>Hold</i>$50+</span>
-              <span class="lv-req"><i>Mine</i>Any day</span>
+              <span class="lv-req"><i>Mine</i>Any amount</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="2" aria-checked="false">
               <span class="lv-top"><span class="lv-name">Level 2</span><b class="lv-x">2×</b></span>
               <span class="lv-req"><i>Hold</i>$500+ for a day</span>
-              <span class="lv-req"><i>Mine</i>48h in 2 weeks</span>
+              <span class="lv-req"><i>Mine</i>48h in 2 weeks + hold $50</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="3" aria-checked="false">
               <span class="lv-top"><span class="lv-name">Level 3</span><b class="lv-x">4×</b></span>
               <span class="lv-req"><i>Hold</i>$2,500+ for 7 days</span>
-              <span class="lv-req"><i>Mine</i>120h in 2 weeks</span>
+              <span class="lv-req"><i>Mine</i>120h in 2 weeks + hold $500 a day</span>
             </button>
           </div>
 
@@ -1289,7 +1289,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
               <div id="hold-flag"></div>
             </div>
             <div class="ecard">
-              <h3>Mining <span class="h3-sub">No buying needed</span></h3>
+              <h3>Mining <span class="h3-sub" id="mine-needs">No buying needed</span></h3>
               <label class="sr-only" for="earn-gpu">Your GPU</label>
               <select class="select" id="earn-gpu"></select>
               <div class="earn-big"><b id="earn-day">—</b><span>/day</span></div>
@@ -1962,8 +1962,15 @@ window.HashModel = (function () {
 
   // GPU <select> builder shared by the home and calculator pages. Names only, grouped;
   // laptop GPUs estimated from desktop data are marked "est.".
+  const GPU_GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
+  // The card at the top of the dropdown (the default everywhere, so no card is picked for no reason).
+  window.hcTopGpu = function () {
+    const gpus = window.GPUS || [];
+    for (const [key] of GPU_GROUPS) { const g = gpus.find((x) => x.group === key); if (g) return g; }
+    return gpus[0];
+  };
   window.hcFillGpuSelect = function (sel, selectedName) {
-    const GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
+    const GROUPS = GPU_GROUPS;
     const groups = {};
     (window.GPUS || []).forEach((g) => {
       if (!groups[g.group]) groups[g.group] = [];
@@ -2544,7 +2551,7 @@ window.HashModel = (function () {
   const cards = $$(".lv-card", cardsBox);
   const sel = $("#earn-gpu");
   const AUTO_MS = 3400;
-  const S = { gpu: "RTX 4070", level: reduce ? 2 : 1, bag: 2500, auto: !reduce };
+  const S = { gpu: hcTopGpu().name, level: reduce ? 2 : 1, bag: 2500, auto: !reduce };
   hcFillGpuSelect(sel, S.gpu);
   sel.addEventListener("change", () => { S.gpu = sel.value; render(); });
   $("#bag").addEventListener("input", (e) => {
@@ -2614,7 +2621,8 @@ window.HashModel = (function () {
     cards.forEach((c) => c.setAttribute("aria-checked", String(+c.dataset.lv === L)));
     cards.forEach((c) => (c.tabIndex = +c.dataset.lv === L ? 0 : -1));
 
-    // If you mine
+    // If you mine (M2 and M3 also need a small bag: H1 and H2)
+    $("#mine-needs").textContent = ["No buying needed", "Needs $50 held", "Needs $500 held a day"][L - 1];
     const r = M.miner({ myRev: g.rev, level: L });
     const top = M.miner({ myRev: g.rev, level: 3 }).total || 1;
     tween($("#earn-day"), r.total, money);

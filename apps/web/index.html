@@ -271,17 +271,17 @@
             <button type="button" class="lv-card" role="radio" data-lv="1" aria-checked="true">
               <span class="lv-top"><span class="lv-name">Level 1</span><b class="lv-x">1×</b></span>
               <span class="lv-req"><i>Hold</i>$50+</span>
-              <span class="lv-req"><i>Mine</i>Any day</span>
+              <span class="lv-req"><i>Mine</i>Any amount</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="2" aria-checked="false">
               <span class="lv-top"><span class="lv-name">Level 2</span><b class="lv-x">2×</b></span>
               <span class="lv-req"><i>Hold</i>$500+ for a day</span>
-              <span class="lv-req"><i>Mine</i>48h in 2 weeks</span>
+              <span class="lv-req"><i>Mine</i>48h in 2 weeks + hold $50</span>
             </button>
             <button type="button" class="lv-card" role="radio" data-lv="3" aria-checked="false">
               <span class="lv-top"><span class="lv-name">Level 3</span><b class="lv-x">4×</b></span>
               <span class="lv-req"><i>Hold</i>$2,500+ for 7 days</span>
-              <span class="lv-req"><i>Mine</i>120h in 2 weeks</span>
+              <span class="lv-req"><i>Mine</i>120h in 2 weeks + hold $500 a day</span>
             </button>
           </div>
 
@@ -300,7 +300,7 @@
               <div id="hold-flag"></div>
             </div>
             <div class="ecard">
-              <h3>Mining <span class="h3-sub">No buying needed</span></h3>
+              <h3>Mining <span class="h3-sub" id="mine-needs">No buying needed</span></h3>
               <label class="sr-only" for="earn-gpu">Your GPU</label>
               <select class="select" id="earn-gpu"></select>
               <div class="earn-big"><b id="earn-day">—</b><span>/day</span></div>

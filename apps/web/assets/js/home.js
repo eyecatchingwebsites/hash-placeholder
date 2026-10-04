@@ -90,7 +90,7 @@
   const cards = $$(".lv-card", cardsBox);
   const sel = $("#earn-gpu");
   const AUTO_MS = 3400;
-  const S = { gpu: "RTX 4070", level: reduce ? 2 : 1, bag: 2500, auto: !reduce };
+  const S = { gpu: hcTopGpu().name, level: reduce ? 2 : 1, bag: 2500, auto: !reduce };
   hcFillGpuSelect(sel, S.gpu);
   sel.addEventListener("change", () => { S.gpu = sel.value; render(); });
   $("#bag").addEventListener("input", (e) => {
@@ -160,7 +160,8 @@
     cards.forEach((c) => c.setAttribute("aria-checked", String(+c.dataset.lv === L)));
     cards.forEach((c) => (c.tabIndex = +c.dataset.lv === L ? 0 : -1));
 
-    // If you mine
+    // If you mine (M2 and M3 also need a small bag: H1 and H2)
+    $("#mine-needs").textContent = ["No buying needed", "Needs $50 held", "Needs $500 held a day"][L - 1];
     const r = M.miner({ myRev: g.rev, level: L });
     const top = M.miner({ myRev: g.rev, level: 3 }).total || 1;
     tween($("#earn-day"), r.total, money);

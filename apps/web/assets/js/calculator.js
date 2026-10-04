@@ -11,7 +11,7 @@
   const fromPos = (p) => RANGE[0] * Math.pow(RANGE[1] / RANGE[0], p / 1000);
   const nice = (v) => { const m = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / m) * m; };
 
-  const g0 = GPUS.find((g) => g.name === "RTX 4070") || GPUS[0];
+  const g0 = hcTopGpu();
   const DEFAULTS = {
     gpu: g0.name, myRev: g0.rev, watts: g0.w, elec: 0.15, level: 2, bag: 500, hlevel: 2,
     volPerGpu: E.volPerGpu, avgRev: E.avgRev, p2: E.mMix[1], p3: E.mMix[2],

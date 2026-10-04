@@ -134,8 +134,15 @@
 
   // GPU <select> builder shared by the home and calculator pages. Names only, grouped;
   // laptop GPUs estimated from desktop data are marked "est.".
+  const GPU_GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
+  // The card at the top of the dropdown (the default everywhere, so no card is picked for no reason).
+  window.hcTopGpu = function () {
+    const gpus = window.GPUS || [];
+    for (const [key] of GPU_GROUPS) { const g = gpus.find((x) => x.group === key); if (g) return g; }
+    return gpus[0];
+  };
   window.hcFillGpuSelect = function (sel, selectedName) {
-    const GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
+    const GROUPS = GPU_GROUPS;
     const groups = {};
     (window.GPUS || []).forEach((g) => {
       if (!groups[g.group]) groups[g.group] = [];

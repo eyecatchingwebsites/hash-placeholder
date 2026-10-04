@@ -1196,7 +1196,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             </details>
             <details>
               <summary>What is the hold clock?</summary>
-              <div class="a"><p>It starts once your bag first reaches $50 and keeps running, even through price dips. <b>Bigger bags age faster:</b> the clock runs at 1× up to $2,500, 2× at $5,000 and 3× at $7,500 or more, so buying more speeds it up from then on. <b>Selling costs 2.5× its share:</b> sell 10% of your bag and the clock loses 25%; sell 40% or more and it restarts from zero. Any transfer out counts as selling, including sending to another wallet, a liquidity pool or an exchange.</p></div>
+              <div class="a"><p>It starts once your bag first reaches $50 and keeps running, even through price dips. <b>Bigger bags age faster:</b> the clock runs at 1× up to $2,500, 2× at $5,000 and 3× at $7,500 or more, so buying more speeds it up from then on. <b>Selling costs 2.5× its share:</b> sell 10% of your bag and the clock loses 25%; sell 40% or more and it restarts from zero. Any transfer out counts as selling, including sending to a liquidity pool or an exchange. Moving $HASH between your own wallets doesn't, once you link them on the wallet page (at launch): you sign a free message with each, and they share one bag and one clock.</p></div>
             </details>
             <details>
               <summary>Does mined $HASH count toward the thresholds?</summary>
@@ -1467,8 +1467,15 @@ window.HASHCOIN = Object.assign({
 
   // GPU <select> builder shared by the home and calculator pages. Names only, grouped;
   // laptop GPUs estimated from desktop data are marked "est.".
+  const GPU_GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
+  // The card at the top of the dropdown (the default everywhere, so no card is picked for no reason).
+  window.hcTopGpu = function () {
+    const gpus = window.GPUS || [];
+    for (const [key] of GPU_GROUPS) { const g = gpus.find((x) => x.group === key); if (g) return g; }
+    return gpus[0];
+  };
   window.hcFillGpuSelect = function (sel, selectedName) {
-    const GROUPS = [["NVIDIA", "NVIDIA desktop"], ["AMD", "AMD desktop"], ["Intel", "Intel desktop"], ["Laptops", "Laptops"], ["Workstation & mining cards", "Workstation and mining cards"]];
+    const GROUPS = GPU_GROUPS;
     const groups = {};
     (window.GPUS || []).forEach((g) => {
       if (!groups[g.group]) groups[g.group] = [];

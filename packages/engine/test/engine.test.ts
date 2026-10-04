@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DAY_MS, DEFAULT_RULES, HOUR_MS, advanceClock, applyBalanceChange, chestShares, clockSpeed, clockStartTokens,
-  computeHolderLevel, computeMinerLevel, creditedHours, holdClockMs, hourCredit, holderMinShare, holderProgress, levelPriceUsd, runEpoch,
+  computeHolderLevel, computeMinerLevel, creditedHours, holdClockMs, hourCredit, isInternalTransfer, linkWallet, unlinkWallet, holderMinShare, holderProgress, levelPriceUsd, runEpoch,
   runHolderPayout, settle, splitTax, splitTokens, type WalletState, type WeightInput,
 } from "../src/index.js";
 
@@ -99,6 +99,43 @@ describe("holder levels", () => {
     expect(p.usdToNextHolder).toBeCloseTo(200);
     expect(p.msToNextHolder).toBe(14 * HOUR_MS);
     expect(p.speed).toBe(1);
+  });
+});
+
+describe("wallet linking", () => {
+  it("merges clocks weighted by bag, so a fresh wallet can't borrow an aged clock", () => {
+    const aged = wallet(2500, 21 * 24, "a");
+    const fresh = applyBalanceChange({ ...EMPTY, address: "b" }, tokensFor(7500), T0, price, R);
+    const g = linkWallet(aged, fresh, T0, price, R);
+    expect(g.address).toBe("a");
+    expect(g.balance).toBe(tokensFor(10000));
+    expect(g.clockMs).toBeCloseTo(0.25 * 21 * DAY_MS);
+    expect(computeHolderLevel(g, price, T0, R)).toBe(2); // 5.25 days: not H3 yet
+  });
+
+  it("linking an empty wallet changes nothing; two unstarted clocks start if the group is big enough", () => {
+    const aged = wallet(2500, 100, "a");
+    expect(linkWallet(aged, { ...EMPTY, address: "b" }, T0, price, R).clockMs).toBe(100 * HOUR_MS);
+    const dust = (addr: string) => applyBalanceChange({ ...EMPTY, address: addr }, tokensFor(30), T0, price, R);
+    expect(dust("x").clockMs).toBeNull();
+    expect(linkWallet(dust("x"), dust("y"), T0, price, R).clockMs).toBe(0); // $60 together
+  });
+
+  it("transfers inside a group aren't sales", () => {
+    const groupOf = (a: string) => ({ a: "g1", b: "g1", c: "g2" })[a];
+    expect(isInternalTransfer("a", "b", groupOf)).toBe(true);
+    expect(isInternalTransfer("a", "c", groupOf)).toBe(false);
+    expect(isInternalTransfer("a", "z", groupOf)).toBe(false);
+    expect(isInternalTransfer("y", "z", groupOf)).toBe(false);
+  });
+
+  it("unlinking counts as that wallet selling its share, and it starts over", () => {
+    const g = wallet(4000, 100, "a");
+    const { group, wallet: left } = unlinkWallet(g, { address: "b", balance: tokensFor(800) }, T0, price, R);
+    expect(group.balance).toBe(tokensFor(3200));
+    expect(group.clockMs).toBeCloseTo(50 * HOUR_MS); // sold 20% → lost half
+    expect(left.clockMs).toBe(0);
+    expect(left.balance).toBe(tokensFor(800));
   });
 });
 
