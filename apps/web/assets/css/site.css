@@ -954,3 +954,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   .cycle-controls { gap: 8px; }
   #cycle-pause { min-height: 32px; padding: 0 12px; }
 }
+
+/* Trader-first (Oct 4): holding comes first, a GPU is the optional extra */
+.ecard h3 .h3-sub { margin-left: 8px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line-2); font: 600 .72rem/1 var(--font-body); color: var(--muted); vertical-align: 2px; letter-spacing: 0; }
+.art-figure .opt { justify-self: center; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--gold-line); color: var(--gold); font: 700 .56rem/1 var(--font-display); letter-spacing: .02em; }
+.art-buyin .fake-btn { padding: 6px 12px; }
+.nowrap { white-space: nowrap; }
