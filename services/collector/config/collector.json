@@ -1,0 +1,19 @@
+{
+  "_note": "Which coins to collect from Kryptex, and benchmark hashrates (H/s) per GPU model, from hashrate.no's PRL benchmark page (fetched Oct 4, 2026). Cards not listed are judged against their own best 3-hour average. Payout addresses come from services/api/config/coins.json.",
+  "everyMinutes": 5,
+  "coins": {
+    "PRL": {
+      "kryptex": "prl",
+      "catalog": {
+        "RTX 5090": 417.9e12,
+        "RTX 4090": 304.6e12,
+        "RTX 4080": 159.3e12,
+        "RTX 4070 Ti": 142.3e12,
+        "RTX 4070 Super": 132.3e12,
+        "RTX 4070": 115.5e12,
+        "RTX 3080": 105.2e12
+      }
+    },
+    "QUAN": { "kryptex": "qtc", "catalog": {} }
+  }
+}
