@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  DAY_MS, DEFAULT_RULES, HOUR_MS, applyBalanceChange, chestShares, computeHolderLevel, computeMinerLevel,
-  holdClockMs, holderMinShare, holderProgress, runEpoch, runHolderPayout, settle, splitTax, splitTokens,
+  DAY_MS, DEFAULT_RULES, HOUR_MS, applyBalanceChange, chestShares, clockStartTokens, computeHolderLevel,
+  computeMinerLevel, holdClockMs, holderMinShare, holderProgress, levelPriceUsd, runEpoch, runHolderPayout, settle, splitTax, splitTokens,
   type WalletState, type WeightInput,
 } from "../src/index.js";
 
@@ -41,6 +41,24 @@ describe("holder levels", () => {
     w = applyBalanceChange(w, -w.balance, T0 + 101 * HOUR_MS); // sell everything
     expect(w.clockStartAt).toBeNull();
     expect(holdClockMs(w, T0 + 200 * HOUR_MS)).toBe(0);
+  });
+
+  it("the clock only starts once the bag reaches the H1 size, so dust can't pre-age a wallet", () => {
+    const min = clockStartTokens(price, R);
+    expect(min).toBe(tokensFor(50));
+    let w: WalletState = { address: "w", balance: 0n, clockStartAt: null };
+    w = applyBalanceChange(w, tokensFor(1), T0, min); // park $1 early
+    expect(w.clockStartAt).toBeNull();
+    w = applyBalanceChange(w, tokensFor(2500), T0 + 100 * HOUR_MS, min); // the real buy, days later
+    expect(w.clockStartAt).toBe(T0 + 100 * HOUR_MS);
+    expect(computeHolderLevel(w, price, T0 + 100 * HOUR_MS, R)).toBe(1); // not H3 straight away
+    w = applyBalanceChange(w, tokensFor(1000), T0 + 120 * HOUR_MS, min); // topping up still never moves it
+    expect(w.clockStartAt).toBe(T0 + 100 * HOUR_MS);
+  });
+
+  it("levels use the higher of the 1h and 7-day prices, so a crash doesn't drop levels at once", () => {
+    expect(levelPriceUsd(0.0005, 0.001)).toBe(0.001);
+    expect(levelPriceUsd(0.002, 0.001)).toBe(0.002);
   });
 
   it("reports progress to the next holder level", () => {
@@ -166,6 +184,7 @@ describe("epoch", () => {
     expect(byAddr.c!.chestUsd).toBeCloseTo(40);
     expect(r.pending).toHaveLength(3);
     expect(r.carryUsd).toBeCloseTo(0);
+    expect(r.totals.buyUsd).toBeCloseTo(0.1125); // only mining is bought; the chest is already $HASH
   });
 
   it("never pays the chest to excluded wallets", () => {

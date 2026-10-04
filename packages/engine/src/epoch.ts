@@ -32,7 +32,10 @@ export interface PayoutLine {
   pendingUsd: number;
   chestShare: number;
   chestUsd: number;
-  /** USD paid in this epoch's batch (immediate mining + chest). */
+  /**
+   * USD paid in this epoch's batch (immediate mining + chest). Only the mining part is bought
+   * on the market; the chest is paid from the harvested tax, which is already $HASH.
+   */
   payNowUsd: number;
 }
 
@@ -52,7 +55,11 @@ export interface EpochResult {
   pending: PendingRecord[];
   /** Chest not distributed (wallet caps, no eligible miners); add it to the next epoch. */
   carryUsd: number;
-  totals: { miningUsd: number; immediateUsd: number; pendingUsd: number; chestUsd: number; payNowUsd: number };
+  totals: {
+    miningUsd: number; immediateUsd: number; pendingUsd: number; chestUsd: number; payNowUsd: number;
+    /** USD of $HASH the treasury buys on the market this epoch: the immediate mining share only. */
+    buyUsd: number;
+  };
 }
 
 const EMPTY_WALLET = (address: string): WalletState => ({ address, balance: 0n, clockStartAt: null });
@@ -102,7 +109,7 @@ export function runEpoch(input: EpochInput): EpochResult {
     carryUsd: Math.max(0, input.chestUsd - chestPaid),
     totals: {
       miningUsd: miningTotal, immediateUsd: sum("immediateUsd"), pendingUsd: sum("pendingUsd"),
-      chestUsd: chestPaid, payNowUsd: sum("payNowUsd"),
+      chestUsd: chestPaid, payNowUsd: sum("payNowUsd"), buyUsd: sum("immediateUsd"),
     },
   };
 }

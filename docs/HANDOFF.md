@@ -18,7 +18,7 @@ git checkout claude/vibrant-cray-fpbieb
 
 ## 2. Where things stand
 
-- **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 21 at handoff). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
+- **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 22 as of the Oct 4 local session). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
 - **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). The desktop app has not been run on Windows yet.
 - **Next in the build plan**: the devnet test run (Token-2022 token, fee collection, mock pool feed, batch payouts), then real miners and pools research. See `docs/TECHNICAL-PLAN.md`.
 - **Open decisions**: `docs/PROJECT.md` §11 (holder payout cadence, hold clocks, launchpad, legal review, etc.).
@@ -53,7 +53,7 @@ python3 apps/web/scripts/artifact_page.py            # make the artifact page in
 - Installed: Python 3.14 (`python`, also `py`), Node 24, npm 11, Git, Playwright + Chromium (global; `check_site.mjs` finds it). Rust/Tauri not installed yet.
 - `.gitattributes` keeps `*.svg` and the generated site files at LF, and the site scripts read and write UTF-8 with LF explicitly (Windows Python otherwise defaults to cp1252 and CRLF), so `build_standalone.py` and `artifact_page.py` give the same bytes on Windows and Linux.
 - `python` is 3.14; `python3` is a separate Microsoft Store 3.13. Both run the scripts.
-- **Verified locally (Oct 4):** `npm test` (engine 21, switcher 11, API 4) and `npm run typecheck` pass; `python sim/hashsim.py` reproduces the PROJECT.md §8 numbers; the standalone build is byte-identical to the repo; `check_site.mjs` passes at all six sizes; the artifact build matches the published preview byte for byte, and this local session can read the preview (so it can republish). Not run: `apps/desktop` (no Rust yet).
+- **Verified locally (Oct 4):** `npm test` (engine 21, now 23; switcher 11; API 4) and `npm run typecheck` pass; `python sim/hashsim.py` reproduces the PROJECT.md §8 numbers; the standalone build is byte-identical to the repo; `check_site.mjs` passes at all six sizes; the artifact build matches the published preview byte for byte, and this local session can read the preview (so it can republish). Not run: `apps/desktop` (no Rust yet).
 
 ## 6. Cloud-session leftovers that don't carry over
 

@@ -32,7 +32,9 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
   - Reaching 5× needs about **$283 of daily volume per mining GPU** (4 × $2.50 ÷ 3.5% − $2.50). Above that miners get exactly 5× and holders get more; below it miners get the full 3.5% and holders get 1%.
 - **Why 5% now:** with a dynamic split, the higher tax pays miners and holders more instead of looking like extraction. Trade-offs: a round trip costs 10% instead of 6% (fewer flippers, less volume), and Raydium LaunchLab's reward launch (1% or 3%, unverified) probably can't do 5%, so the likely route is our own Token-2022 token with a Raydium CPMM or Orca pool. The sim: if 5% cuts volume 30%, miner income falls ~20%.
 - **Fee authorities:** fee config and withdraw authorities in a multisig. Publicly commit to never raising the fee, and ideally renounce the config authority after launch. Set the max fee per transfer high.
-- **Our own transfers are taxed too** (payouts to miners, etc.). The fee is held in the recipient account and collected back into the treasury, so it recirculates. Send a little extra so miners receive the full amount.
+- **Our own transfers are taxed too** (payouts to miners, etc.). Token-2022 has no per-wallet fee exemption. The fee is held in the recipient account and collected back into the treasury, so it recirculates. Send a little extra so miners receive the full amount. The treasury's market buy is also taxed, so mining value reaches miners ~5% smaller (that 5% goes to the pot); a miner who sells straight away loses another 5%, ~10% plus swap costs versus selling the mined coin directly.
+- **Stats exclude our own transfers.** Volume and "tax collected" shown on the site count only outside trades, not treasury buys or payouts (their withheld fee still goes into the split).
+- **Only mining is bought on the market.** The chest and holder pot are paid from the harvested tax, which is already $HASH (engine: `totals.buyUsd` = the immediate mining share).
 - **Launchpad:**
   - **pump.fun can't do this.** Its creator fee is fixed (0.30% on the curve, then 0.95% → 0.05% on PumpSwap), only charged in its own pools, and can be avoided elsewhere, which is the $UPLIFT problem.
   - **Options:**
@@ -55,8 +57,8 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 | H3 | ≥ $2,500 | ≥ 72 hours | 4× |
 
 - **Holder pot share** = bag × holder multiplier, each wallet capped at 5% of the pot (excess shared out, rest carries). Linear in the bag, not √, so splitting one bag across wallets gains nothing.
-- **Hold clock:** starts when $HASH first lands in the wallet and keeps running through dips. **Selling shrinks it in proportion** (sell 25% of the bag → the clock drops 25%; sell everything → it resets). Buying never moves it. Short clocks because tokens move fast (user decision). Transfers out count as selling, including wallet-to-wallet moves, LP and CEX deposits.
-- **Dips:** falling below a bag threshold drops the level; recovering restores it immediately, no new wait.
+- **Hold clock:** starts when the bag first reaches the H1 size ($50) and keeps running through dips (changed Oct 4 from "when $HASH first lands", so a $1 dust buy can't pre-age a wallet for an instant H3 later; `clockStartTokens` in the engine). Pre-aging still works with $50 per wallet. **Selling shrinks it in proportion** (sell 25% of the bag → the clock drops 25%; sell everything → it resets). Buying never moves it. Short clocks because tokens move fast (user decision). Transfers out count as selling, including wallet-to-wallet moves, LP and CEX deposits.
+- **Dips:** levels value the bag at the **higher of the ~1h and ~7-day average prices** (Oct 4, was ~1h only), so a crash takes about a week to drop anyone's level while a rise counts within the hour. This softens the crash spiral (price drops → H levels drop → M2/M3 drop too). Falling below a bag threshold drops the level; recovering restores it immediately, no new wait. Engine: `levelPriceUsd`.
 - **Excluded from the holder pot:** dev, treasury, payout, liquidity-pool and exchange wallets.
 - **Payout cadence:** hourly or daily (paying every holder every 10 minutes costs too much in transactions). Draft.
 
@@ -70,7 +72,8 @@ A memecoin plus GPU-mining platform, marketed to **memecoin traders who have gam
 
 - Gating M2/M3 on holder levels keeps the reason for miners to buy and hold (user decision); the sim found buying-in to level up is what lifts price most.
 - Miners who hold also earn from the holder pot on their own bag: doing both pays from both pots.
-- **Mined $HASH counts** toward holder thresholds. **Position value** uses a ~1-hour average price, checked at each payout.
+- **Mined $HASH counts** toward holder thresholds. **Position value** uses the level price above (higher of the 1h and 7-day averages), checked at each payout.
+- **"5×" is an average across all miners**, and only when volume per GPU is high enough. With √ weighting a small GPU at M3 gets more than 5× and a big GPU at M1 less, so the site says miners "average up to 5×", never that each miner is topped up to 5× (copy fixed Oct 4).
 - **The website shows "paid in the last 24h" per level** after launch, never promised percentages. Only the 1:2:4 ratios, the 5× target, the 3.5% cap and the 1% holder minimum are fixed.
 - **Sqrt balancing** for miners: small GPUs get the biggest multiplier relative to what they mine.
 - Engine: `computeHolderLevel`, `computeMinerLevel`, `applyBalanceChange` (hold clock), `runEpoch` (miners), `runHolderPayout` (holders) in `packages/engine`.
@@ -232,14 +235,14 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 ## 10. Build status
 | Piece | Status |
 |---|---|
-| Payout engine (`packages/engine`): tax split (5× target, 3.5% cap, 1% holder minimum), holder levels with hold clock, miner levels, chest and holder-pot weights with caps, epoch, hybrid payout, settlement, token split | Done, 21 tests (updated Oct 3 for the two ladders) |
+| Payout engine (`packages/engine`): tax split (5× target, 3.5% cap, 1% holder minimum), holder levels with hold clock, miner levels, chest and holder-pot weights with caps, epoch, hybrid payout, settlement, token split | Done, 23 tests (Oct 4: clock starts at the H1 bag, level price, `buyUsd`) |
 | Coin switcher (`packages/switcher`): per-card scoring (benchmarks or hashrate.no catalog, slippage and confirmation-delay penalties), hysteresis, Ed25519-signed assignments, wallet validation | Done, 11 tests |
 | Assignment API (`services/api`): `POST /v1/assignments`, signed miner list `GET /v1/miners`, `/v1/keys`, `/v1/health` | Done, 4 tests. Placeholder pools and miners in `config/` |
 | Desktop app (`apps/desktop`): Rust core (GPU detection, signature checks, hash-verified downloads, safe unzip, flag-injection guard, crash-restart supervisor) + Tauri 2 shell (wallet entry, Start/Stop, tray, background check-ins) | Core: 13 tests. App compiles. End-to-end test passes (API + app + stand-in miner). Not yet run on Windows |
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`, blocks until the production key is set) | Added, not yet run on GitHub |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Devnet test run: Token-2022 5% token, fee collection, mock pool feed, batch payouts | Next |
-| Website (`apps/web`) | Static front end (home, calculator, FAQ/docs), reworked through Oct 4 from user feedback; current state in §13 "Current website (Oct 4)". Preview Version 21. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js`. Browser check: `apps/web/scripts/check_site.mjs` |
+| Website (`apps/web`) | Static front end (home, calculator, FAQ/docs), reworked through Oct 4 from user feedback; current state in §13 "Current website (Oct 4)". Preview Version 22. Backend features (waitlist, download, live stats, payout feed, wallet addresses) are labeled placeholders. Launch settings in `apps/web/assets/js/config.js`. Browser check: `apps/web/scripts/check_site.mjs` |
 | Real miners and pools (licenses, dev fees, per-worker APIs) for PRL / QUAN / QTC | Research needed |
 | Desktop: code signing, temperature/power limits, pause while gaming, auto-update, benchmarks, AV false-positive submissions | To do (`apps/desktop/README.md`) |
 | Engine: exclude dev/treasury wallets from the chest | Done (`excluded` in `runEpoch` and `runHolderPayout`) |
@@ -265,15 +268,24 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 - Renter capture (~8% of the chest in the sim): a longer M2 window would cut it, at the cost of slower leveling.
 - Payout cadence (10 min vs hourly) vs transaction cost.
 - Coins to support for switching, and which pools have per-worker APIs.
-- Legal review (payouts funded by other people's fees, custody, marketing language).
+- Legal review (payouts funded by other people's fees, custody, marketing language). The holder pot (passive rewards from other people's trading, run by us) is the part most likely to look like a security.
+- **Launch token setup** (none decided yet): total supply and where the other 99% goes; the pool's starting liquidity and whether the LP is locked or burned; revoke the mint and freeze authorities; no other Token-2022 extensions (no permanent delegate, no transfer hook); a plan against snipers, since launching our own pool has no bonding curve.
+- Website estimate: the 5% tax filters out bot and arbitrage volume, which is much of Solana memecoin volume, so $750 per GPU is optimistic even for launch week. Consider a lower default or a clearly labeled range.
+
+**Technical review (Oct 4, local session) and the user's answers:**
+- **Splitting mining across wallets (√ weighting):** one hashrate split over K wallets gets √K times the chest weight, and M1 needs no bag, so extra wallets are free. One person with one GPU can do this, so it doesn't depend on how many miners join. **User (Oct 4):** pre-launch visitors will be traders, so it won't be flooded with miners; as more GPUs come in, change the protocol to **require more $HASH buying as an entry ticket into mining**. That ticket (a bag in every mining wallet) is also the fix for splitting, so add it before the chest is large. Known risk until then.
+- **Rented and farm hashrate:** the 5× target makes renting profitable and anyone can point a miner at the pool with their wallet, with or without the app. Same answer: the entry ticket grows with GPU count.
+- **Pool login:** `packages/switcher/src/assign.ts` logs in to the pool with the miner's Solana wallet. On normal pools that login must be the coin's payout address, so the coin would never reach us. Needs `PLATFORM_COIN_ADDRESS.solWallet.rig-gpu` (or a pool account, or our own pool); fix it when the pool is chosen (Phase 1). User: none of the tech is set up yet.
+- **Money in vs money moved:** the only outside money is mining revenue (1,000 GPUs ≈ $2.5K/day of buys against ≈ $283K/day of volume at the 5× target); the chest and holder pot redistribute traders' tax. **User:** the level system makes miners buy more and feel pressure to hold (the sim agrees: levels roughly doubled the price outcome).
+- **Trust:** all the tax lands in a wallet we control and our server decides payouts; the fee withdraw authority can't be renounced. Plan: publish every payout round (inputs, who got what, Solscan links) so anyone can re-run the open-source engine and check it; a multisig with independent signers; an on-chain claim later.
 
 ## 12. Name: Hashcoin ($HASH), decided Oct 3
 It follows the classic coin pattern (Bitcoin, Litecoin, Dogecoin, Hashcoin), and "hash" is literally what payouts are measured by (hashrate). Before launch, check the .com and the $HASH ticker for clashes on Solana (HASH is also Provenance Blockchain's ticker on other chains).
 **Logo (decided Oct 3):** option C, an italic two-bar hash on a coin. Coin #EBB447, hash white. Final files in `apps/web/brand/logo/` (SVG master, PNGs 16–1024, favicon, wordmark lockups). Brand accent color = #EBB447.
 
 ## 13. Website direction (Oct 3)
-**Current website (Oct 4, preview Version 21).** The bullets further down are the dated history; where they disagree, this summary wins.
-- **Hero, left:** title "The first token your GPU gets paid to buy." (no tag above it), lede "Spare power on everyday PCs becomes nonstop buying of $HASH. Then 5% of every trade flows back: a bonus that tops miners up to 5× what they mine, and rewards for everyone holding.", bullets Hold it (no GPU needed) / Mine it (no buying needed) / Or both, buttons "Join the waitlist (Coming soon)" and "What would I make?".
+**Current website (Oct 4, preview Version 22).** The bullets further down are the dated history; where they disagree, this summary wins.
+- **Hero, left:** title "The first token your GPU gets paid to buy." (no tag above it), lede "Spare power on everyday PCs becomes nonstop buying of $HASH. Then 5% of every trade flows back: a bonus that lifts miners' average pay up to 5× what they mine, and rewards for everyone holding." (Oct 4: was "tops miners up to 5×", which isn't true for each miner), bullets Hold it (no GPU needed) / Mine it (no buying needed) / Or both, buttons "Join the waitlist (Coming soon)" and "What would I make?".
 - **Hero, right:** two flywheels with tabs. The coin flywheel (Miners buy in → Holders hold → Trades fill the pot → Both get paid → More people join) plays three times, then the bag flywheel once per level (Get $HASH: buy, mine or both → Trades pay you → Your bag grows → Level up → Bigger share; mint/violet/gold per level), then back. A framed caption bar under the wheel with step buttons and Pause.
 - **Topic explorer** (seven tiles, one topic at a time, fills the screen on big monitors): What you'd make (level cards; Holding "No GPU needed", Mining "No buying needed", Hold + mine), How it works (5% pot, holder rewards, miner bonus, the self-balancing split slider, tax-pot simulation and math behind toggles), Levels, Tokenomics, Mining (your PC works like normal), Launch (waitlist placeholder, countdown, status), FAQ.
 - **Header:** Earnings, How it works, Levels, Tokenomics, Mining, FAQ; X, Discord, CA (at launch), Join the waitlist.

@@ -251,7 +251,7 @@
       "<b>Miners buy in.</b> Every miner's earnings are swapped into $HASH on the market, around the clock.",
       "<b>Holders hold.</b> A bigger bag held longer earns a bigger share, so less gets sold.",
       "<b>Trades fill the reward pot.</b> 5% of every buy and sell goes to miners and holders. More trading, bigger rewards.",
-      "<b>Both get paid.</b> Miners are topped up to 5× what they mine. Holders share the rest, at least 1% of every trade.",
+      "<b>Both get paid.</b> Miners average up to 5× what they mine. Holders share the rest, at least 1% of every trade.",
       "<b>More people join.</b> Bigger rewards draw more GPUs and holders, and more buying. Around it goes.",
     ],
     spokes: { 0: "in", 1: "in", 2: "in", 3: "out", 4: "in" },

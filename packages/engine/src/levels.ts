@@ -1,5 +1,10 @@
 import type { HolderLevel, Level, Rules } from "./rules.js";
 
+/** The level price: the higher of the ~1h and ~7-day average prices. */
+export function levelPriceUsd(avg1hUsd: number, avg7dUsd: number): number {
+  return Math.max(avg1hUsd, avg7dUsd);
+}
+
 /** What the platform tracks per wallet. Token amounts are in base units. */
 export interface WalletState {
   address: string;
@@ -7,14 +12,17 @@ export interface WalletState {
   balance: bigint;
   /**
    * Start of the hold clock (ms epoch); the clock reads `now - clockStartAt`.
-   * Starts when $HASH first lands. Selling a fraction f of the bag shrinks the clock by f.
-   * Buying never moves it. Null while the wallet holds nothing.
+   * Starts when the bag first reaches the H1 size. Selling a fraction f of the bag shrinks the
+   * clock by f. Buying never moves it. Null until then and while the wallet holds nothing.
    */
   clockStartAt: number | null;
 }
 
 export interface PriceContext {
-  /** USD per whole token, ideally a ~1h time-weighted average. */
+  /**
+   * USD per whole token for level thresholds: the higher of the ~1h and ~7-day averages,
+   * so a crash takes about a week to drop anyone's level while a rise counts within the hour.
+   */
   priceUsd: number;
   decimals: number;
 }
@@ -54,18 +62,26 @@ export function computeMinerLevel(daysMined: number, holderLevel: HolderLevel, r
   return 1;
 }
 
+/** Token amount (base units) worth the H1 bag at this price: the hold clock starts at this size. */
+export function clockStartTokens(p: PriceContext, rules: Rules): bigint {
+  if (p.priceUsd <= 0) return 0n;
+  return BigInt(Math.ceil((rules.holder.usd[0] / p.priceUsd) * 10 ** p.decimals));
+}
+
 /**
  * Apply an observed on-chain balance change to the wallet state.
  * Any outflow counts as selling, including wallet-to-wallet transfers, LP and exchange deposits.
+ * The clock starts with the first inflow that leaves the bag at `clockMin` or more (the H1 bag,
+ * from `clockStartTokens`), so dust can't be parked early to pre-age a wallet.
  */
-export function applyBalanceChange(w: WalletState, delta: bigint, at: number): WalletState {
+export function applyBalanceChange(w: WalletState, delta: bigint, at: number, clockMin = 0n): WalletState {
   const before = w.balance;
   const balance = before + delta < 0n ? 0n : before + delta;
   let clockStartAt = w.clockStartAt;
   if (balance === 0n) {
     clockStartAt = null;
   } else if (delta > 0n && clockStartAt === null) {
-    clockStartAt = at;
+    if (balance >= clockMin) clockStartAt = at;
   } else if (delta < 0n && clockStartAt !== null && before > 0n) {
     const keptFraction = Number(balance) / Number(before);
     const clock = Math.max(0, at - clockStartAt);

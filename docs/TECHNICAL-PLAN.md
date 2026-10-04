@@ -9,7 +9,7 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 ## 0. Where things stand
 | Area | State | Location |
 |---|---|---|
-| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 21 tests | `packages/engine` |
+| Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 23 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 13 tests, end-to-end test passes, never run on Windows | `apps/desktop` |
@@ -33,7 +33,7 @@ These block real mining. Each one is research plus a decision from the user.
    - Must-haves:
      - **Per-worker stats API** (accepted shares or hashrate per worker name), because payouts are credited from this.
      - Worker names in the form `wallet.rig-gpu`.
-     - Payout to one platform address.
+     - Payout to one platform address. **The login must be our coin address plus the worker name** (`PLATFORM_COIN_ADDRESS.solWallet.rig-gpu`), or a pool account. `packages/switcher/src/assign.ts` currently logs in with the Solana wallet alone, which on a normal pool would send the coin nowhere. Check each pool's worker-name length limit (Solana addresses are 32–44 characters) and fix `assign.ts` once a pool is chosen.
      - PPS/PPLNS terms and the pool fee.
      - Regions.
    - Output: fill in `services/api/config/coins.json`.
@@ -54,7 +54,7 @@ These block real mining. Each one is research plus a decision from the user.
 Goal: prove fee → chest → payouts on devnet with fake miners.
 
 1. `packages/chain` (TypeScript, `@solana/web3.js` + `@solana/spl-token`):
-   - `createHashMint()`: Token-2022 mint with the transfer-fee extension at 300 bps, a high max fee, and both fee authorities set to a multisig. Devnet: a throwaway keypair from env, never committed.
+   - `createHashMint()`: Token-2022 mint with the transfer-fee extension at 500 bps, a high max fee, and both fee authorities set to a multisig. Mint and freeze authorities revoked after minting; no other extensions. Devnet: a throwaway keypair from env, never committed.
    - `harvestFees()`: collect withheld fees from token accounts (`harvestWithheldTokensToMint` + `withdrawWithheldTokensFromMint`), then split with `splitTax` into dev, chest and holder-pot wallets.
    - `indexTransfers(fromSlot)`: stream every $HASH transfer, then call `applyBalanceChange` per wallet (any outflow shrinks the hold clock in proportion). Webhook or polling.
    - `sendBatch(transfers)`: pack about 20 transfers per transaction (Token-2022 `transferChecked` with fee), with priority fees and retry. Create associated token accounts for new miners (budget ~0.002 SOL each).
@@ -75,7 +75,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 | Job | Every | Does |
 |---|---|---|
 | collector | 1 min | Pulls per-worker stats from each pool, then earnings estimates per wallet |
-| chain-watch | live | Transfer indexer, then `WalletState` per wallet, plus the 1h average price |
+| chain-watch | live | Transfer indexer, then `WalletState` per wallet (`applyBalanceChange` with `clockStartTokens`), plus the level price (`levelPriceUsd` of the 1h and 7-day averages). Tags treasury and payout transfers so volume stats count outside trades only |
 | fee-watch | 10 min | Harvests the Token-2022 tax, then `splitTax` → dev / chest / holder-pot buckets |
 | holders | 1 h or 1 day | `runHolderPayout` over all wallets (excluding dev, treasury, pools, exchanges) → `sendBatch` |
 | epoch | 10 min | `runEpoch` → buy $HASH → `splitTokens` → `sendBatch` → write the ledger |
@@ -94,8 +94,10 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 - `float` (balance snapshots)
 - `waitlist`
 
+**Public payout record (trust):** every payout round publishes its inputs (tax harvested, mined USD per wallet, levels, prices) and its results (who got what, Solscan links) on the dashboard, so anyone can re-run the open-source engine and get the same numbers. Later: publish a hash of each round on-chain and pay through an on-chain claim.
+
 **Safety:**
-- Treasury in a Squads multisig. The hot payout wallet holds only the float, with an automatic refill from the multisig needing manual approval above a limit.
+- Treasury in a Squads multisig, with signers who aren't all the same person. The hot payout wallet holds only the float, with an automatic refill from the multisig needing manual approval above a limit.
 - A kill switch: pause payouts.
 - Alerts: float low, epoch failed, pool feed stale, RPC errors, payout tx failures.
 - Watch for block withholding: expected vs actual blocks per pool, and flag wallets with many shares but no blocks.
@@ -140,7 +142,9 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
 - Security review of the backend, payout signing and key handling. Consider an external review of `packages/chain` and the treasury flows.
 - Load test the epoch job (5,000 wallets → transfer batching and RPC limits).
 - Our own pool for any coin without a suitable pool (open-source stratum server + node), only if Phase 1 found no option.
+- **Mining entry ticket (user, Oct 4):** as GPUs grow, require a $HASH bag in every mining wallet before it gets any chest share. It also stops one GPU being split across many wallets for extra √ weight. Add it to the engine and sim before the chest is large.
 - Launch checklist:
+  - Token setup decided (`docs/PROJECT.md` §11): supply, starting liquidity and LP lock/burn, mint and freeze authorities revoked, no other extensions, anti-snipe plan.
   - Multisig configured and fee authorities moved.
   - Dev wallet locked or vested publicly.
   - Float funded (~$1K).
