@@ -993,16 +993,13 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .art-figure .fig-extra { margin-top: 2px; font: 600 .58rem/1.2 var(--font-body); color: var(--dim); }
 .hero h1 { text-wrap: balance; }
 
-/* Hero: eyebrow + one-sentence lede that tells what's new */
-.hero-eyebrow { display: inline-flex; align-items: center; gap: .5em; margin: 0 0 clamp(14px, 2vh, 24px); padding: .45em .9em; border-radius: 999px; border: 1px solid var(--gold-line); background: var(--gold-soft); color: var(--gold); font: 700 clamp(.8rem, calc(.3vw + .5rem), 1.1rem)/1 var(--font-display); letter-spacing: .01em; }
-.hero-eyebrow::before { content: ""; width: .5em; height: .5em; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+/* Hero: one-sentence lede that tells what's new */
 .hero-lede { margin: clamp(16px, 2.4vh, 28px) 0 0; max-width: 32em; color: var(--muted); font-size: clamp(1.05rem, calc(.6vw + .45rem), 1.75rem); line-height: 1.45; }
 .hero-lede b { color: var(--gold); font-weight: 700; }
 .hero h1 { max-width: 13ch; }
-@media (min-width: 1180px) { .hero h1 { max-width: none; font-size: clamp(2.6rem, min(3.7vw, 7.6vh), 5.1rem); } }
+@media (min-width: 1180px) { .hero h1 { max-width: none; font-size: clamp(2.6rem, min(4.4vw, 8.2vh), 7rem); } }
 @media (min-width: 1180px) and (max-height: 820px) {
-  .hero-eyebrow { margin-bottom: 10px; font-size: .78rem; }
-  .hero-lede { margin-top: 12px; font-size: 1rem; }
+    .hero-lede { margin-top: 12px; font-size: 1rem; }
   .hero h1 { font-size: 2.5rem; }
 }
 
