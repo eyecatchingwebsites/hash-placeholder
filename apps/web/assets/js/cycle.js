@@ -1,7 +1,7 @@
 // Hero flywheels. Two rings of five stations around the Hashcoin coin, switched with tabs:
 //   1. The coin flywheel: miners buy in, holders hold, trades pay 5%, the split balances, more join.
-//   2. Your bag flywheel: you mine, your bag grows, you level up, bigger share, earn on both
-//      (one loop per level, Level 1 to 3).
+//   2. Your bag flywheel: buy or mine (or both), trades pay your bag, it grows, you level up,
+//      a bigger share (one loop per level, Level 1 to 3).
 // One step at a time: the active station plays its animation, then the link to the next station
 // draws itself and the next station takes over. Spokes to the coin and their labels stay visible;
 // the ones that matter for the current step glow. A finished station keeps its last frame and is
@@ -96,8 +96,14 @@
         const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), tg = tags[k];
         return Math.min(c > 1e-6 ? tg.offsetWidth * sc / 2 / c : Infinity, s > 1e-6 ? tg.offsetHeight * sc / 2 / s : Infinity);
       };
+      // Center distance at which the label's box (at its 1.1× "hot" size) clears its card's box.
+      const clear = (k) => {
+        const a = angle(+k), c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a)), tg = tags[k];
+        const tw = tg.offsetWidth * sc * 1.1, th = tg.offsetHeight * sc * 1.1;
+        return Math.min(c > 1e-6 ? (tw + cardW) / 2 / c : Infinity, s > 1e-6 ? (th + cardH) / 2 / s : Infinity);
+      };
       const tagAt = {};
-      Object.keys(spokes).forEach((k) => (tagAt[k] = edge(+k) - ext(k) * 1.1 - 12 * sc));
+      Object.keys(spokes).forEach((k) => (tagAt[k] = R - clear(k) - 12 * sc));
       const room = Math.min(...stations.map((_, i) => edge(i) - 26 * sc), ...Object.keys(spokes).map((k) => tagAt[k] - ext(k) * 1.1 - 12 * sc));
       const coinD = Math.round(Math.min(230 * sc, Math.max(84, 2 * room)));
       core.style.left = cx + "px";
@@ -258,21 +264,23 @@
   });
 
   // ---------- Flywheel 2: your bag, one loop per level ----------
-  // Example in dollars from the site's own estimate (assets/js/model.js): a sample bag at each
-  // level, plus an RTX 5090 as the optional extra. Each loop: buy, holder rewards, a GPU on top,
-  // a week of growth, then the next level (a new color scheme for the whole wheel).
+  // Buying and mining are two ways in, not steps you must do: either one fills the same bag, and
+  // the loop is the bag itself (rewards, growth, level, bigger share). Example in dollars from the
+  // site's own estimate (assets/js/model.js): a sample bag at each level and an RTX 5090. Each loop
+  // ends on the next level, with a new color scheme for the whole wheel.
   const bagRoot = document.getElementById("fw-bag");
   const bagCore = bagRoot.querySelector("[data-core-lvl]").parentElement;
   const HM = window.HashModel;
   const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 10.71 };
   const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
   const EXAMPLE_BAG = [450, 2200, 6000];
+  const NEXT_NEEDS = { 2: "$500+ for a day", 3: "$2,500+ for 3 days" };
   const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
   const bagNums = (L) => {
-    const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L, mult: 1.9 };
+    const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L };
     const bag = EXAMPLE_BAG[L - 1];
     const h = HM ? HM.holder(bag, L) : { perDay: bag * 0.0088 * L, yieldPct: 0.88 * L };
-    return { r, bag, h, week: 7 * (r.total || r.mining + r.chestShare) + 7 * h.perDay };
+    return { r, bag, h, weekHold: 7 * h.perDay, weekGpu: 7 * (r.mining + r.chestShare) };
   };
   let bagLevel = 1, bagTop = false;
   function setBagLevel(l) {
@@ -281,38 +289,37 @@
     hero.dataset.bagLevel = l;
     bagCore.querySelector("[data-core-lvl]").textContent = "Level " + l;
   }
+  function showMult(l) {
+    B("mult").textContent = ["", "1×", "2×", "4×"][l];
+    B("mult-sub").textContent = ["", "your bag counts once", "your bag counts double", "your bag counts 4 times"][l];
+  }
   function fillBag(L) {
     const n = bagNums(L);
-    B("buy").textContent = "Buy " + usd(n.bag);
     B("hold").textContent = "+" + usd(n.h.perDay);
     B("hold-sub").textContent = `a day on a ${usd(n.bag)} bag (${n.h.yieldPct.toFixed(2)}%)`;
-    B("gpu").textContent = "+" + usd(n.r.mining + n.r.chestShare);
-    B("gpu-sub").textContent = "a day, mining + bonus";
+    B("bonus").textContent = `+${usd(n.r.chestShare)} a day bonus if you mine`;
     B("bal").textContent = usd(n.bag);
-    B("week").textContent = "+" + usd(n.week);
-    B("lvnote").textContent = L < 3 ? `Next: Level ${L + 1}, ${["", "", "2×", "4×"][L + 1]} share` : "Top level: 4× share";
+    B("week-hold").textContent = "+" + usd(n.weekHold);
+    B("week-gpu").textContent = "+" + usd(n.weekGpu);
+    B("lvnote").textContent = L < 3 ? `Level ${L + 1}: ${NEXT_NEEDS[L + 1]}` : "Top level";
+    showMult(Math.min(3, L + 1));
     return n;
   }
   const bag = makeWheel(bagRoot, {
     captions: [
-      "<b>You buy $HASH.</b> From $50, your bag earns holder rewards. No GPU needed.",
-      "<b>Every trade pays you.</b> 5% of every buy and sell fills the reward pot, and holders share at least 1% of every trade.",
-      "<b>Got a GPU? Add it.</b> Optional. Mining adds more $HASH plus a miner bonus, and holding unlocks the bigger bonuses.",
-      "<b>Your bag grows.</b> Rewards and mining land in the same bag, and a bigger bag earns more.",
-      "<b>Level up.</b> A bigger bag, held longer, unlocks the next level and a bigger share. Then around again.",
+      "<b>Get $HASH.</b> Buy it, mine it with any PC that has a GPU, or both. Either way it lands in the same bag.",
+      "<b>Every trade pays your bag.</b> Holders share at least 1% of every trade. Miners also get a bonus on top.",
+      "<b>Your bag grows.</b> Rewards are paid in $HASH, so they start earning too.",
+      "<b>Level up.</b> A bigger bag, held longer, reaches the next level. Buying, mining and rewards all count.",
+      "<b>A bigger share.</b> Level 2 counts your bag double, Level 3 four times. Then around again.",
     ],
-    caption: (i) => (i === 4 && bagTop ? "<b>Top level.</b> Keep holding to keep Level 3 and its 4× share." : null),
-    spokes: { 0: "in", 1: "in", 2: "in", 3: "in", 4: "out" },
+    caption: (i) => (i >= 3 && bagTop ? (i === 3 ? "<b>Top level.</b> Keep holding to stay at Level 3." : "<b>4× share.</b> Level 3 counts your bag four times, for as long as you hold.") : null),
+    spokes: { 0: "in", 1: "in", 2: "in", 3: "out", 4: "out" },
     hot: every(5, 700),
-    pulse: [3],
+    pulse: [2],
     onStep(i, st) {
       if (i === 0) fillBag(bagLevel);
       if (i === 3) {
-        const n = bagNums(bagLevel);
-        B("bal").textContent = usd(n.bag);
-        countTo(B("bal"), n.bag, n.bag + n.week, st, (v) => "$" + fmt(v), 500, 1600);
-      }
-      if (i === 4) {
         const prev = bagLevel, next = Math.min(3, prev + 1);
         const art = st.querySelector(".art-level");
         art.style.setProperty("--from", ((prev - 1) / 2) * 100 + "%");
@@ -321,14 +328,15 @@
         bagTop = prev === 3;
         if (next !== prev) setTimeout(() => {
           setBagLevel(next);
-          B("lvnote").textContent = `Level ${next} unlocked: ${next === 2 ? "2×" : "4×"} share`;
+          B("lvnote").textContent = `Level ${next} unlocked`;
+          showMult(next);
         }, 1300);
       }
     },
     onStatic(sts) {
       setBagLevel(3);
       fillBag(3);
-      sts[4].querySelector(".art-level").dataset.level = 3;
+      sts[3].querySelector(".art-level").dataset.level = 3;
     },
   });
   // ---------- Controller: tabs, shared caption, steps and pause ----------
@@ -412,7 +420,7 @@
       stepBtns.forEach((b) => (b.hidden = true));
       caption.innerHTML = "<span>" + (i === 0
         ? "Miners buy in → holders hold → trades fill the reward pot → miners and holders get paid → more people join."
-        : "You buy → every trade pays your bag → optional: a GPU adds more → your bag grows → level up, then around again.") + "</span>";
+        : "Buy or mine $HASH (or both) → every trade pays your bag → your bag grows → level up → a bigger share, then around again.") + "</span>";
     } else w.start();
     if (fade) requestAnimationFrame(() => requestAnimationFrame(() => w.root.classList.remove("entering")));
   }
