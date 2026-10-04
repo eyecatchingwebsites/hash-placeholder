@@ -208,7 +208,11 @@ impl Runtime {
             download_verified(&build.url, &build.sha256, &dir)?;
         }
         let args = render_args(&spec.args, a, device, 4067 + device as u16)?;
-        let mut sup = Supervisor::new(exe, args);
+        // One log per GPU next to the miner, kept small: started fresh on each launch.
+        let log = dir.join(format!("gpu-{device}.log"));
+        let _ = std::fs::write(&log, format!("--- {} {}
+", exe.display(), args.join(" ")));
+        let mut sup = Supervisor::new(exe, args).with_log(log);
         sup.start()?;
         Ok(sup)
     }

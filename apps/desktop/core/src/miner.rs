@@ -42,16 +42,31 @@ pub struct Supervisor {
     child: Option<Child>,
     pub state: MinerState,
     failures: u32,
+    /// Where the miner's output goes (appended), so a crash can be diagnosed. None = discard.
+    log: Option<PathBuf>,
 }
 
 impl Supervisor {
     pub fn new(exe: PathBuf, args: Vec<String>) -> Self {
-        Self { exe, args, child: None, state: MinerState::Stopped, failures: 0 }
+        Self { exe, args, child: None, state: MinerState::Stopped, failures: 0, log: None }
+    }
+
+    /// Send the miner's output to this file (appended) instead of discarding it.
+    pub fn with_log(mut self, path: PathBuf) -> Self {
+        self.log = Some(path);
+        self
     }
 
     pub fn start(&mut self) -> Result<(), String> {
         let mut cmd = Command::new(&self.exe);
-        cmd.args(&self.args).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+        cmd.args(&self.args).stdin(Stdio::null());
+        match self.log.as_ref().and_then(|p| std::fs::OpenOptions::new().create(true).append(true).open(p).ok()) {
+            Some(f) => {
+                let err = f.try_clone().map_err(|e| e.to_string())?;
+                cmd.stdout(f).stderr(err);
+            }
+            None => { cmd.stdout(Stdio::null()).stderr(Stdio::null()); }
+        }
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
