@@ -13,44 +13,23 @@ export function weightOf(x: WeightInput, rules: Rules): number {
   return Math.pow(x.earningsUsd, rules.alpha) * rules.miner.mult[x.level];
 }
 
-/**
- * Shares per address from weights, summing to <= 1. Shares above `cap` are clipped and
- * the excess is redistributed to uncapped addresses by weight (water-filling). If every
- * address is capped, the leftover stays undistributed.
- */
-export function cappedShares(weights: Map<string, number>, cap: number): Map<string, number> {
+/** Each address's share of the pot: its weight over the total. No per-wallet cap (user, Oct 4). */
+export function proportionalShares(weights: Map<string, number>): Map<string, number> {
+  const total = [...weights.values()].reduce((a, w) => a + (w > 0 ? w : 0), 0);
   const shares = new Map<string, number>();
-  const limit = cap > 0 ? cap : 1;
-  const open = new Map([...weights].filter(([, w]) => w > 0));
-  let remaining = 1;
-  while (open.size > 0) {
-    const total = [...open.values()].reduce((a, b) => a + b, 0);
-    const capped: string[] = [];
-    for (const [addr, w] of open) {
-      if ((remaining * w) / total > limit) capped.push(addr);
-    }
-    if (capped.length === 0) {
-      for (const [addr, w] of open) shares.set(addr, (remaining * w) / total);
-      break;
-    }
-    for (const addr of capped) {
-      shares.set(addr, limit);
-      open.delete(addr);
-      remaining -= limit;
-    }
-    if (remaining <= 1e-12) break;
-  }
+  if (total <= 0) return shares;
+  for (const [addr, w] of weights) if (w > 0) shares.set(addr, w / total);
   return shares;
 }
 
-/** Miner chest shares: √(earnings) × miner level, capped per wallet. */
+/** Miner chest shares: √(earnings) × miner level. */
 export function chestShares(inputs: WeightInput[], rules: Rules): Map<string, number> {
   const weights = new Map<string, number>();
   for (const x of inputs) {
     const w = weightOf(x, rules);
     if (w > 0) weights.set(x.address, (weights.get(x.address) ?? 0) + w);
   }
-  return cappedShares(weights, rules.walletCap);
+  return proportionalShares(weights);
 }
 
 export interface HolderWeightInput {
@@ -61,7 +40,7 @@ export interface HolderWeightInput {
 }
 
 /**
- * Holder pot shares: bag × holder level, capped per wallet. Linear in the bag (not √),
+ * Holder pot shares: bag × holder level. Linear in the bag (not √),
  * so splitting one bag across many wallets gains nothing. Wallets below H1 get nothing.
  */
 export function holderShares(inputs: HolderWeightInput[], rules: Rules): Map<string, number> {
@@ -71,5 +50,5 @@ export function holderShares(inputs: HolderWeightInput[], rules: Rules): Map<str
     const w = x.balanceUsd * rules.holder.mult[x.level];
     weights.set(x.address, (weights.get(x.address) ?? 0) + w);
   }
-  return cappedShares(weights, rules.holder.walletCap);
+  return proportionalShares(weights);
 }

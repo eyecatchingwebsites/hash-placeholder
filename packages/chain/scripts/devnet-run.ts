@@ -18,10 +18,10 @@ const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const DATA = here("../data");
 const RPC = process.env.SOLANA_RPC ?? "https://api.devnet.solana.com";
 const DECIMALS = 6;
-const SUPPLY = 1_000_000_000n;
+const SUPPLY = 21_000_000n; // user, Oct 4
 const FEE = { bps: 500, max: SUPPLY * 10n ** BigInt(DECIMALS) }; // cap = whole supply, so the 5% always applies
-/** Devnet has no market, so assume a price: $0.001 → $1M market cap at 1B supply. */
-const PRICE_USD = 0.001;
+/** Devnet has no market, so assume a price: $1M market cap at 21M supply. */
+const PRICE_USD = 1_000_000 / 21_000_000;
 /** Test holders' bags in USD: below H1, H1, H2-sized, H3-sized (no hold clock has run yet, so all pay as H1). */
 const BAGS_USD = [30, 600, 3_000, 8_000];
 

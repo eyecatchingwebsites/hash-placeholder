@@ -203,7 +203,7 @@ describe("holder payout", () => {
       wallet(10, 100, "dust"),    // below H1
       wallet(1_000_000, 999, "pool"),
     ];
-    const r = runHolderPayout({ now: T0, potUsd: 300, wallets, price, rules: { ...R, holder: { ...R.holder, walletCap: 0 } }, excluded: new Set(["pool"]) });
+    const r = runHolderPayout({ now: T0, potUsd: 300, wallets, price, rules: R, excluded: new Set(["pool"]) });
     const by = Object.fromEntries(r.lines.map((l) => [l.address, l]));
     expect(by.h1!.usd).toBeCloseTo(100);
     expect(by.h2!.usd).toBeCloseTo(200);
@@ -212,12 +212,13 @@ describe("holder payout", () => {
     expect(r.carryUsd).toBeCloseTo(0);
   });
 
-  it("caps one wallet at 5% of the pot", () => {
-    const wallets = [wallet(100_000, 999, "whale")];
-    for (let i = 0; i < 40; i++) wallets.push(wallet(100, 1, "s" + i));
+  it("has no per-wallet cap: a big bag takes its full share and nothing carries", () => {
+    const wallets = [wallet(100_000, 999, "whale")]; // $100K at H3: weight 400,000
+    for (let i = 0; i < 40; i++) wallets.push(wallet(100, 1, "s" + i)); // $100 at H1: weight 100 each
     const r = runHolderPayout({ now: T0, potUsd: 1000, wallets, price, rules: R });
-    expect(r.lines.find((l) => l.address === "whale")!.usd).toBeCloseTo(50);
+    expect(r.lines.find((l) => l.address === "whale")!.usd).toBeCloseTo((1000 * 400_000) / 404_000);
     expect(r.paidUsd).toBeCloseTo(1000);
+    expect(r.carryUsd).toBeCloseTo(0);
   });
 });
 
@@ -227,26 +228,18 @@ describe("chest shares", () => {
       { address: "a", earningsUsd: 1, level: 1 },
       { address: "b", earningsUsd: 4, level: 1 },
       { address: "c", earningsUsd: 1, level: 3 },
-    ], { ...R, walletCap: 0 });
+    ], R);
     // weights 1, 2, 4 -> shares 1/7, 2/7, 4/7
     expect(s.get("a")).toBeCloseTo(1 / 7);
     expect(s.get("b")).toBeCloseTo(2 / 7);
     expect(s.get("c")).toBeCloseTo(4 / 7);
   });
 
-  it("caps a wallet and redistributes the excess", () => {
-    const inputs: WeightInput[] = [{ address: "whale", earningsUsd: 10000, level: 3 }];
-    for (let i = 0; i < 50; i++) inputs.push({ address: "m" + i, earningsUsd: 2, level: 1 });
-    const s = chestShares(inputs, R);
-    expect(s.get("whale")).toBeCloseTo(0.05);
-    const total = [...s.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeCloseTo(1);
+  it("a single miner gets the whole chest (no per-wallet cap)", () => {
+    const s = chestShares([{ address: "solo", earningsUsd: 3, level: 1 }], R);
+    expect(s.get("solo")).toBeCloseTo(1);
   });
 
-  it("leaves chest undistributed when every wallet is capped", () => {
-    const s = chestShares([{ address: "a", earningsUsd: 3, level: 2 }], R);
-    expect(s.get("a")).toBeCloseTo(0.05);
-  });
 });
 
 describe("epoch", () => {
@@ -257,7 +250,7 @@ describe("epoch", () => {
   ]);
   const earnings = new Map([["a", 0.05], ["b", 0.05], ["c", 0.05]]);
   const hoursMined = new Map([["a", 300], ["b", 60], ["c", 300]]);
-  const base = { epochId: "e1", now: T0, earnings, hoursMined, wallets, price, chestUsd: 70, floatAvailableUsd: 1000, rules: { ...R, walletCap: 0 } };
+  const base = { epochId: "e1", now: T0, earnings, hoursMined, wallets, price, chestUsd: 70, floatAvailableUsd: 1000, rules: R };
 
   it("pays 75% of mining now, holds 25%, and splits the chest by miner level", () => {
     const r = runEpoch(base);
@@ -288,9 +281,9 @@ describe("epoch", () => {
     expect(r.totals.pendingUsd).toBeCloseTo(0.15 - 0.05625);
   });
 
-  it("carries chest that the wallet cap leaves undistributed", () => {
-    const r = runEpoch({ ...base, rules: R });
-    expect(r.carryUsd).toBeCloseTo(70 * 0.85);
+  it("carries chest only when no miner is eligible", () => {
+    expect(runEpoch(base).carryUsd).toBeCloseTo(0);
+    expect(runEpoch({ ...base, excluded: new Set(["a", "b", "c"]) }).carryUsd).toBeCloseTo(70);
   });
 });
 

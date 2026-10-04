@@ -3,7 +3,7 @@ import type { Rules } from "./rules.js";
 
 /**
  * Wallet linking: a holder proves two wallets are theirs by signing a message with each (free, no
- * transaction). Linked wallets form one group with one bag, one hold clock and one 5% cap, and
+ * transaction). Linked wallets form one group with one bag, and one hold clock, and
  * transfers inside the group don't touch the clock (they still pay the 5% tax).
  *
  * The group is tracked as a single WalletState: `address` is the group's id (its first wallet),

@@ -27,8 +27,6 @@ export interface Rules {
     sellPenalty: number;
     /** Holder-pot weight multiplier per holder level. */
     mult: Record<1 | 2 | 3, number>;
-    /** Max share of one holder pot a single wallet can take (0..1). */
-    walletCap: number;
   };
   miner: {
     /**
@@ -50,8 +48,6 @@ export interface Rules {
   };
   /** Chest weight = earningsUsd ** alpha × miner multiplier. 0.5 = square-root GPU balancing. */
   alpha: number;
-  /** Max share of one epoch's chest a single wallet can take (0..1). */
-  walletCap: number;
   /** Share of estimated mining earnings paid immediately; the rest waits for confirmation. */
   immediateShare: number;
 }
@@ -69,7 +65,6 @@ export const DEFAULT_RULES: Rules = {
     maxSpeed: 3,
     sellPenalty: 2.5,
     mult: { 1: 1, 2: 2, 3: 4 },
-    walletCap: 0.05,
   },
   miner: {
     hours: { 2: 48, 3: 120 },
@@ -79,7 +74,6 @@ export const DEFAULT_RULES: Rules = {
     mult: { 1: 1, 2: 2, 3: 4 },
   },
   alpha: 0.5,
-  walletCap: 0.05,
   immediateShare: 0.75,
 };
 
