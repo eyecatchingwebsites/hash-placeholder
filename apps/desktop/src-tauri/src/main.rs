@@ -45,7 +45,10 @@ fn key_ring() -> KeyRing {
     // Development only: trust the local API's throwaway key. Never enabled in release builds.
     #[cfg(all(debug_assertions, feature = "dev-key"))]
     if let Ok(k) = std::env::var("HASHCOIN_DEV_PUBKEY") {
-        let _ = ring.add_b64("dev", &k);
+        match ring.add_b64("dev", &k) {
+            Ok(()) => eprintln!("Hashcoin Miner: trusting the local API's dev key"),
+            Err(e) => eprintln!("Hashcoin Miner: HASHCOIN_DEV_PUBKEY is not a valid key ({e})"),
+        }
     }
     ring
 }

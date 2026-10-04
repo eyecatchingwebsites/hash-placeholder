@@ -18,7 +18,10 @@ pub struct KeyRing(HashMap<String, VerifyingKey>);
 
 impl KeyRing {
     pub fn add_b64(&mut self, kid: &str, raw_b64: &str) -> Result<(), String> {
-        let bytes: [u8; 32] = B64.decode(raw_b64).map_err(|e| e.to_string())?.try_into().map_err(|_| "key must be 32 bytes")?;
+        // Accept the key with or without its trailing "=" padding (it's easy to lose when copying).
+        let trimmed = raw_b64.trim().trim_end_matches('=');
+        let padded = format!("{trimmed}{}", "=".repeat((4 - trimmed.len() % 4) % 4));
+        let bytes: [u8; 32] = B64.decode(padded).map_err(|e| e.to_string())?.try_into().map_err(|_| "key must be 32 bytes")?;
         let key = VerifyingKey::from_bytes(&bytes).map_err(|e| e.to_string())?;
         self.0.insert(kid.to_string(), key);
         Ok(())
@@ -107,6 +110,15 @@ mod tests {
         other.pool.user = format!("prl1platformpayoutaddress.{}-0", crate::wallet::worker_id("SomeoneElse", "gamingpc"));
         assert!(other.check(&f.wallet, "gamingpc", 0, a.issued_at + 1).is_err());
         assert!(a.check(&f.wallet, "gamingpc", 1, a.issued_at + 1).is_err());
+    }
+
+    #[test]
+    fn accepts_a_key_without_its_padding() {
+        let f = fixture();
+        let mut ring = KeyRing::default();
+        ring.add_b64(&f.kid, f.public_key.trim_end_matches('=')).unwrap();
+        assert!(ring.verify::<Assignment>(&f.envelope).is_ok());
+        assert!(KeyRing::default().add_b64("x", "not a key").is_err());
     }
 
     #[test]
