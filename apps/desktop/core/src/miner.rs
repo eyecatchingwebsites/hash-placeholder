@@ -93,8 +93,15 @@ impl Supervisor {
             MinerState::Running { since, .. } => {
                 let since = *since;
                 if let Some(c) = self.child.as_mut() {
-                    if c.try_wait().map_err(|e| e.to_string())?.is_some() {
+                    if let Some(status) = c.try_wait().map_err(|e| e.to_string())? {
                         self.child = None;
+                        if let Some(log) = &self.log {
+                            use std::io::Write;
+                            if let Ok(mut f) = std::fs::OpenOptions::new().append(true).open(log) {
+                                let code = status.code().map(|c| format!("{c} (0x{:08X})", c as u32)).unwrap_or_else(|| "none".into());
+                                let _ = writeln!(f, "--- exited after {:.1}s, exit code {code}", since.elapsed().as_secs_f64());
+                            }
+                        }
                         // A miner that ran for 10+ minutes before exiting resets the backoff.
                         if since.elapsed() > Duration::from_secs(600) { self.failures = 0; }
                         self.failures += 1;
