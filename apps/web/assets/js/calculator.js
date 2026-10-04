@@ -95,7 +95,7 @@
     const flags = [];
     if (S.hlevel > maxH) flags.push(maxH ? `H${S.hlevel} needs ${whole(M.HOLDER.usd[S.hlevel - 1])}; this bag counts as H${maxH}.` : "This bag is below $50, so it earns no holder rewards.");
     if ((S.level === 2 && maxH < 1) || (S.level === 3 && maxH < 2)) flags.push(`M${S.level} also needs ${S.level === 2 ? "H1 ($50 held)" : "H2 ($500 held for 24 hours)"}. Set your bag to match.`);
-    if (!mk.targetMet) flags.push(`At ${F.usd(S.volPerGpu)} per GPU the 3.5% cap is reached before 5×, so miners average ${F.mult(1 + mk.chestPerGpu / S.avgRev)} and holders get their 1% minimum.`);
+    if (!mk.targetMet) flags.push(`At ${F.usd(S.volPerGpu)} per GPU even the 5% maximum tax can't lift miners to 5×, so miners average ${F.mult(1 + mk.chestPerGpu / S.avgRev)} and holders get their 1% minimum.`);
     if (r.net + hold.perDay < 0) flags.push("At this electricity price, power costs more than you earn in this estimate.");
     $("#fc-flags").innerHTML = flags.map((f) => `<p class="flag">${f}</p>`).join("");
 

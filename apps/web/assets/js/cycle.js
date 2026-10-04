@@ -1,5 +1,5 @@
 // Hero flywheels. Two rings of five stations around the Hashcoin coin, switched with tabs:
-//   1. The coin flywheel: miners buy in, holders hold, trades pay 5%, the split balances, more join.
+//   1. The coin flywheel: miners buy in, holders hold, trades pay a 2–5% tax, the split balances, more join.
 //   2. Your bag flywheel: buy or mine (or both), trades pay your bag, it grows, you level up,
 //      a bigger share (one loop per level, Level 1 to 3).
 // One step at a time: the active station plays its animation, then the link to the next station
@@ -250,7 +250,7 @@
     captions: [
       "<b>Miners buy in.</b> Every miner's earnings are swapped into $HASH on the market, around the clock.",
       "<b>Holders hold.</b> A bigger bag held longer earns a bigger share, so less gets sold.",
-      "<b>Trades fill the reward pot.</b> 5% of every buy and sell goes to miners and holders. More trading, bigger rewards.",
+      "<b>Trades fill the reward pot.</b> A 2–5% tax on every buy and sell goes to miners and holders. More trading, bigger rewards.",
       "<b>Both get paid.</b> Miners average up to 5× what they mine. Holders share the rest, at least 1% of every trade.",
       "<b>More people join.</b> Bigger rewards draw more GPUs and holders, and more buying. Around it goes.",
     ],

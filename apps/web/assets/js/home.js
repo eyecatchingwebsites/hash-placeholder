@@ -84,6 +84,8 @@
   window.addEventListener("hashchange", () => route(location.hash, true));
   if (location.hash) route(location.hash, true);
 
+  const pct2 = (x) => `${(100 * x).toFixed(2).replace(/\.?0+$/, "")}%`;
+
   // ---------- Earnings ----------
   const scope = $("#earn-scope");
   const cardsBox = $("#lv-cards");
@@ -199,15 +201,17 @@
     const hb = M.holder(S.bag, pl);
     $("#plug-gpu").textContent = `${g.name} · M${L} · ${whole(S.bag)} H${pl}`;
     $("#plug-eq").innerHTML =
-      `pot ÷ N     = 4.5% × ($${E.volPerGpu} + $${n2(E.avgRev)}) = $${n2(mk.pool)}\n` +
-      `chest ÷ N   = min(4 × $${n2(E.avgRev)}, 3.5% × $${n2(mk.base)}) = $${n2(mk.chestPerGpu)}\n` +
-      `holders ÷ N = $${n2(mk.pool)} − $${n2(mk.chestPerGpu)} = $${n2(mk.holderPerGpu)}\n\n` +
+      `tax rate    = ${pct2(mk.rate)} (lowest that lifts miners to 5× and keeps holders at 1%+)\n` +
+      `tax ÷ N     = ${pct2(mk.rate)} × ($${E.volPerGpu} + $${n2(E.avgRev)}) = $${n2(mk.tax)}\n` +
+      `dev ÷ N     = ${pct2(mk.devShare)} of it = $${n2(mk.devPerGpu)}\n` +
+      `chest ÷ N   = 4 × $${n2(E.avgRev)}, kept within 45–75% of the tax = $${n2(mk.chestPerGpu)}\n` +
+      `holders ÷ N = $${n2(mk.tax)} − $${n2(mk.devPerGpu)} − $${n2(mk.chestPerGpu)} = $${n2(mk.holderPerGpu)}\n\n` +
       `your cut    = $${n2(mk.chestPerGpu)} × √${n2(g.rev)} × ${M.MULT[L - 1]} ÷ (√${n2(E.avgRev)} × ${mk.avgMult.toFixed(1)})\n` +
       `            = <b>${money(r.chestShare)}/day</b> + mining ${money(r.mining)} = <b>${money(r.total)}/day</b>\n\n` +
       `your bag    = ${whole(S.bag)} × ${(100 * mk.yieldPerDay[pl - 1]).toFixed(2)}% a day (H${pl})\n` +
       `            = <b>${money(hb.perDay)}/day</b>`;
     $("#plug-note").textContent =
-      `Miners reach 5× once volume per GPU is above $${Math.round(mk.targetVolPerGpu)}. Below that, holder rewards shrink first, down to 1%. ` +
+      `Below $${Math.round(mk.targetVolPerGpu)} per GPU even a 5% tax can't lift miners to 5×; above it the tax falls as trading gets busier, never leaving holders under 1% of volume. ` +
       `$${E.volPerGpu} is launch-week trading; later it's usually lower. After launch this is replaced by what each level was actually paid.`;
   }
   render();
@@ -221,17 +225,16 @@
     const paintBal = () => {
       const v = toV(+bal.value);
       const mk = M.market({ volPerGpu: v });
-      const pool = M.TAX - M.DEV;
-      const m = mk.chestRate, ho = mk.holderRate;
+      const m = mk.shares.miners, ho = mk.shares.holders, pool = m + ho;
       $("#bal-vol-o").textContent = `${whole(v)} traded per GPU a day`;
       $("#bal-m").style.width = (100 * m) / pool + "%";
       $("#bal-h").style.width = (100 * ho) / pool + "%";
-      $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(1)}%`;
-      $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(1)}%`;
+      $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(0)}%`;
+      $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(0)}%`;
       const mult = F.mult(1 + mk.chestPerGpu / mk.avgRev);
       $("#bal-note").innerHTML = mk.targetMet
-        ? `Miners are at <b>5×</b> their mining. The extra goes to holders.`
-        : `Miners are at <b>${mult}</b>, under 5×, so they get the max.`;
+        ? `Tax <b>${pct2(mk.rate)}</b>. Miners are at <b>5×</b> their mining; holders get <b>${pct2(mk.holderRate)}</b> of every trade.`
+        : `Tax <b>5%</b>, the most it goes. Miners are at <b>${mult}</b>, under 5×, so they get the max.`;
     };
     bal.value = toP(E.volPerGpu);
     paintBal();
@@ -298,6 +301,8 @@
   const MINER_W = GPUS_MINING * Math.sqrt(E.avgRev) * mk.avgMult;
   const HOLDER_W = MCAP * (mk.holderWeightPerGpu / mk.mcapPerGpu);
   const MINED_PER_SPLIT = (GPUS_MINING * E.avgRev) / 144;
+  // The tax the formula sets at the estimate's volume; the pot is what's left after dev's share.
+  const POT_PER_TRADE = mk.rate * (1 - mk.devShare);
 
   let pot = 0, elapsed = 0, last = 0, raf = 0, tradeTimer = 0, visible = true, paused = false;
 
@@ -308,7 +313,7 @@
     while (list.children.length > MAX_ROWS) list.lastElementChild.remove();
   }
   function trade(amount, side, label) {
-    const toPot = amount * (M.TAX - M.DEV);
+    const toPot = amount * POT_PER_TRADE;
     pot += toPot;
     row(trades, `<span class="side${side === "Sell" ? " sell" : ""}">${side}</span><span class="amt">${label || F.usd(amount)}</span><span class="to">+${money(toPot)}</span>`);
     amountEl.textContent = money(pot);
@@ -319,7 +324,8 @@
     trade(amount, Math.random() < 0.58 ? "Buy" : "Sell");
   }
   function split() {
-    const chest = Math.min((M.TARGET - 1) * MINED_PER_SPLIT, pot * (M.CHEST_MAX / (M.TAX - M.DEV)));
+    const tax = pot / (1 - mk.devShare);
+    const chest = Math.min(M.minerMaxAt(mk.rate) * tax, Math.max(M.SHARE.minerMin * tax, (M.TARGET - 1) * MINED_PER_SPLIT));
     const holders = pot - chest;
     const out = [];
     [...SAMPLE].sort(() => Math.random() - 0.5).slice(0, 3).forEach((g) => {

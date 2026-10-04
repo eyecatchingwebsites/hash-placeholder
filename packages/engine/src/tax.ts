@@ -1,9 +1,11 @@
 import type { Rules } from "./rules.js";
 
 // The tax and its split (user, Oct 4):
-// - The rate moves between 2% and 5%: the lowest rate at which miners can reach their 5× target.
-//   Busy trading → 2%; quiet trading → up to 5%. Token-2022 applies a change ~2 epochs (~4 days)
-//   after it's set, so it's computed from multi-day averages (`targetTaxRate`).
+// - The rate moves between 2% and 5%: the lowest rate at which miners can reach their 5× target
+//   AND holders still get at least 1% of trading volume (user, Oct 4: option 2). Quiet trading →
+//   5%; only heavy trading lowers it (to 2.25% at the lowest: at 2% holders can't reach 1%).
+//   Token-2022 applies a change ~2 epochs (~4 days) after it's set, so it's computed from
+//   multi-day averages (`targetTaxRate`).
 // - Shares of the tax: dev 5–10% (falls as the rate rises, so dev's cut of volume stays about
 //   0.2–0.25% and raising the tax doesn't pay the dev more), miners 45–75% (what reaches 5×),
 //   holders 20–50% (the rest).
@@ -66,17 +68,20 @@ export function splitTax(x: TaxSplitInput, rules: Rules): TaxSplit {
 }
 
 /**
- * The tax rate to set next: the lowest rate (in `step`s from 2% to 5%) at which miners' max share of
- * the tax covers their 5× target, given recent daily volume and mining (use multi-day averages: a
- * change lands ~4 days after it's set). Busy trading → 2%; quiet trading → up to 5%.
+ * The tax rate to set next: the lowest rate (in `step`s from 2% to 5%) at which miners reach their
+ * 5× target and holders still get `holderMinOfVolume` of trading volume, given recent daily volume
+ * and mining (use multi-day averages: a change lands ~4 days after it's set). If no lower rate does
+ * both, the maximum.
  */
 export function targetTaxRate(x: { volumeUsd: number; minedUsd: number }, rules: Rules): number {
-  const { minRate, maxRate, step } = rules.tax;
-  const need = (rules.minerTargetMult - 1) * Math.max(0, x.minedUsd);
+  const { minRate, maxRate, step, holderMinOfVolume } = rules.tax;
+  const volumeUsd = Math.max(0, x.volumeUsd);
+  if (volumeUsd === 0) return maxRate;
   const steps = Math.round((maxRate - minRate) / step);
   for (let i = 0; i <= steps; i++) {
-    const rate = minRate + i * step;
-    if (rate * Math.max(0, x.volumeUsd) * minerMaxShareAt(rate, rules) >= need) return Number(rate.toFixed(6));
+    const rate = Number((minRate + i * step).toFixed(6));
+    const s = splitTax({ taxUsd: rate * volumeUsd, rate, minedUsd: x.minedUsd }, rules);
+    if (s.targetMet && s.holderUsd >= holderMinOfVolume * volumeUsd - 1e-9) return rate;
   }
   return maxRate;
 }

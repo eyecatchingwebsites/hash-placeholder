@@ -16,6 +16,8 @@ export interface Rules {
     devShare: { atMinRate: number; atMaxRate: number };
     minerShare: { min: number; max: number };
     holderShareMin: number;
+    /** The rate is never lowered so far that holders get less than this share of trading volume. */
+    holderMinOfVolume: number;
   };
   /** Miners' total pay target as a multiple of what their GPUs mined (5 = mining + 4× from the chest). */
   minerTargetMult: number;
@@ -70,6 +72,7 @@ export const DEFAULT_RULES: Rules = {
     devShare: { atMinRate: 0.10, atMaxRate: 0.05 },
     minerShare: { min: 0.45, max: 0.75 },
     holderShareMin: 0.20,
+    holderMinOfVolume: 0.01,
   },
   minerTargetMult: 5,
   holder: {

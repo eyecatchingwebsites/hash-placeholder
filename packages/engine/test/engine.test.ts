@@ -203,11 +203,17 @@ describe("tax split", () => {
     expect(s.chestUsd).toBeCloseTo(225); // needs 300 - 100 = 200 (40%), floored at 45%
   });
 
-  it("sets the tax to the lowest rate that lets miners reach 5x: busy -> 2%, quiet -> up to 5%", () => {
+  it("sets the lowest rate where miners reach 5x and holders still get 1% of volume", () => {
     // 1,000 GPUs mining $2.50/day need $10,000/day of bonus.
-    expect(targetTaxRate({ volumeUsd: 1_000_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.02, 6); // 2% x 70% = $14,000
-    expect(targetTaxRate({ volumeUsd: 400_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.035, 6); // 3.5% x 72.5% = $10,150; 3.25% falls short
-    expect(targetTaxRate({ volumeUsd: 100_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.05, 6); // can't reach 5x: max rate
+    // Quiet: even 5% can't lift miners to 5x -> stay at 5%.
+    expect(targetTaxRate({ volumeUsd: 100_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.05, 6);
+    // $750 of volume per GPU (the site's launch-week estimate): 2.75% is the first rate where
+    // holders get >= 1% of volume (2.5% gives them 0.94%).
+    expect(targetTaxRate({ volumeUsd: 750_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.0275, 6);
+    // Very heavy trading: the floor is 2.25%, since at 2% holders' max share (45%) is only 0.9%.
+    expect(targetTaxRate({ volumeUsd: 5_000_000, minedUsd: 2_500 }, R)).toBeCloseTo(0.0225, 6);
+    const at = splitTax({ taxUsd: 0.0275 * 750_000, rate: 0.0275, minedUsd: 2_500 }, R);
+    expect(at.holderUsd / 750_000).toBeGreaterThanOrEqual(0.01);
   });
 });
 
