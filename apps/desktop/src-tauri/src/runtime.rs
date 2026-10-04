@@ -251,7 +251,8 @@ fn download_verified(url: &str, sha256: &str, dir: &Path) -> Result<(), String> 
     Ok(())
 }
 
-#[cfg(test)]
+// The configured miner (ForgeMiner) only has a Windows build, so the end-to-end test runs on Windows.
+#[cfg(all(test, windows))]
 mod e2e {
     //! End-to-end against a running API (services/api). Ignored by default; run with
     //! HASHCOIN_E2E_API=http://127.0.0.1:8787 HASHCOIN_E2E_PUBKEY=<dev key> cargo test -p hashcoin-miner -- --ignored
@@ -267,11 +268,11 @@ mod e2e {
         let data = std::env::temp_dir().join(format!("hashcoin-e2e-{}", std::process::id()));
         // Stand-in miner (examples/stand_in_miner.rs, built by `cargo test`): pre-placed where a
         // verified download would go, so no network fetch is needed.
-        let dir = data.join("miners/prl-miner/0.0.0");
+        let dir = data.join("miners/forgeminer/1.8.4/ForgeMiner-1.8.4-windows");
         std::fs::create_dir_all(&dir).unwrap();
         let exe_name = format!("stand_in_miner{}", std::env::consts::EXE_SUFFIX);
         let built = std::env::current_exe().unwrap().parent().unwrap().parent().unwrap().join("examples").join(exe_name);
-        std::fs::copy(&built, dir.join(format!("prl-miner{}", std::env::consts::EXE_SUFFIX)))
+        std::fs::copy(&built, dir.join("forge.exe"))
             .unwrap_or_else(|e| panic!("stand-in miner not built at {}: {e}", built.display()));
 
         let wallet = "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF";
@@ -288,8 +289,9 @@ mod e2e {
             std::thread::sleep(Duration::from_millis(100));
             if let Ok(a) = std::fs::read_to_string(dir.join("args.txt")) { args = a; break; }
         }
-        assert!(args.contains(&format!("--user {wallet}.e2e-0")), "{args}");
-        assert!(args.contains("--algo pearlhash"));
+        assert!(args.contains(&format!("--wallet {wallet}.e2e-0")), "{args}");
+        assert!(args.contains("--algorithm pearlhash"));
+        assert!(args.contains("--temp-limit 80"));
 
         rt.stop();
         assert_eq!(rt.status().gpus[0].state, "idle");

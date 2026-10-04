@@ -24,13 +24,14 @@ const post = (body: unknown) => fetch(`${base}/v1/assignments`, { method: "POST"
 const pub = { t1: createPublicKey(key) };
 
 describe("api", () => {
-  it("assigns PRL to an RTX 4070 and QTC to an RX 7900 XTX, signed", async () => {
+  it("assigns PRL to an RTX 4070, signed; an AMD card waits for a miner", async () => {
     const res = await post({ wallet: WALLET, rigId: "gamingpc", gpus: [{ index: 0, name: "NVIDIA GeForce RTX 4070" }, { index: 1, name: "AMD Radeon RX 7900 XTX" }] });
     expect(res.status).toBe(200);
-    const body = await res.json() as { results: { assignment: SignedEnvelope }[] };
-    const [a, b] = body.results.map((r) => verifyEnvelope<Assignment>(r.assignment, pub));
-    expect(a).toMatchObject({ coin: "PRL", minerId: "prl-miner", pool: { user: `${WALLET}.gamingpc-0` } });
-    expect(b).toMatchObject({ coin: "QTC", minerId: "multi-miner" });
+    const body = await res.json() as { results: { assignment: SignedEnvelope | null }[] };
+    const a = verifyEnvelope<Assignment>(body.results[0]!.assignment!, pub);
+    expect(a).toMatchObject({ coin: "PRL", algo: "pearlhash", minerId: "forgeminer", pool: { user: `${WALLET}.gamingpc-0` } });
+    // No AMD miner yet that Windows Defender doesn't flag (see services/api/config/coins.json).
+    expect(body.results[1]!.assignment).toBeNull();
     expect(a!.expiresAt - a!.issuedAt).toBe(cfg.ttlMs);
   });
 

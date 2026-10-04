@@ -1,28 +1,21 @@
 {
-  "_note": "Placeholder entries. Fill in official release URLs and SHA-256 hashes for each miner build after reviewing its license and dev fee.",
+  "_note": "ForgeMiner 1.8.4: official GitHub release, SHA-256 matches the one published in the release notes; Windows Defender doesn't flag it (SRBMiner 3.7.1 was quarantined as Trojan:Win32/Ravartar!rfn). Closed source: get the developer's OK for the app to download official releases (never rehosted) before launch. Flags from its README; confirm with `forge.exe --help`. devFee is per algorithm (%).",
   "version": 1,
   "miners": [
     {
-      "id": "prl-miner",
-      "version": "0.0.0",
-      "algos": ["pearlhash"],
-      "devFee": 0,
+      "id": "forgeminer",
+      "version": "1.8.4",
+      "algos": ["pearlhash", "quantus", "qhash"],
+      "devFee": 2,
+      "devFeeByAlgo": { "pearlhash": 2, "quantus": 2, "qhash": 1 },
       "builds": {
-        "windows-x86_64": { "url": "https://downloads.invalid/prl-miner-win64.zip", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "prl-miner.exe" },
-        "linux-x86_64": { "url": "https://downloads.invalid/prl-miner-linux.tar.gz", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "prl-miner" }
+        "windows-x86_64": {
+          "url": "https://github.com/0xHashRaptor/ForgeMiner/releases/download/v1.8.4/ForgeMiner-1.8.4-windows.zip",
+          "sha256": "c61474c1edad5052b717f5a46a1900ea4056871b042f9da97351647ac356de1b",
+          "exe": "ForgeMiner-1.8.4-windows/forge.exe"
+        }
       },
-      "args": ["--algo", "{algo}", "--pool", "{pool}", "--user", "{user}", "--pass", "{pass}", "--devices", "{device}", "--api", "127.0.0.1:{apiPort}"]
-    },
-    {
-      "id": "multi-miner",
-      "version": "0.0.0",
-      "algos": ["quanhash", "qhash", "progpow-epic"],
-      "devFee": 0,
-      "builds": {
-        "windows-x86_64": { "url": "https://downloads.invalid/multi-miner-win64.zip", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "multi-miner.exe" },
-        "linux-x86_64": { "url": "https://downloads.invalid/multi-miner-linux.tar.gz", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "exe": "multi-miner" }
-      },
-      "args": ["-a", "{algo}", "-o", "{pool}", "-u", "{user}", "-p", "{pass}", "-d", "{device}", "--api-bind", "127.0.0.1:{apiPort}"]
+      "args": ["--algorithm", "{algo}", "--pool", "{pool}", "--wallet", "{user}", "--gpu", "{device}", "--api-bind", "127.0.0.1:{apiPort}", "--temp-limit", "80", "--temp-resume", "70"]
     }
   ]
 }
