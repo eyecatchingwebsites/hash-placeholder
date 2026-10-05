@@ -18,6 +18,7 @@ const api = createApi({
   coins: cfg.coins, quotes, policy: cfg.policy, score: cfg.score, ttlMs: cfg.ttlMs, platformSell: () => ({}),
   minerManifest: { version: 1, miners: [] }, signingKey: key, kid: "t1", now: () => clock,
   onAssign: (w) => recorded.push(w),
+  publicRecord: () => ({ round: 3, wallets: { [WALLET]: { holderLevel: 2 } } }),
 });
 let base = "";
 beforeAll(async () => { await new Promise<void>((r) => api.server.listen(0, r)); base = `http://127.0.0.1:${(api.server.address() as AddressInfo).port}`; });
@@ -61,5 +62,14 @@ describe("api", () => {
     expect(verifyEnvelope(env, pub)).toEqual({ miners: [], version: 1 });
     const keys = await (await fetch(`${base}/v1/keys`)).json() as Record<string, string>;
     expect(Buffer.from(keys.t1!, "base64")).toHaveLength(32);
+  });
+  it("serves the public payout record: stats and one wallet", async () => {
+    const stats = await (await fetch(`${base}/v1/stats`)).json();
+    expect(stats).toEqual({ round: 3, wallets: 1 });
+    const w = await fetch(`${base}/v1/wallet/${WALLET}`);
+    expect(w.headers.get("access-control-allow-origin")).toBe("*");
+    expect(await w.json()).toEqual({ address: WALLET, holderLevel: 2 });
+    expect((await fetch(`${base}/v1/wallet/not-an-address`)).status).toBe(400);
+    expect((await fetch(`${base}/v1/wallet/11111111111111111111111111111111`)).status).toBe(404);
   });
 });

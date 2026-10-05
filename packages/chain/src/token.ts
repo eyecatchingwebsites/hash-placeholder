@@ -1,15 +1,15 @@
 // On-chain actions for $HASH: a Token-2022 mint with the transfer-fee extension, fee harvesting,
 // and batched payouts. Devnet first (packages/chain/scripts/devnet-run.ts).
 import {
-  type AccountInfo, type Connection, Keypair, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction,
-  type TransactionSignature,
+  type AccountInfo, type Connection, Keypair, type ParsedTransactionWithMeta, PublicKey, sendAndConfirmTransaction,
+  SystemProgram, type TokenBalance, Transaction, type TransactionSignature,
 } from "@solana/web3.js";
 import {
   AuthorityType, createAssociatedTokenAccountIdempotentInstruction, createInitializeMintInstruction,
   createInitializeTransferFeeConfigInstruction, createMintToInstruction, createSetAuthorityInstruction,
-  createTransferCheckedWithFeeInstruction, ExtensionType, getAssociatedTokenAddressSync, getMintLen,
-  getTransferFeeAmount, harvestWithheldTokensToMint, TOKEN_2022_PROGRAM_ID, unpackAccount,
-  withdrawWithheldTokensFromMint,
+  createTransferCheckedWithFeeInstruction, ExtensionType, getAssociatedTokenAddressSync, getMint, getMintLen,
+  getTransferFeeAmount, getTransferFeeConfig, harvestWithheldTokensToMint, setTransferFee, TOKEN_2022_PROGRAM_ID,
+  unpackAccount, withdrawWithheldTokensFromMint,
 } from "@solana/spl-token";
 import { chunk, grossUp, transferFee } from "./fees.js";
 
@@ -120,6 +120,83 @@ export async function harvestFees(
   signatures.push(await withdrawWithheldTokensFromMint(conn, payer, mint, dest, withdrawAuthority, [], undefined, P));
   const after = (await conn.getTokenAccountBalance(dest)).value.amount;
   return { harvested: BigInt(after) - BigInt(before), signatures };
+}
+
+/**
+ * The transfer fee in force now, and a scheduled change if one is waiting. Token-2022 applies a new
+ * fee two epochs after it's set, and every transfer must state the fee exactly, so read this
+ * before each batch rather than assuming a rate.
+ */
+export async function transferFeeNow(conn: Connection, mint: PublicKey): Promise<{
+  bps: number; max: bigint; epoch: number; scheduled?: { bps: number; max: bigint; epoch: number };
+}> {
+  const [info, { epoch }] = await Promise.all([getMint(conn, mint, "confirmed", P), conn.getEpochInfo("confirmed")]);
+  const cfg = getTransferFeeConfig(info);
+  if (!cfg) return { bps: 0, max: 0n, epoch };
+  const older = cfg.olderTransferFee, newer = cfg.newerTransferFee;
+  const live = epoch >= Number(newer.epoch) ? newer : older;
+  const out = { bps: live.transferFeeBasisPoints, max: live.maximumFee, epoch };
+  return epoch < Number(newer.epoch)
+    ? { ...out, scheduled: { bps: newer.transferFeeBasisPoints, max: newer.maximumFee, epoch: Number(newer.epoch) } }
+    : out;
+}
+
+/** Schedule a new tax rate (fee config authority signs). It takes effect two epochs later, about 4 days. */
+export async function setTaxRate(conn: Connection, payer: Keypair, mint: PublicKey, configAuthority: Keypair, bps: number, maxFee: bigint): Promise<TransactionSignature> {
+  return setTransferFee(conn, payer, mint, configAuthority, [], bps, maxFee, undefined, P);
+}
+
+/** One indexed transaction: how each token account of the mint changed. */
+export interface TokenDelta { owner: string; account: string; delta: bigint }
+export interface MintTx { signature: string; at: number; deltas: TokenDelta[] }
+
+/** Balance changes for `mint` in one parsed transaction, from its pre- and post-token balances. */
+export function mintDeltas(tx: ParsedTransactionWithMeta, mint: string): TokenDelta[] {
+  if (!tx.meta || tx.meta.err) return [];
+  const keys = tx.transaction.message.accountKeys.map((k) => k.pubkey.toBase58());
+  const byAccount = new Map<string, { owner: string; pre: bigint; post: bigint }>();
+  const add = (list: TokenBalance[] | null | undefined, which: "pre" | "post") => {
+    for (const b of list ?? []) {
+      if (b.mint !== mint) continue;
+      const account = keys[b.accountIndex]!;
+      const e = byAccount.get(account) ?? { owner: b.owner ?? "", pre: 0n, post: 0n };
+      e[which] = BigInt(b.uiTokenAmount.amount);
+      if (b.owner) e.owner = b.owner;
+      byAccount.set(account, e);
+    }
+  };
+  add(tx.meta.preTokenBalances, "pre");
+  add(tx.meta.postTokenBalances, "post");
+  return [...byAccount].flatMap(([account, e]) => (e.post === e.pre ? [] : [{ owner: e.owner, account, delta: e.post - e.pre }]));
+}
+
+/**
+ * Every transaction touching the mint since `untilSignature`, oldest first. Token-2022 requires
+ * the mint on every transfer of a mint with a transfer fee, so this sees them all.
+ */
+export async function mintTransactionsSince(
+  conn: Connection, mint: PublicKey, untilSignature?: string, opts: { maxTx?: number; pauseMs?: number } = {},
+): Promise<MintTx[]> {
+  const maxTx = opts.maxTx ?? 2000;
+  // Public RPCs rate-limit per method; pace the per-transaction reads.
+  const pause = () => new Promise((r) => setTimeout(r, opts.pauseMs ?? 0));
+  const sigs: { signature: string; blockTime?: number | null; err: unknown }[] = [];
+  let before: string | undefined;
+  while (sigs.length < maxTx) {
+    const page = await conn.getSignaturesForAddress(mint, { before, until: untilSignature, limit: 1000 }, "confirmed");
+    sigs.push(...page);
+    if (page.length < 1000) break;
+    before = page[page.length - 1]!.signature;
+  }
+  const out: MintTx[] = [];
+  for (const s of sigs.reverse()) {
+    if (s.err) { out.push({ signature: s.signature, at: (s.blockTime ?? 0) * 1000, deltas: [] }); continue; }
+    await pause();
+    const tx = await conn.getParsedTransaction(s.signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+    if (!tx) throw new Error(`transaction ${s.signature} not found yet`);
+    out.push({ signature: s.signature, at: (tx.blockTime ?? s.blockTime ?? 0) * 1000, deltas: mintDeltas(tx, mint.toBase58()) });
+  }
+  return out;
 }
 
 export async function tokenBalance(conn: Connection, owner: PublicKey, mint: PublicKey): Promise<bigint> {

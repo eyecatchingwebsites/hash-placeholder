@@ -1,0 +1,17 @@
+{
+  "_note": "Devnet rehearsal of the payout loop (services/payouts/src/main.ts). Price is assumed ($1M market cap at 21M supply); the simulated market stands in for real trading.",
+  "network": "devnet",
+  "rpc": "https://api.devnet.solana.com",
+  "rpcPauseMs": 600,
+  "collectorMinutes": 5,
+  "roundMinutes": 30,
+  "holderEveryRounds": 1,
+  "priceUsd": 0.047619,
+  "decimals": 6,
+  "rate": { "adjust": true, "lookbackDays": 2, "minIntervalHours": 24 },
+  "settleAtEstimateAfterHours": 6,
+  "minHolderPayoutUsd": 0.0001,
+  "maxPayoutUsdPerRound": 100,
+  "minTreasurySol": 0.003,
+  "simulate": { "enabled": true, "dailyVolumeUsd": 750, "traders": 6, "sellers": 2, "marketTokens": 1000000 }
+}
