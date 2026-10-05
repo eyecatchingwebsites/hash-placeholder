@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@hashcoin/engine": "*",
+    "@raydium-io/raydium-sdk-v2": "^0.2.73-alpha",
     "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.99.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0"
   }
 }
