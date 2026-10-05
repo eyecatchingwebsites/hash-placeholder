@@ -233,7 +233,7 @@
       $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(0)}%`;
       const mult = F.mult(1 + mk.chestPerGpu / mk.avgRev);
       $("#bal-note").innerHTML = mk.targetMet
-        ? `Tax <b>${pct2(mk.rate)}</b>. Miners are at <b>5×</b> their mining; holders get <b>${pct2(mk.holderRate)}</b> of every trade.`
+        ? `Tax <b>${pct2(mk.rate)}</b>. Miners are at <b>${mk.chestPerGpu / mk.avgRev > 4.05 ? mult : "5×"}</b> their mining; holders get <b>${pct2(mk.holderRate)}</b> of every trade.`
         : `Tax <b>5%</b>, the most it goes. Miners are at <b>${mult}</b>, under 5×, so they get the max.`;
     };
     bal.value = toP(E.volPerGpu);

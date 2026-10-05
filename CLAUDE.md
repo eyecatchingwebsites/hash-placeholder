@@ -1,6 +1,6 @@
 # Hashcoin ($HASH)
 
-A Solana token plus a GPU-mining platform (presented as a real product, not a joke memecoin): spare GPU power on everyday PCs becomes nonstop buying of $HASH, and a 5% tax on every trade pays miners and holders. **New session? Read `docs/HANDOFF.md` first** (branch, how to resume, how the user likes to work), then **`docs/PROJECT.md`**, the project memory (all decisions, numbers, open questions). Keep it updated when decisions change.
+A Solana token plus a GPU-mining platform (presented as a real product, not a joke memecoin): spare GPU power on everyday PCs becomes nonstop buying of $HASH, and a 2–5% tax on every trade (set by a public formula) pays miners and holders. **New session? Read `docs/HANDOFF.md` first** (branch, how to resume, how the user likes to work), then **`docs/PROJECT.md`**, the project memory (all decisions, numbers, open questions). Keep it updated when decisions change.
 
 - Architecture: `docs/ARCHITECTURE.md`
 - Ordered build plan: `docs/TECHNICAL-PLAN.md` (start here for what to do next)

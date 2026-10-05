@@ -18,7 +18,7 @@ git checkout claude/vibrant-cray-fpbieb
 
 ## 2. Where things stand
 
-- **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 26 as of the Oct 4 local session). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
+- **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 27 as of the Oct 4 local session). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
 - **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). **Oct 4: the app mined for real on the user's RTX 4070 SUPER**: local API → signed assignment → the app downloaded and verified ForgeMiner 1.8.4 → mining PRL on Kryptex (~124 TH/s) under the platform address + short worker id → the collector (`services/collector`) mapped the Kryptex worker back to the user's Solana wallet and credited mining hours and PRL. Miner, pool and decisions: `docs/PROJECT.md` §5.
 - **Next in the build plan**: the devnet test run (Token-2022 token, fee collection, batch payouts), feeding the collector into `runEpoch`, truing the collector up to Kryptex's actual balance, and a platform payout address (PRL currently pays the user's own address for testing). See `docs/TECHNICAL-PLAN.md`.
 
