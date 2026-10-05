@@ -116,6 +116,9 @@ export async function harvestFees(
     signatures.push(await harvestWithheldTokensToMint(conn, payer, mint, group, undefined, P));
   }
   const dest = ata(treasury, mint);
+  if (!(await conn.getAccountInfo(dest))) {
+    signatures.push(await sendAndConfirmTransaction(conn, new Transaction().add(createAssociatedTokenAccountIdempotentInstruction(payer.publicKey, dest, treasury, mint, P)), [payer]));
+  }
   const before = (await conn.getTokenAccountBalance(dest)).value.amount;
   signatures.push(await withdrawWithheldTokensFromMint(conn, payer, mint, dest, withdrawAuthority, [], undefined, P));
   const after = (await conn.getTokenAccountBalance(dest)).value.amount;

@@ -107,46 +107,63 @@ async function main() {
   console.log(`3. fee ${live.bps} bps; config authority ${ours(fee.transferFeeConfigAuthority)}, withdraw authority ${ours(fee.withdrawWithheldAuthority)}; mint authority ${info.mintAuthority?.toBase58() ?? "none"}, freeze ${info.freezeAuthority?.toBase58() ?? "none"}; supply ${Number(info.supply) / 1e6}`);
 
   // 4. A buyer trades on the curve.
-  if ((await sol(buyer.publicKey)) < 0.03) {
+  if (!state.sellTx && (await sol(buyer.publicKey)) < 0.03) {
     const sig = await sendAndConfirmTransaction(conn, new Transaction().add(SystemProgram.transfer({ fromPubkey: admin.publicKey, toPubkey: buyer.publicKey, lamports: 0.05 * LAMPORTS_PER_SOL })), [admin]);
     console.log(`   funded buyer 0.05 SOL ${tx(sig)}`);
   }
   const rb = await load(buyer);
   const poolInfo = await rb.launchpad.getRpcPoolInfo({ poolId });
+  let boughtTx = state.buyTx as string | undefined;
+  if (!boughtTx) {
   const buy = await rb.launchpad.buyToken({
     programId: PROGRAM, mintA, mintAProgram: TOKEN_2022_PROGRAM_ID, poolInfo, configInfo: poolInfo.configInfo, platformFeeRate: platform.feeRate,
     txVersion: TxVersion.V0, buyAmount: new BN(0.02 * LAMPORTS_PER_SOL), slippage: new BN(500),
   });
   const bought = await buy.execute({ sendAndConfirm: true });
+  boughtTx = state.buyTx = tx(bought.txId);
+  save();
+  }
   const held = await tokenBalance(conn, buyer.publicKey, mintA);
-  console.log(`4. buyer bought for 0.02 SOL → holds ${Number(held) / 1e6} ${tx(bought.txId)}`);
+  console.log(`4. buyer bought for 0.02 SOL → holds ${Number(held) / 1e6} ${boughtTx}`);
+  let soldTx = state.sellTx as string | undefined;
+  if (!soldTx) {
   const sell = await rb.launchpad.sellToken({
     programId: PROGRAM, mintA, mintAProgram: TOKEN_2022_PROGRAM_ID, poolInfo: await rb.launchpad.getRpcPoolInfo({ poolId }), configInfo: poolInfo.configInfo,
     platformFeeRate: platform.feeRate, txVersion: TxVersion.V0, sellAmount: new BN((held / 2n).toString()), slippage: new BN(500),
   });
   const sold = await sell.execute({ sendAndConfirm: true });
-  console.log(`   buyer sold half ${tx(sold.txId)}`);
+  soldTx = state.sellTx = tx(sold.txId);
+  save();
+  }
+  console.log(`   buyer sold half ${soldTx}`);
 
   // 5. Collect the tax and schedule a new rate.
   const candidates = [ata(buyer.publicKey, mintA), ata(admin.publicKey, mintA), vaultA];
   const h = await harvestFees(conn, admin, mintA, admin, admin.publicKey, candidates);
   console.log(`5. tax collected to our wallet: ${Number(h.harvested) / 1e6} HASHT ${h.signatures.map(tx).join(" ")}`);
-  const rateSig = await setTaxRate(conn, admin, mintA, admin, 275, BigInt(SUPPLY.toString()));
-  const after = await transferFeeNow(conn, mintA);
-  console.log(`   rate change scheduled: ${after.scheduled?.bps ?? after.bps} bps from epoch ${after.scheduled?.epoch ?? "now"} ${tx(rateSig)}`);
+  // Expected to fail on LaunchLab: the fee config authority is LaunchLab's own PDA, not ours.
+  let rateChange: string;
+  try {
+    const sig = await setTaxRate(conn, admin, mintA, admin, 275, BigInt(SUPPLY.toString()));
+    rateChange = tx(sig);
+  } catch (e) {
+    rateChange = `refused: ${((e as { logs?: string[] }).logs ?? []).find((l) => l.includes("Error")) ?? (e as Error).message.split("\n")[0]}`;
+  }
+  console.log(`   rate change: ${rateChange}`);
 
   // 6. Platform and creator fees (SOL): what would pay miners on launch day.
   const before = await sol(admin.publicKey);
   const results: Record<string, string> = {};
   for (const [name, run] of [
     ["platform", () => raydium.launchpad.claimPlatformFee({ programId: PROGRAM, platformId, platformClaimFeeWallet: admin.publicKey, poolId, txVersion: TxVersion.V0 })],
+    ["platformVault", () => raydium.launchpad.claimVaultPlatformFee({ programId: PROGRAM, platformId, mintB: NATIVE_MINT, txVersion: TxVersion.V0 })],
     ["creator", () => raydium.launchpad.claimCreatorFee({ programId: PROGRAM, mintB: NATIVE_MINT, txVersion: TxVersion.V0 })],
   ] as const) {
-    try { const r = await (await run()).execute({ sendAndConfirm: true }); results[name] = tx(r.txId); } catch (e) { results[name] = `failed: ${(e as Error).message.split("\n")[0]}`; }
+    try { const r = await (await run()).execute({ sendAndConfirm: true }); results[name] = tx(r.txId); } catch (e) { results[name] = `failed: ${String((e as Error)?.message ?? JSON.stringify(e)).split("\n")[0]}`; }
   }
   console.log(`6. fees claimed: ${JSON.stringify(results)}; admin SOL ${before} → ${await sol(admin.publicKey)}`);
-  Object.assign(state, { trades: { buy: tx(bought.txId), sell: tx(sold.txId) }, taxCollected: Number(h.harvested) / 1e6, rateChange: tx(rateSig), fees: results });
+  Object.assign(state, { trades: { buy: boughtTx, sell: soldTx }, taxCollected: Number(h.harvested) / 1e6, rateChange, fees: results });
   save();
 }
 
-main().catch((e) => { console.error(e instanceof Error ? e.message : e); process.exit(1); });
+main().catch((e) => { console.error(e instanceof Error ? e.stack : e); process.exit(1); });
