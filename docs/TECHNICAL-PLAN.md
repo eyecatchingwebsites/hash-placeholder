@@ -12,7 +12,8 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 | Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 33 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
-| Collector (Kryptex per-worker stats → mining hours and mined value per wallet) | 🟡 7 tests, runs live against Kryptex; not yet trued up to pool payouts or wired into `runEpoch` | `services/collector` |
+| Collector (Kryptex per-worker stats → mining hours and mined value per wallet) | 🟡 8 tests, runs live against Kryptex inside the payout loop; not yet trued up to pool payouts | `services/collector` |
+| Payout loop (collector → transfer indexer/hold clocks → harvest → rate by formula → split → pay → public record) | 🟡 10 tests, running on devnet since Oct 5 with a simulated market; mainnet needs market buys and real settlement | `services/payouts` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 12 tests, end-to-end test passes on Windows (Oct 4), window launches; needs a real miner and pool | `apps/desktop` |
 | Website (home, calculator, FAQ/docs; backend parts are placeholders) | 🟡 static front end | `apps/web` |
 | CI + Windows release workflow | 🟡 written, never run on GitHub | `.github/workflows` |
