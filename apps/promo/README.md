@@ -1,24 +1,26 @@
 # Promo reel (`apps/promo`)
 
-A 32-second launch teaser. The message is the thing that makes Hashcoin different from the thousands of GPU-mineable coins: **your GPU doesn't mine $HASH, it buys it, on Solana.** One field of about 3,600 dots carries the whole film (they are GPUs, they form the words, they flow through Solana into buys, they loop as the tax, and they end as $HASH), with Apple-style type on black. 1920×1080, 60 fps, silent (add music when posting).
+A 60-second launch film for traders (v3). It opens on a hook, then explains the whole architecture one step at a time, styled after $PAID's fee-configuration video: a dark grid, one sentence at a time with words sharpening out of a blur, and a pipeline of round nodes with light travelling along the links. Our signature is the dot field: every dot is a PC. 1920×1080, 60 fps, silent (add music when posting).
 
 | Time | Scene |
 |---|---|
-| 0–3.8 s | A field of dots with a wave of light: "There are thousands of GPU coins." A shock ring dims them: "$HASH isn't one of them." |
-| 3.8–7.3 s | "Your GPU doesn't mine it." The dots fly together into gold dot-text: "It buys it." |
-| 7.3–13 s | GPUs (a mining cluster) send white dots through a Solana ring, where they turn gold and stack into a rising chart of buys: "GPUs mine other coins in the background." / "Every payout buys $HASH on Solana." |
-| 13–18.7 s | The dots become a loop (GPUs buy, people trade, 2–5% tax, paid back to miners and holders); each dot flashes as it passes the tax point |
-| 18.7–22.6 s | "Built on" Solana, in dots coloured with Solana's purple-to-green, plus "Token-2022. 21 million supply. Minting switched off for good." |
-| 22.6–27 s | The app tilts in; a cursor clicks the coin and dots burst out of it: "One click. It runs in the background." |
-| 27–32 s | The dots form $HASH. "On Solana. Coming soon." and fine print |
+| 0–11 s | "What if every gaming PC was buying your bag?" over a field of dots lighting up gold; "Around the clock. Automatically."; the dots pour into the coin: "Meet $HASH. The token GPUs buy. On Solana." |
+| 11–18 s | "Your GPU mines whatever pays most." GPU → Quantus / QubitCoin / Pearl; the app scans and Pearl wins (Pearl's own art and logotype) |
+| 18–25 s | "Mined coins are sold. Every payout buys $HASH." GPU → Pearl → Sold → Buys $HASH on Solana → Your wallet |
+| 25–32 s | "Every trade pays a 2–5% tax." Buys and sells each send their tax into the reward pot (Token-2022: every DEX) |
+| 32–39 s | "A public formula splits the tax." Miners 45–75%, holders 20–50%, development 5–10% |
+| 39–45 s | "Quiet market, higher tax. Busy market, lower." A slider moves the rate from 5% to 2.25% |
+| 45–51 s | "Hold longer. Mine more. Up to 4× the share." Level 1 / 2 / 4 bars made of dots |
+| 51–57 s | "GPUs buy. Traders trade. The tax pays it back." The loop |
+| 57–60 s | $HASH. "On Solana. Coming soon." Fine print, including "Not affiliated with Pearl or the Solana Foundation." |
 
-Solana appears as the word in its brand colours, not the logo. Check the Solana Foundation's brand guidelines before adding their logo.
+Third-party marks, used unaltered: Pearl's logotype and "genesis" pearl art (`assets/pearl-logotype.svg`, `assets/pearl-genesis.webp`, from pearlresearch.ai's brand files) and the Solana logomark (`assets/solana.svg`, from solana.com/branding, which forbids implying endorsement).
 
 ## Files
 
-- `index.html`: the reel (a canvas of dots plus a few DOM layers for words and the app). Every frame is a pure function of time (`seek(t)`), so renders are exact. Open it in a browser to watch it loop, or add `?t=19.5` to freeze a moment.
+- `index.html`: the reel (a canvas for the dots, links and light; DOM for nodes, labels and words built word by word). Every frame is a pure function of time (`seek(t)`), so renders are exact. Open it in a browser to watch it loop, or add `?t=19.5` to freeze a moment.
 - `render.mjs`: steps through the reel with Playwright and pipes PNG frames to ffmpeg.
-- `assets/`: the coin, Inter (OFL), and 3× screenshots of the app (`app-off.jpg`, `app-on.jpg`) taken from `apps/desktop/ui` with a sample wallet. Retake them if the app changes.
+- `assets/`: the coin, Inter (OFL), the Pearl and Solana marks above, and 3× screenshots of the app (`app-off.jpg`, `app-on.jpg`, used by earlier cuts) taken from `apps/desktop/ui` with a sample wallet.
 
 ## Render
 
