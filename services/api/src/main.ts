@@ -40,11 +40,30 @@ function remember(w: WorkerRecord) {
 // The payout loop's public record (services/payouts), re-read on each request.
 const publicPath = process.env.HASH_PUBLIC_RECORD ?? here("../../payouts/data/public.json");
 
+// Price history for the app's charts: PRL from the Kryptex pool (hourly, last 30 days), cached for
+// 10 minutes. $HASH has no market until launch, so it's null until then.
+let priceCache: { at: number; body: unknown } | null = null;
+async function prices() {
+  if (priceCache && Date.now() - priceCache.at < 10 * 60_000) return priceCache.body;
+  const since = Date.now() - 30 * 24 * 3_600_000;
+  let prl: [number, number][] = [];
+  try {
+    const r = await fetch("https://pool.kryptex.com/api/v1/coin/prl/price/chart", { signal: AbortSignal.timeout(10_000) });
+    const pts = (await r.json()) as { timestamp: number; price: number }[];
+    prl = pts.filter((p) => p.timestamp >= since && p.price > 0).map((p) => [p.timestamp, p.price]);
+  } catch { /* keep the last good copy below */ }
+  if (!prl.length && priceCache) return priceCache.body;
+  const body = { updatedAt: new Date().toISOString(), prl: { source: "Kryptex pool", points: prl }, hash: null };
+  priceCache = { at: Date.now(), body };
+  return body;
+}
+
 const { server } = createApi({
   coins: cfg.coins, quotes, policy: cfg.policy, score: cfg.score, ttlMs: cfg.ttlMs,
   platformSell: () => ({}), // TODO: feed from the treasury's actual daily sell volume per coin
   minerManifest, signingKey: loadSigningKey(pem), kid: process.env.HASH_SIGNING_KID ?? "dev",
   onAssign: remember,
+  prices,
   publicRecord: () => {
     try { return JSON.parse(readFileSync(publicPath, "utf8")); } catch { return null; }
   },

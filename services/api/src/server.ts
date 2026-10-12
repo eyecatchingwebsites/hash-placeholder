@@ -21,6 +21,8 @@ export interface ApiDeps {
   onAssign?: (w: WorkerRecord) => void;
   /** The payout loop's public record (services/payouts data/public.json), or null before the first round. */
   publicRecord?: () => { wallets?: Record<string, unknown>; priceUsd?: number } | null;
+  /** Price history for the app's charts (PRL from the pool; $HASH once it trades). */
+  prices?: () => Promise<unknown>;
 }
 
 /** One pool worker (one GPU) and the wallet it pays. */
@@ -83,6 +85,10 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
     };
 
     if (req.method === "GET" && url.pathname === "/v1/health") return send(200, { ok: true });
+    if (req.method === "GET" && url.pathname === "/v1/prices") {
+      res.setHeader("access-control-allow-origin", "*");
+      return deps.prices ? send(200, await deps.prices()) : send(503, { error: "no price feed" });
+    }
     // Public payout record, readable from the website.
     if (req.method === "GET" && (url.pathname === "/v1/stats" || url.pathname.startsWith("/v1/wallet/"))) {
       res.setHeader("access-control-allow-origin", "*");
