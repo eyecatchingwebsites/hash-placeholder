@@ -8,3 +8,4 @@ services/api/data/
 services/collector/data/
 packages/chain/data/
 services/payouts/data/
+apps/promo/out/
