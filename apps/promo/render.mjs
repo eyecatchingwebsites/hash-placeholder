@@ -1,7 +1,8 @@
-// Renders the promo reel (index.html) to an MP4, frame by frame, with Playwright and ffmpeg.
-//   node apps/promo/render.mjs                  -> apps/promo/out/hashcoin-promo.mp4 (1920x1080, 60 fps)
+// Renders the promo film (index.html) to an MP4, frame by frame, with Playwright and ffmpeg.
+//   node apps/promo/render.mjs                  -> apps/promo/out/hashcoin-promo.mp4 (1920x1080, 60 fps, motion blur)
 //   node apps/promo/render.mjs --stills 1,8.6   -> PNG stills at those seconds, for checking
-//   node apps/promo/render.mjs --fps 30
+//   node apps/promo/render.mjs --fps 30 --sub 1 -> quicker draft, no motion blur
+// Motion blur: each output frame blends --sub sub-frames spread over half a frame (a 180° shutter).
 // Needs Playwright (global install is fine) and ffmpeg: on PATH, or set FFMPEG to its path
 // (for example the binary from the ffmpeg-static npm package).
 import { createRequire } from "module";
@@ -17,6 +18,7 @@ try { pw = require("playwright"); } catch { pw = require(path.join(execSync("npm
 
 const arg = (name, def) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : def; };
 const fps = Number(arg("--fps", 60));
+const sub = Math.max(1, Number(arg("--sub", 4)));
 const stills = arg("--stills", null);
 const out = path.join(here, "out");
 mkdirSync(out, { recursive: true });
@@ -29,8 +31,6 @@ await page.goto(pathToFileURL(path.join(here, "index.html")).href);
 await page.evaluate(async () => { await document.fonts.load("700 100px Inter"); await document.fonts.ready; await Promise.all([...document.images].map((i) => i.decode())); });
 const duration = await page.evaluate(() => window.DURATION);
 
-const frameAt = async (t) => { await page.evaluate((x) => window.seek(x), t); return page.screenshot({ type: "png" }); };
-
 if (stills) {
   for (const s of stills.split(",").map(Number)) {
     await page.evaluate((x) => window.seek(x), s);
@@ -39,15 +39,20 @@ if (stills) {
   console.log(`stills in ${out}`, errors.length ? "ERRORS " + errors.join(" | ") : "");
 } else {
   const file = path.join(out, "hashcoin-promo.mp4");
+  const blur = sub > 1 ? ["-vf", `tmix=frames=${sub},select='eq(mod(n,${sub}),${sub - 1})'`, "-fps_mode", "cfr", "-r", String(fps)] : [];
   const ff = spawn(process.env.FFMPEG || "ffmpeg", [
-    "-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(fps), "-c:v", "png", "-i", "-",
-    "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-pix_fmt", "yuv420p", "-movflags", "+faststart", file,
+    "-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(fps * sub), "-c:v", sub > 1 ? "mjpeg" : "png", "-i", "-",
+    ...blur, "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-movflags", "+faststart", file,
   ], { stdio: ["pipe", "inherit", "inherit"] });
   const total = Math.round(duration * fps);
   const started = Date.now();
   for (let i = 0; i < total; i++) {
-    const png = await frameAt(i / fps);
-    if (!ff.stdin.write(png)) await new Promise((r) => ff.stdin.once("drain", r));
+    for (let k = 0; k < sub; k++) {
+      const t = (i + (sub > 1 ? (k / sub) * 0.5 : 0)) / fps;
+      await page.evaluate((x) => window.seek(x), t);
+      const img = await page.screenshot(sub > 1 ? { type: "jpeg", quality: 95 } : { type: "png" });
+      if (!ff.stdin.write(img)) await new Promise((r) => ff.stdin.once("drain", r));
+    }
     if (i % fps === 0) process.stdout.write(`\r${(i / fps).toFixed(0)}s / ${duration}s`);
   }
   ff.stdin.end();
