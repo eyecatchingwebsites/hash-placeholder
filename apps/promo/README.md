@@ -1,19 +1,22 @@
 # Promo reel (`apps/promo`)
 
-A 53-second launch film (v4). **One world, one camera:** every part of the system sits on a single loop, and the camera flies from step to step along it, dipping out a little on each move, then pulls back to show the whole loop at once. The coin that forms in the opening is the same $HASH node the story comes back to. One short line per step, written plainly. Motion blur comes from blending sub-frames (see Render). 1920×1080, 60 fps, silent (add music when posting).
+An 84-second launch film (v5). The opening is a field of dots (every dot a PC) pouring into the $HASH coin. Then the loop: every step sits on one loop and the camera pans straight from step to step (smooth sine easing, no zoom dips). After the tax, the camera pushes into the vault and the film switches to slides for the parts that need a picture of their own (the self-adjusting tax, the split, miner bonus, holder rewards, levels), then comes back out at holders and miners and pulls back to the whole loop. Illustrated icons: a graphics card whose fans spin once it mines, a candlestick chart, a vault whose dial turns, a wallet with coins. One short line per step. Motion blur from blended sub-frames. 1920×1080, 60 fps, silent (add music when posting).
 
 | Time | Line on screen | Picture |
 |---|---|---|
-| 0–3 s | Most coins need buyers. | A dim field of dots (every dot a PC) |
-| 3.7–8 s | $HASH makes its own. | The dots light up gold and pour into the $HASH coin |
-| 8–14 s | Your GPU mines in the background. | The camera flies to the GPU; soft rings breathe out of it |
-| 14–20 s | It picks the coin that pays most. | Quantus, QubitCoin and Pearl appear; the app checks each, Pearl wins |
-| 20–25.6 s | Then it buys $HASH on Solana. | Light runs from Pearl to the $HASH coin (Solana badge); the coin beats as each buy lands |
-| 25.6–30.8 s | People buy and sell $HASH. | Traders, with BUY and SELL tags rising |
-| 30.8–36 s | Every trade pays a 2–5% tax. | Small gold trails run into the tax node |
-| 36–41.6 s | The tax pays holders and miners. | Light runs from the tax to holders and miners, and back to the GPUs |
-| 41.6–47 s | One loop. Around the clock. | The camera pulls back: the whole loop, light running all the way round |
-| 47–53 s | $HASH. On Solana. Coming soon. | End card and fine print |
+| 0–8 s | Most coins need buyers. / $HASH makes its own. | Dots light up gold and pour into the coin |
+| 8–13.8 s | Your GPU mines in the background. | The graphics card, fans spinning, rings breathing out |
+| 13.8–19.8 s | It picks the coin that pays most. | Quantus, QubitCoin and Pearl; the app checks each, Pearl wins |
+| 19.8–25.4 s | Then it buys $HASH on Solana. | Light runs into the $HASH coin (Solana badge), which beats as each buy lands |
+| 25.4–30.6 s | People buy and sell $HASH. | The chart, with BUY and SELL tags rising |
+| 30.6–37 s | Every trade pays a 2–5% tax. | Trails run into the vault; the camera pushes into it |
+| 37–44.6 s | Slow trading? The tax goes up. / Busy trading? It goes down. | A 2%–5% gauge over a strip of trading bars: quiet bars, the rate climbs to 5%; busy bars, it falls to 2.25% |
+| 44.6–50 s | The tax is split three ways. | One bar: miners 45–75%, holders 20–50%, dev 5–10% |
+| 50–57 s | Miners get a bonus on top. / Up to 5× their mining, on average. | The graphics card sends light into a bar: "your mining", then the gold bonus stacking to 5× |
+| 57–63.6 s | Holders get paid just for holding. / At least 1% of every trade. | $HASH coins arcing into a wallet |
+| 63.6–70 s | Hold longer and mine more. / Level up for up to 4× the share. | Level 1, 2, 3 cards: 1×, 2×, 4×, with dot bars 1 : 2 : 4 |
+| 70–77 s | One loop. Around the clock. | Back out at holders and miners, then the whole loop |
+| 77–84 s | $HASH. On Solana. Coming soon. | End card and fine print |
 
 Third-party marks, used unaltered: the Pearl, Quantus and QubitCoin marks the user supplied (`assets/pearl-mark.png`, `quantus.png`, `qubitcoin.png`, turned light-on-transparent for the dark nodes) and the Solana logomark (`assets/solana.svg`, from solana.com/branding, which forbids implying endorsement). The end card says we aren't affiliated with any of them.
 
@@ -30,6 +33,6 @@ node apps/promo/render.mjs                    # apps/promo/out/hashcoin-promo.mp
 node apps/promo/render.mjs --stills 2,12,19.5 # PNG stills for checking
 ```
 
-Needs Playwright and ffmpeg (on PATH, or `FFMPEG=<path>`; the `ffmpeg-static` npm package works). A full render with motion blur takes about 20 minutes; `--sub 1` drafts in about 5.
+Needs Playwright and ffmpeg (on PATH, or `FFMPEG=<path>`; the `ffmpeg-static` npm package works). A full render with motion blur takes about 45 minutes; `--sub 1` drafts in about 10.
 
 Copy rules from `CLAUDE.md` apply: no promised returns; the app shot carries "Sample wallet and numbers." and the end card says "Estimates, not promises."
