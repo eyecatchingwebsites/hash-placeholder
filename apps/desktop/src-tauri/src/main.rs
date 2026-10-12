@@ -73,6 +73,19 @@ fn save_wallet(rt: State<Shared>, app: tauri::AppHandle, address: String) -> Res
     Ok(r.status())
 }
 
+/// The wallet's public payout record from the server (levels, hours mined, paid and pending), or
+/// None before its first payout. Runs off the main thread so a slow server doesn't freeze the window.
+#[tauri::command]
+async fn account(rt: State<'_, Shared>) -> Result<Option<serde_json::Value>, String> {
+    let (base, wallet) = { let r = rt.lock().unwrap(); (r.settings.api_base.clone(), r.settings.wallet.clone()) };
+    if wallet.is_empty() { return Ok(None); }
+    match ureq::get(&format!("{base}/v1/wallet/{wallet}")).timeout(Duration::from_secs(10)).call() {
+        Ok(resp) => resp.into_json::<serde_json::Value>().map(Some).map_err(|e| e.to_string()),
+        Err(ureq::Error::Status(404 | 503, _)) => Ok(None),
+        Err(e) => Err(format!("server unreachable: {e}")),
+    }
+}
+
 #[tauri::command]
 fn detect(rt: State<Shared>) -> Status {
     let gpus = detect_gpus();
@@ -142,7 +155,7 @@ fn main() {
                 api.prevent_close();
             }
         })
-        .invoke_handler(tauri::generate_handler![status, save_wallet, detect, start, stop])
+        .invoke_handler(tauri::generate_handler![status, save_wallet, detect, start, stop, account])
         .run(tauri::generate_context!())
         .expect("error while running Hashcoin Miner");
 }

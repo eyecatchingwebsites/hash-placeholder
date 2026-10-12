@@ -40,6 +40,8 @@ export function publicRecord(l: Ledger, x: {
       holderLevel, minerLevel: hours > 0 ? computeMinerLevel(hours, holderLevel, x.rules) : null,
       holdClockHours: holdClockMs(w, x.now, x.price, x.rules) / 3_600_000, hoursMinedInWindow: hours,
       paidTokens: { miner: tokens(paid.miner), holder: tokens(paid.holder) },
+      // Held-back mining (paid once the mined coin sells) plus payouts that failed and will be retried.
+      pendingUsd: l.pending.filter((p) => p.address === a).reduce((s, p) => s + p.estimatedUsd, 0) + l.owed.filter((o) => o.address === a).reduce((s, o) => s + o.usd, 0),
     }];
   }));
   return {

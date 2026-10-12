@@ -5,87 +5,258 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hashcoin Miner</title>
 <style>
-  :root { --bg: #121514; --panel: #1a1e1c; --ink: #e8ebe8; --muted: #9aa39f; --line: #2c3330; --accent: #f08a3c; --good: #5ccf7f; --bad: #ff7a6e; color-scheme: dark; }
+  @font-face { font-family: "Manrope"; src: url("fonts/manrope-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+  @font-face { font-family: "Inter"; src: url("fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  /* Same tokens as the website (apps/web/assets/css/site.css): one gold accent on near-black. */
+  :root {
+    --bg: #0B0C0D; --panel: #111315; --panel-2: #16181B; --line: #1F2226; --line-2: #2C3035;
+    --text: #EDEBE6; --muted: #A0A4AA; --dim: #7C8188;
+    --gold: #EBB447; --gold-hover: #F3C766; --gold-ink: #15110D; --gold-soft: rgba(235, 180, 71, .10); --gold-line: rgba(235, 180, 71, .38);
+    --bad: #F07A6A;
+    --display: "Manrope", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --body: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    color-scheme: dark;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { padding: 20px 16px; display: grid; gap: 16px; }
-  h1 { margin: 0; font-size: 1.4rem; } h1 b { color: var(--accent); }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
-  label { font-weight: 600; }
-  input { width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 13px ui-monospace, Menlo, Consolas, monospace; }
-  .hint { color: var(--muted); font-size: 12px; }
-  .row { display: flex; gap: 8px; }
-  button { flex: 1; padding: 11px; border: 0; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
-  button.primary { background: var(--accent); color: #1b1f1d; }
-  button.secondary { background: var(--line); color: var(--ink); }
-  button:disabled { opacity: .5; cursor: default; }
-  .gpu { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px 0; border-top: 1px solid var(--line); }
-  .gpu:first-of-type { border-top: 0; }
-  .state { font-weight: 700; } .state.mining { color: var(--good); }
-  .err { color: var(--bad); }
-  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/1.5 var(--body); -webkit-font-smoothing: antialiased; user-select: none; }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+  [hidden] { display: none !important; }
+  .num { font-family: var(--display); font-variant-numeric: tabular-nums; }
+
+  .app { min-height: 100%; display: flex; flex-direction: column; padding: 18px 22px 18px; gap: 20px; }
+
+  /* Header: brand left, the payout wallet right. */
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 9px; font: 800 17px/1 var(--display); letter-spacing: -.02em; }
+  .brand svg { width: 26px; height: 26px; }
+  .wallet-chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); background: transparent; border-radius: 999px; padding: 6px 12px 6px 10px; color: var(--muted); font-size: 12.5px; cursor: pointer; }
+  .wallet-chip:hover { color: var(--text); border-color: var(--dim); }
+  .wallet-chip .addr { color: var(--text); font-family: var(--display); font-weight: 600; letter-spacing: .01em; }
+  .wallet-chip svg { width: 13px; height: 13px; opacity: .7; }
+
+  /* Wallet form (first run, or when changing the address). */
+  .wallet-form { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel); }
+  .wallet-form h2 { margin: 0; font: 700 15px/1.3 var(--display); letter-spacing: -.01em; }
+  .wallet-form input { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--bg); font: 500 13px/1.2 var(--display); letter-spacing: .01em; user-select: text; }
+  .wallet-form input:focus { border-color: var(--gold-line); outline: none; box-shadow: 0 0 0 3px var(--gold-soft); }
+  .wallet-form p { margin: 0; color: var(--dim); font-size: 12.5px; }
+  .wallet-form .actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn { border: 0; border-radius: 8px; padding: 9px 16px; font: 700 13.5px/1 var(--display); cursor: pointer; }
+  .btn.gold { background: var(--gold); color: var(--gold-ink); }
+  .btn.gold:hover { background: var(--gold-hover); }
+  .btn.quiet { background: transparent; color: var(--muted); }
+  .btn.quiet:hover { color: var(--text); }
+
+  /* The coin: the one big control. Click to start or stop. */
+  .hero { display: grid; justify-items: center; text-align: center; gap: 4px; padding-top: 4px; }
+  .coin { position: relative; width: 148px; height: 148px; border: 0; padding: 0; border-radius: 50%; background: none; cursor: pointer; margin-bottom: 14px; }
+  .coin:disabled { cursor: default; }
+  .coin svg { width: 100%; height: 100%; overflow: visible; }
+  .coin .edge { transform-origin: 50% 50%; stroke: var(--line-2); transition: stroke .4s; }
+  .coin .face { fill: var(--panel-2); stroke: var(--line-2); stroke-width: 1; transition: fill .4s, stroke .4s; }
+  .coin .hash { fill: var(--dim); transition: fill .4s; }
+  .coin:not(:disabled):hover .hash { fill: var(--gold); }
+  .coin:not(:disabled):hover .face { stroke: var(--gold-line); }
+  .coin:disabled .hash { fill: var(--line-2); }
+  .coin.on .face { fill: var(--gold); stroke: var(--gold); }
+  .coin.on .hash, .coin.on:hover .hash { fill: var(--gold-ink); }
+  .coin.on .edge { stroke: var(--gold); animation: turn 48s linear infinite; }
+  .coin.on::after { content: ""; position: absolute; inset: -18px; border-radius: 50%; background: radial-gradient(closest-side, rgba(235, 180, 71, .16), transparent); z-index: -1; }
+  @keyframes turn { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .coin.on .edge { animation: none; } }
+
+  .state { margin: 0; font: 800 30px/1.1 var(--display); letter-spacing: -.03em; }
+  .state.on { color: var(--gold); }
+  .sub { margin: 0; color: var(--muted); max-width: 330px; }
+  .sub b { color: var(--text); font-weight: 600; }
+  .error { margin: 6px 0 0; color: var(--bad); max-width: 360px; font-size: 13px; }
+
+  /* Sections */
+  section h2 { margin: 0 0 6px; display: flex; justify-content: space-between; align-items: baseline; font: 700 13px/1.3 var(--display); color: var(--muted); letter-spacing: 0; }
+  .link { background: none; border: 0; padding: 0; color: var(--dim); font: 600 12.5px/1 var(--body); cursor: pointer; }
+  .link:hover { color: var(--text); }
+  .rows { border-top: 1px solid var(--line); }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .row .name { font-weight: 500; }
+  .row .val { font-family: var(--display); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .row .meta { grid-column: 1 / -1; color: var(--dim); font-size: 12.5px; }
+  .row .meta.live { color: var(--gold); }
+  .empty { color: var(--dim); font-size: 13px; padding: 10px 0; }
+
+  /* Levels: a thin bar shows progress to the next one. */
+  .level .val { color: var(--text); }
+  .bar { grid-column: 1 / -1; height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 4px 0 1px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--gold); border-radius: 4px; transition: width .6s; }
+
+  footer { margin-top: auto; color: var(--dim); font-size: 12px; }
 </style>
 </head>
 <body>
-<main>
-  <h1><b>$HASH</b> Miner</h1>
-
-  <section class="card">
-    <label for="wallet">Your Solana wallet address</label>
-    <input id="wallet" placeholder="e.g. 4Nd1mYwSzKj7…" autocomplete="off" spellcheck="false">
-    <span class="hint">Payouts go here. Only paste your public address. Hashcoin never asks for a seed phrase or private key.</span>
-    <div class="row"><button class="secondary" id="save">Save address</button></div>
-  </section>
-
-  <section class="card">
-    <div class="row">
-      <button class="primary" id="start">Start mining</button>
-      <button class="secondary" id="stop">Stop</button>
+<div class="app">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#EBB447"/><g transform="translate(50 50) skewX(-16) translate(-50 -50)" fill="#15110D"><rect x="35" y="24" width="11" height="52" rx="2"/><rect x="54" y="24" width="11" height="52" rx="2"/><rect x="25" y="37" width="50" height="10" rx="2"/><rect x="25" y="54" width="50" height="10" rx="2"/></g></svg>
+      Hashcoin
     </div>
-    <span class="hint" id="summary"></span>
-    <span class="err" id="error" hidden></span>
-  </section>
+    <button class="wallet-chip" id="chip" hidden title="Change the wallet you're paid to">
+      Paid to <span class="addr" id="chip-addr"></span>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 2.5l2 2L6 12l-2.8.8L4 10z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
 
-  <section class="card">
-    <div class="row" style="justify-content: space-between; align-items: baseline;">
-      <label>Graphics cards</label>
-      <button class="secondary" id="detect" style="flex: 0 0 auto; padding: 6px 10px; font-size: 12px;">Rescan</button>
+  <form class="wallet-form" id="wallet-form" hidden>
+    <h2 id="wallet-title">Where should we pay you?</h2>
+    <input id="wallet" placeholder="Your Solana wallet address" autocomplete="off" spellcheck="false" aria-labelledby="wallet-title">
+    <p>Paste your public address from Phantom, Solflare or any Solana wallet. Hashcoin never asks for your seed phrase or private key.</p>
+    <div class="actions">
+      <button type="button" class="btn quiet" id="cancel">Cancel</button>
+      <button type="submit" class="btn gold" id="save">Save address</button>
     </div>
-    <div id="gpus"></div>
+  </form>
+
+  <div class="hero">
+    <button class="coin" id="coin" aria-pressed="false" aria-label="Start mining">
+      <svg viewBox="-12 -12 124 124" aria-hidden="true">
+        <circle class="edge" cx="50" cy="50" r="57" fill="none" stroke-width="3" stroke-dasharray="1.2 4.77"/>
+        <circle class="face" cx="50" cy="50" r="50"/>
+        <g class="hash" transform="translate(50 50) skewX(-16) translate(-50 -50)"><rect x="35" y="24" width="11" height="52" rx="2"/><rect x="54" y="24" width="11" height="52" rx="2"/><rect x="25" y="37" width="50" height="10" rx="2"/><rect x="25" y="54" width="50" height="10" rx="2"/></g>
+      </svg>
+    </button>
+    <p class="state" id="state">Not mining</p>
+    <p class="sub" id="sub"></p>
+    <p class="error" id="error" role="alert" hidden></p>
+  </div>
+
+  <section aria-labelledby="cards-h">
+    <h2 id="cards-h">Your graphics cards <button class="link" id="detect">Scan again</button></h2>
+    <div class="rows" id="gpus"></div>
   </section>
 
-  <span class="hint">Hashcoin picks the best-paying coin for each card and pays you in $HASH. Earnings vary with mining revenue, trading volume and the $HASH price.</span>
-</main>
+  <section aria-labelledby="you-h" id="you">
+    <h2 id="you-h">Levels and payouts</h2>
+    <div class="rows" id="account"></div>
+  </section>
+
+  <footer>Earnings change with coin prices, how much $HASH is traded and its price.</footer>
+</div>
 <script>
   const { invoke } = window.__TAURI__.core;
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  let editing = false;
+  const usd = (v) => (v > 0 && v < 0.01 ? "under $0.01" : v >= 100 ? `$${Math.round(v).toLocaleString("en-US")}` : `$${v.toFixed(2)}`);
+  const short = (a) => (a.length > 12 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a);
+  const cardName = (n) => n.replace(/^(NVIDIA|AMD|Intel\(R\))\s+/i, "").replace(/^GeForce\s+/i, "");
+  // Level rules (packages/engine DEFAULT_RULES): M2 = 48 h mined in 14 days + H1, M3 = 120 h + H2.
+  // H1 = $50 held, H2 = $500 held with 24 h on the hold clock, H3 = $2,500 with 7 days.
+  const MINER = { 2: { hours: 48, holder: 1 }, 3: { hours: 120, holder: 2 } };
+  const HOLDER = [null, { usd: 50, hours: 0 }, { usd: 500, hours: 24 }, { usd: 2500, hours: 168 }];
+
+  let last = null, editingWallet = false;
+
+  function showWalletForm(show) {
+    editingWallet = show;
+    $("wallet-form").hidden = !show;
+    if (show) {
+      $("wallet").value = last?.settings.wallet || "";
+      $("cancel").hidden = !last?.settings.wallet;
+      $("wallet").focus();
+    }
+    render(last);
+  }
 
   function render(s) {
-    if (!editing) $("wallet").value = s.settings.wallet || "";
-    $("start").disabled = s.mining; $("stop").disabled = !s.mining;
-    const total = s.gpus.reduce((a, g) => a + (g.expectedUsdPerDay || 0), 0);
-    $("summary").textContent = s.mining
-      ? `Mining on ${s.gpus.filter((g) => g.state === "mining").length} of ${s.gpus.length} cards · est. $${total.toFixed(2)}/day before the chest bonus · rig "${s.settings.rigId}"`
-      : `Stopped · rig "${s.settings.rigId}"`;
-    $("error").hidden = !s.error; $("error").textContent = s.error || "";
-    $("gpus").innerHTML = s.gpus.length ? s.gpus.map((g) => `
-      <div class="gpu">
-        <span>${esc(g.gpu.name)}</span><span class="state ${g.state === "mining" ? "mining" : ""}">${esc(g.state)}</span>
-        <span class="hint">${g.coin ? `${esc(g.coin)} · est. $${g.expectedUsdPerDay.toFixed(2)}/day` : ""}</span><span class="hint">${esc(g.reason)}</span>
-      </div>`).join("") : `<span class="hint">No supported card found. Hashcoin needs an NVIDIA, AMD or Intel Arc GPU with current drivers.</span>`;
-  }
-  const run = (cmd, args) => invoke(cmd, args).then(render).catch((e) => { $("error").hidden = false; $("error").textContent = e; });
+    if (!s) return;
+    last = s;
+    const hasWallet = !!s.settings.wallet;
+    $("chip").hidden = !hasWallet || editingWallet;
+    $("chip-addr").textContent = short(s.settings.wallet);
+    if (!hasWallet && !editingWallet) { editingWallet = true; $("wallet-form").hidden = false; $("cancel").hidden = true; }
 
-  $("wallet").addEventListener("focus", () => (editing = true));
-  $("wallet").addEventListener("blur", () => (editing = false));
-  $("save").onclick = () => run("save_wallet", { address: $("wallet").value });
-  $("start").onclick = () => run("start");
-  $("stop").onclick = () => run("stop");
+    const mining = s.gpus.filter((g) => g.state === "mining");
+    const perDay = mining.reduce((a, g) => a + (g.expectedUsdPerDay || 0), 0);
+    const coin = $("coin");
+    coin.classList.toggle("on", s.mining);
+    coin.disabled = !hasWallet || (!s.mining && !s.gpus.length);
+    coin.setAttribute("aria-pressed", String(s.mining));
+    coin.setAttribute("aria-label", s.mining ? "Stop mining" : "Start mining");
+    $("state").textContent = s.mining ? (mining.length ? "Mining" : "Starting…") : "Not mining";
+    $("state").classList.toggle("on", s.mining);
+    $("sub").innerHTML = !hasWallet ? "Add your wallet address to start."
+      : !s.gpus.length ? "No supported graphics card found."
+      : s.mining
+        ? (mining.length ? `About <b>${usd(perDay)} a day</b> from ${mining.length === 1 ? "your card" : `${mining.length} cards`}, paid in $HASH. Click the coin to stop.` : "Getting your cards ready. This can take a minute the first time.")
+        : "Click the coin to start mining.";
+    $("error").hidden = !s.error;
+    $("error").textContent = s.error || "";
+
+    $("gpus").innerHTML = s.gpus.length ? s.gpus.map((g) => {
+      const on = g.state === "mining";
+      const meta = on ? `Mining ${esc(g.coin)}`
+        : g.state.startsWith("restarting") ? "The miner stopped; restarting it"
+        : s.mining ? esc(g.reason) : "Ready";
+      return `<div class="row"><span class="name">${esc(cardName(g.gpu.name))}</span>
+        <span class="val">${on && g.expectedUsdPerDay != null ? `${usd(g.expectedUsdPerDay)}/day` : ""}</span>
+        <span class="meta${on ? " live" : ""}">${meta}</span></div>`;
+    }).join("") : `<p class="empty">Hashcoin needs an NVIDIA, AMD or Intel Arc graphics card with current drivers. Plug-in cards only; built-in graphics can't mine.</p>`;
+  }
+
+  function renderAccount(a) {
+    const box = $("account");
+    if (!last?.settings.wallet) { $("you").hidden = true; return; }
+    $("you").hidden = false;
+    if (!a) {
+      box.innerHTML = `<p class="empty">Your levels and payouts show here after your first payout, a few minutes after you start mining.</p>`;
+      return;
+    }
+    const m = a.minerLevel ?? 1, h = a.holderLevel ?? 0, hours = a.hoursMinedInWindow ?? 0, bag = a.balanceUsd ?? 0, clock = a.holdClockHours ?? 0;
+    // Miner level
+    let mNext = "", mPct = 1;
+    if (m < 3) {
+      const need = MINER[m + 1];
+      mPct = Math.min(1, hours / need.hours);
+      mNext = hours < need.hours
+        ? `${hours.toFixed(1)} of ${need.hours} hours mined in the last 14 days, for M${m + 1}.`
+        : `Hours done. Reach holder level H${need.holder} to unlock M${m + 1}.`;
+    } else mNext = "Top miner level.";
+    // Holder level
+    let hNext = "", hPct = 1;
+    if (h < 3) {
+      const need = HOLDER[h + 1];
+      if (bag < need.usd) { hPct = bag / need.usd; hNext = `Hold ${usd(need.usd)} of $HASH for H${h + 1}. You hold ${usd(bag)}.`; }
+      else { hPct = need.hours ? Math.min(1, clock / need.hours) : 1; hNext = `${clock.toFixed(0)} of ${need.hours} hours on your hold clock, for H${h + 1}. A bigger bag fills it faster.`; }
+    } else hNext = "Top holder level.";
+    const paid = (a.paidTokens?.miner ?? 0) + (a.paidTokens?.holder ?? 0);
+    const paidUsd = a.priceUsd ? ` (${usd(paid * a.priceUsd)})` : "";
+    const pending = a.pendingUsd ?? 0;
+    box.innerHTML = `
+      <div class="row level"><span class="name">Miner level</span><span class="val">M${m}</span>
+        <span class="bar"><i style="width:${(100 * mPct).toFixed(1)}%"></i></span><span class="meta">${mNext}</span></div>
+      <div class="row level"><span class="name">Holder level</span><span class="val">${h ? `H${h}` : "None yet"}</span>
+        <span class="bar"><i style="width:${(100 * Math.max(0, hPct)).toFixed(1)}%"></i></span><span class="meta">${hNext}</span></div>
+      <div class="row"><span class="name">Paid to you so far</span><span class="val">${paid.toLocaleString("en-US", { maximumFractionDigits: 2 })} $HASH</span>
+        <span class="meta">${paidUsd ? `Worth about${paidUsd.replace(/[()]/g, " ")}at today's price.` : ""}</span></div>
+      ${pending > 0 ? `<div class="row"><span class="name">Still coming</span><span class="val">${usd(pending)}</span>
+        <span class="meta">Part of each mining payout is sent once the coin your card mined has been sold.</span></div>` : ""}`;
+  }
+
+  const run = (cmd, args) => invoke(cmd, args).then(render).catch((e) => { $("error").hidden = false; $("error").textContent = String(e); });
+  const refreshAccount = () => invoke("account").then(renderAccount).catch(() => renderAccount(null));
+
+  $("chip").onclick = () => showWalletForm(true);
+  $("cancel").onclick = () => showWalletForm(false);
+  $("wallet-form").onsubmit = (e) => {
+    e.preventDefault();
+    invoke("save_wallet", { address: $("wallet").value })
+      .then((s) => { editingWallet = false; $("wallet-form").hidden = true; render(s); refreshAccount(); })
+      .catch((err) => { $("error").hidden = false; $("error").textContent = String(err); });
+  };
+  $("coin").onclick = () => run(last?.mining ? "stop" : "start").then(refreshAccount);
   $("detect").onclick = () => run("detect");
-  run("status");
+  run("status").then(refreshAccount);
   setInterval(() => run("status"), 3000);
+  setInterval(refreshAccount, 60000);
 </script>
 </body>
 </html>

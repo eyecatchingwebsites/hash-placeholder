@@ -20,7 +20,7 @@ export interface ApiDeps {
   /** Called for every assignment handed out, so the collector can map pool workers back to wallets. */
   onAssign?: (w: WorkerRecord) => void;
   /** The payout loop's public record (services/payouts data/public.json), or null before the first round. */
-  publicRecord?: () => { wallets?: Record<string, unknown> } | null;
+  publicRecord?: () => { wallets?: Record<string, unknown>; priceUsd?: number } | null;
 }
 
 /** One pool worker (one GPU) and the wallet it pays. */
@@ -92,7 +92,7 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
       const address = decodeURIComponent(url.pathname.slice("/v1/wallet/".length));
       if (!isSolanaAddress(address)) return send(400, { error: "not a Solana address" });
       const w = rec.wallets?.[address];
-      return w ? send(200, { address, ...(w as object) }) : send(404, { error: "no $HASH activity for this wallet yet" });
+      return w ? send(200, { address, priceUsd: rec.priceUsd, ...(w as object) }) : send(404, { error: "no $HASH activity for this wallet yet" });
     }
     if (req.method === "GET" && url.pathname === "/v1/keys") return send(200, { [deps.kid]: rawPublicKey(deps.signingKey) });
     if (req.method === "GET" && url.pathname === "/v1/miners") return send(200, manifestEnv);

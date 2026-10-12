@@ -6,7 +6,7 @@
   "build": { "frontendDist": "../ui" },
   "app": {
     "withGlobalTauri": true,
-    "windows": [{ "label": "main", "title": "Hashcoin Miner", "width": 460, "height": 680, "resizable": true }],
+    "windows": [{ "label": "main", "title": "Hashcoin Miner", "width": 460, "height": 760, "minWidth": 400, "minHeight": 560, "resizable": true }],
     "security": { "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" }
   },
   "bundle": {
