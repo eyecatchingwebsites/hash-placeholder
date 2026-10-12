@@ -26,7 +26,7 @@ const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, de
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 await page.goto(pathToFileURL(path.join(here, "index.html")).href);
-await page.evaluate(async () => { await document.fonts.ready; await Promise.all([...document.images].map((i) => i.decode())); });
+await page.evaluate(async () => { await document.fonts.load("700 100px Inter"); await document.fonts.ready; await Promise.all([...document.images].map((i) => i.decode())); });
 const duration = await page.evaluate(() => window.DURATION);
 
 const frameAt = async (t) => { await page.evaluate((x) => window.seek(x), t); return page.screenshot({ type: "png" }); };

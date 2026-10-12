@@ -4,149 +4,93 @@
 <meta charset="utf-8">
 <title>Hashcoin promo</title>
 <!--
-  The Hashcoin promo reel (Apple-style: black, one line at a time, the product as the hero).
-  Every frame is a pure function of time: seek(t) sets the whole stage for t seconds.
-  render.mjs steps through it frame by frame and encodes an MP4. Open this file in a browser
-  to watch it play (or add ?t=12.5 to freeze on a moment).
+  The Hashcoin promo reel. One field of ~2,700 dots tells the whole story: they are GPUs, they
+  form the words, they flow through Solana into buys, they loop as the tax, and they end as $HASH.
+  Every frame is a pure function of time: seek(t) sets the whole stage for t seconds, so
+  render.mjs can step through it frame by frame. Open this file in a browser to watch it loop,
+  or add ?t=12.5 to freeze on a moment.
 -->
 <style>
   @font-face { font-family: "Inter"; src: url("assets/inter.woff2") format("woff2"); font-weight: 100 900; }
-  :root { --white: #F5F5F7; --gray: #86868B; --fine: #6E6E73; --gold: #EBB447; --gold-2: #F6DFA6; }
+  :root { --white: #F5F5F7; --gray: #8E8E93; --fine: #6E6E73; --gold: #EBB447; }
   html, body { margin: 0; background: #000; overflow: hidden; }
   #stage { position: relative; width: 1920px; height: 1080px; background: #000; overflow: hidden; color: var(--white);
-    font-family: "Inter", system-ui, sans-serif; font-feature-settings: "ss01", "cv11"; -webkit-font-smoothing: antialiased; transform-origin: 0 0; }
-  .layer, .c { position: absolute; inset: 0; }
-  .c { display: grid; place-items: center; text-align: center; }
-  .t { font-weight: 650; letter-spacing: -.045em; line-height: 1.02; white-space: nowrap; will-change: transform, opacity, filter; }
-  .sub { color: var(--gray); font-weight: 500; letter-spacing: -.02em; }
-  .gold-text { background: linear-gradient(180deg, #FBE7B5 0%, #EBB447 55%, #C48A22 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .silver-text { background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 45%, #A1A1A6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-  /* Scene 1 */
-  #s1a { font-size: 150px; }
-  #s1b { font-size: 60px; }
-  /* Scene 2 */
-  #dots { position: absolute; inset: 0; }
-  #s2 { font-size: 104px; }
-  /* Scene 3: the coin */
-  #coinwrap { position: absolute; left: 50%; top: 50%; width: 380px; height: 380px; margin: -190px 0 0 -190px; perspective: 1400px; }
-  #coin { position: absolute; inset: 0; transform-style: preserve-3d; }
-  #coin img { width: 100%; height: 100%; display: block; }
-  #sheen { position: absolute; inset: 0; clip-path: circle(48% at 50% 50%); overflow: hidden; }
-  #sheen i { position: absolute; top: -20%; bottom: -20%; width: 46%; left: 0; background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,.0) 20%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 80%, transparent 100%); mix-blend-mode: soft-light; }
-  #glow { position: absolute; left: 50%; top: 50%; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(235,180,71,.30), rgba(235,180,71,.10) 45%, transparent 75%); }
-  #word { font-size: 150px; }
-  /* Scene 4 */
-  #s4 { font-size: 132px; line-height: 1.08; }
-  .line { display: block; overflow: hidden; padding: 0 .06em .08em; }
-  .line > span { display: inline-block; will-change: transform; }
-  /* Scene 5: the app */
+    font-family: "Inter", system-ui, sans-serif; -webkit-font-smoothing: antialiased; transform-origin: 0 0; }
+  canvas { position: absolute; inset: 0; }
+  .t { position: absolute; left: 0; right: 0; text-align: center; font-weight: 650; letter-spacing: -.04em; line-height: 1.05; white-space: nowrap; will-change: transform, opacity, filter; }
+  .sub { color: var(--gray); font-weight: 550; letter-spacing: -.02em; }
+  .mid { top: 50%; margin-top: -.55em; }
+  .top { top: 92px; }
+  .sol { background: linear-gradient(90deg, #9945FF 0%, #6E7BF2 45%, #19FB9B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lbl { position: absolute; font-size: 30px; font-weight: 600; letter-spacing: -.01em; color: var(--gray); white-space: nowrap; }
+  .lbl b { color: var(--white); font-weight: 650; }
+  /* The app */
   #prod { position: absolute; inset: 0; perspective: 2200px; perspective-origin: 50% 30%; }
-  #win { position: absolute; inset: 0; transform-origin: 50% 65%; will-change: transform, opacity; }
+  #win { position: absolute; inset: 0; transform-origin: 50% 65%; }
   #cam { position: absolute; left: 0; top: 0; width: 1040px; height: 596px; transform-origin: 0 0; }
   #cam img { position: absolute; inset: 0; width: 1040px; height: 596px; border-radius: 12px; }
-  #shotframe { position: absolute; inset: -1px; border-radius: 13px; border: 1px solid #2C2C2E; box-shadow: 0 30px 120px rgba(235,180,71,.10), 0 40px 90px rgba(0,0,0,.8); }
-  #ring { position: absolute; left: 183px; top: 147px; width: 0; height: 0; }
-  #ring i { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--gold); }
-  #cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; transform-origin: 0 0; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
-  #scrim { position: absolute; inset: 0; background: linear-gradient(180deg, #000 0px, #000 215px, rgba(0,0,0,.6) 300px, transparent 400px, transparent 900px, #000 1000px); }
-  .cap { position: absolute; left: 0; right: 0; top: 84px; text-align: center; font-size: 76px; }
-  #fine5 { position: absolute; right: 64px; bottom: 44px; font-size: 22px; color: var(--fine); font-weight: 500; letter-spacing: -.01em; }
-  /* Scene 6 */
-  .big { font-size: 230px; letter-spacing: -.055em; }
-  .big + .sub, .stack .sub { font-size: 52px; margin-top: 26px; }
-  .stack { display: grid; justify-items: center; }
-  /* Scene 7 */
-  #s7 { position: absolute; inset: 0; display: grid; grid-template-columns: 480px 1060px; align-items: center; justify-content: center; gap: 110px; }
-  #donut { width: 480px; height: 480px; }
-  #donut circle { fill: none; stroke-width: 56; }
-  #donutlabel { position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 480px; height: 480px; font-size: 84px; }
-  .s7t { font-size: 72px; text-align: left; }
-  .s7t.sub { margin-top: 18px; }
-  /* Scene 8 */
-  #endcoin { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -255px 0 0 -75px; }
-  #endword { font-size: 170px; }
-  #endsub { font-size: 54px; }
-  #fine8 { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; font-size: 24px; color: var(--fine); font-weight: 500; letter-spacing: -.01em; }
+  #frame { position: absolute; inset: -1px; border-radius: 13px; border: 1px solid #2C2C2E; box-shadow: 0 40px 140px rgba(235,180,71,.12), 0 40px 90px rgba(0,0,0,.8); }
+  #cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; transform-origin: 0 0; }
+  #scrim { position: absolute; inset: 0; background: linear-gradient(180deg, #000 0px, #000 200px, rgba(0,0,0,.55) 290px, transparent 380px, transparent 900px, #000 1010px); }
+  #fine { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; font-size: 24px; color: var(--fine); font-weight: 500; letter-spacing: -.01em; }
+  #appnote { position: absolute; right: 64px; bottom: 40px; font-size: 22px; color: var(--fine); font-weight: 500; }
 </style>
 </head>
 <body>
 <div id="stage">
-  <!-- 1 -->
-  <div class="c" id="s1a"><div class="t silver-text">Your GPU.</div></div>
-  <div class="c" id="s1b"><div class="t sub">Idle most of the day.</div></div>
-  <!-- 2 -->
-  <canvas id="dots" width="1920" height="1080"></canvas>
-  <div class="c" id="s2"><div class="t">What if it got paid to work?</div></div>
-  <!-- 3 -->
-  <div id="glow"></div>
-  <div id="coinwrap"><div id="coin"><img src="assets/coin.svg" alt=""><div id="sheen"><i></i></div></div></div>
-  <div class="c" id="word"><div class="t">Hashcoin</div></div>
-  <!-- 4 -->
-  <div class="c" id="s4"><div class="t"><span class="line"><span id="l1" class="silver-text">The first token your GPU</span></span><span class="line"><span id="l2" class="gold-text">gets paid to buy.</span></span></div></div>
-  <!-- 5 -->
   <div id="prod"><div id="win"><div id="cam">
     <img id="off" src="assets/app-off.jpg" alt="">
     <img id="on" src="assets/app-on.jpg" alt="">
-    <div id="shotframe"></div>
-    <div id="ring"><i></i></div>
+    <div id="frame"></div>
     <svg id="cursor" viewBox="0 0 24 24"><path d="M4 2.5v17.2l4.6-4.3 2.9 6.6 3-1.3-2.9-6.5h6.3z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg>
   </div></div></div>
   <div id="scrim"></div>
-  <div class="cap t" id="c1">Click the coin.</div>
-  <div class="cap t" id="c2">It mines on spare power.</div>
-  <div class="cap t" id="c3">See your next level.</div>
-  <div id="fine5">Sample wallet and numbers.</div>
-  <!-- 6 -->
-  <div class="c" id="w1"><div class="stack"><div class="t big">Mine it.</div><div class="t sub">Paid in $HASH, plus a bonus.</div></div></div>
-  <div class="c" id="w2"><div class="stack"><div class="t big">Hold it.</div><div class="t sub">Holders share every trade.</div></div></div>
-  <div class="c" id="w3"><div class="stack"><div class="t big gold-text">Or both.</div><div class="t sub">Holding unlocks bigger miner bonuses.</div></div></div>
-  <!-- 7 -->
-  <div id="s7">
-    <div style="position: relative; width: 480px; height: 480px;">
-      <svg id="donut" viewBox="0 0 520 520">
-        <circle cx="260" cy="260" r="200" stroke="#1C1C1E"/>
-        <circle id="a1" cx="260" cy="260" r="200" stroke="#EBB447" transform="rotate(-90 260 260)"/>
-        <circle id="a2" cx="260" cy="260" r="200" stroke="#8FB4E6" transform="rotate(-90 260 260)"/>
-        <circle id="a3" cx="260" cy="260" r="200" stroke="#636366" transform="rotate(-90 260 260)"/>
-      </svg>
-      <div id="donutlabel"><div class="t" id="dl">2–5%</div></div>
-    </div>
-    <div>
-      <div class="t s7t" id="t7a">A 2–5% tax on every trade.</div>
-      <div class="t s7t sub" id="t7b">Back to miners and holders.</div>
-    </div>
-  </div>
-  <!-- 8 -->
-  <img id="endcoin" src="assets/coin.svg" alt="">
-  <div class="c" id="endword"><div class="t">Hashcoin</div></div>
-  <div class="c" id="endsub"><div class="t sub">Coming soon.</div></div>
-  <div id="fine8">$HASH on Solana. Estimates, not promises. We never ask for your seed phrase.</div>
+  <div id="appnote">Sample wallet and numbers.</div>
+  <canvas id="fx" width="1920" height="1080"></canvas>
+
+  <!-- Words. Sizes are set inline; positions by class. -->
+  <div class="t mid" id="c0" style="font-size: 96px;">There are thousands of GPU coins.</div>
+  <div class="t mid" id="c1" style="font-size: 120px;">$HASH isn't one of them.</div>
+  <div class="t" id="c2" style="font-size: 64px; top: 250px;"><span class="sub">Your GPU doesn't mine it.</span></div>
+  <div class="t top" id="c3" style="font-size: 68px;">GPUs mine other coins in the background.</div>
+  <div class="t top" id="c4" style="font-size: 68px;">Every payout buys $HASH on <span class="sol">Solana</span>.</div>
+  <div class="t top" id="c5" style="font-size: 68px;">Every trade pays a 2–5% tax.</div>
+  <div class="t top" id="c6" style="font-size: 68px;">It flows back to miners and holders.</div>
+  <div class="t" id="c7" style="font-size: 64px; top: 250px;"><span class="sub">Built on</span></div>
+  <div class="t" id="c8" style="font-size: 40px; top: 760px;"><span class="sub">Token-2022. 21 million supply. Minting switched off for good.</span></div>
+  <div class="t top" id="c9" style="font-size: 68px;">One click. It runs in the background.</div>
+  <div class="t" id="c10" style="font-size: 56px; top: 700px;"><span class="sub">On <span class="sol">Solana</span>. Coming soon.</span></div>
+  <div id="fine">Estimates, not promises. Never share your seed phrase.</div>
+
+  <!-- Flow labels (centered on their x) -->
+  <div class="lbl" id="f1" style="left: 230px; width: 200px; text-align: center; top: 700px;">Your GPUs</div>
+  <div class="lbl" id="f2" style="left: 860px; width: 200px; text-align: center; top: 700px;"><span class="sol">Solana</span></div>
+  <div class="lbl" id="f3" style="left: 1400px; width: 240px; text-align: center; top: 750px;">$HASH buys</div>
+  <!-- Loop labels -->
+  <div class="lbl" id="g1" style="left: 660px; width: 600px; text-align: center; top: 240px;"><b>GPUs buy</b> $HASH</div>
+  <div class="lbl" id="g2" style="left: 1290px; top: 572px;"><b>People trade</b></div>
+  <div class="lbl" id="g3" style="left: 660px; width: 600px; text-align: center; top: 908px;"><b>2–5% tax</b> on each trade</div>
+  <div class="lbl" id="g4" style="right: 1290px; top: 554px; text-align: right;"><b>Paid back</b> to miners<br>and holders</div>
 </div>
 
 <script>
 "use strict";
-const DURATION = 35;
+const DURATION = 32;
+const W = 1920, H = 1080, CX = 960, CY = 540;
 const $ = (id) => document.getElementById(id);
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
 const E = {
   lin: (x) => x,
   out: (x) => 1 - Math.pow(1 - x, 3),
   in: (x) => x * x * x,
   io: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
   expo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
-  // A soft, slightly overshooting settle for the hard-cut words.
-  back: (x) => 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2),
 };
-const DEF = { o: 0, x: 0, y: 0, s: 1, b: 0, rx: 0, ry: 0 };
 
-// A track is a list of [time, props, ease]. Props carry forward; the ease shapes the segment
-// that ends at that key.
-function track(keys) {
-  let cur = { ...DEF };
-  return keys.map(([t, p, e]) => { cur = { ...cur, ...p }; return [t, { ...cur }, e || "io"]; });
-}
+// ---------- DOM tracks (words, labels, the app) ----------
+const DEF = { o: 0, x: 0, y: 0, s: 1, b: 0, rx: 0 };
+function track(keys) { let cur = { ...DEF }; return keys.map(([t, p, e]) => { cur = { ...cur, ...p }; return [t, { ...cur }, e || "io"]; }); }
 function sample(tr, t) {
   if (t <= tr[0][0]) return tr[0][1];
   for (let i = 1; i < tr.length; i++) {
@@ -164,132 +108,251 @@ function sample(tr, t) {
 function apply(el, p) {
   el.style.opacity = p.o.toFixed(4);
   el.style.visibility = p.o < 0.002 ? "hidden" : "visible";
-  el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) scale(${p.s}) rotateX(${p.rx}deg) rotateY(${p.ry}deg)`;
+  el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) scale(${p.s}) rotateX(${p.rx}deg)`;
   el.style.filter = p.b > 0.05 ? `blur(${p.b.toFixed(2)}px)` : "none";
 }
-// The Apple text move: rise a little, sharpen out of a blur.
-const rise = (t0, d = 0.9, y = 36, b = 18) => [[t0, { o: 0, y, b }], [t0 + d, { o: 1, y: 0, b: 0 }, "expo"]];
-const fall = (t0, d = 0.45) => [[t0, {}], [t0 + d, { o: 0, b: 14, s: 0.985 }, "in"]];
-
+// Words rise a little and sharpen out of a blur; they leave the same way.
+const show = (t0, t1, d = 0.7) => track([[t0, { o: 0, y: 30, b: 16 }], [t0 + d, { o: 1, y: 0, b: 0 }, "expo"], [t1, {}], [t1 + 0.4, { o: 0, b: 14, y: -10 }, "in"]]);
 const T = {
-  s1a: track([[0, { y: -58 }], ...rise(0.5).map(([t, p, e]) => [t, { ...p, y: p.y - 58 }, e]), ...fall(3.05)]),
-  s1b: track([[0, { y: 84 }], ...rise(1.5, 0.9, 30).map(([t, p, e]) => [t, { ...p, y: p.y + 84 }, e]), ...fall(3.05)]),
-  s2: track([[0, {}], ...rise(4.0, 1.0), ...fall(6.3, 0.5)]),
-  coin: track([[7.0, { o: 0, s: 0.62, ry: 75, b: 22 }], [8.5, { o: 1, s: 1, ry: 0, b: 0 }, "expo"], [9.0, {}], [9.8, { y: -96, s: 0.8 }, "io"], [10.7, {}], [11.15, { o: 0, s: 0.86, b: 10 }, "in"]]),
-  glow: track([[7.2, { o: 0, s: 0.7 }], [8.8, { o: 0.75, s: 1 }, "out"], [10.7, {}], [11.2, { o: 0 }, "in"]]),
-  word: track([[9.3, { o: 0, y: 190, b: 16 }], [10.2, { o: 1, y: 150, b: 0 }, "expo"], [10.7, {}], [11.15, { o: 0, b: 12 }, "in"]]),
-  s4: track([[11.19, { o: 0 }], [11.2, { o: 1 }, "lin"], [14.8, {}], [15.3, { o: 0, b: 16, s: 0.985 }, "in"]]),
-  win: track([[15.2, { o: 0, y: 300, rx: 32, s: 0.84 }], [16.9, { o: 1, y: 0, rx: 0, s: 1 }, "expo"], [22.6, {}], [23.3, { o: 0, s: 0.95, b: 10 }, "in"]]),
-  c1: track([[0, {}], ...rise(17.3, 0.8, 24, 14), ...fall(19.3, 0.4)]),
-  c2: track([[0, {}], ...rise(19.6, 0.8, 24, 14), ...fall(20.9, 0.4)]),
-  c3: track([[0, {}], ...rise(21.3, 0.8, 24, 14), ...fall(22.8, 0.4)]),
-  scrim: track([[16.9, { o: 0 }], [17.4, { o: 1 }], [22.9, {}], [23.3, { o: 0 }]]),
-  fine5: track([[16.4, { o: 0 }], [17.0, { o: 1 }], [22.8, {}], [23.2, { o: 0 }]]),
-  // Camera: focus point in app pixels and zoom (1 = the app 1440px wide).
-  cam: track([[15.2, { x: 520, y: 300, s: 0.94 }], [17.4, {}], [18.7, { x: 190, y: 190, s: 2.05 }, "io"], [19.7, {}], [21.2, { x: 640, y: 255, s: 1.6 }, "io"], [22.2, {}], [23.3, { x: 520, y: 300, s: 0.92 }, "io"]]),
-  cursor: track([[17.9, { o: 0, x: 330, y: 330 }], [18.2, { o: 1 }], [18.85, { x: 186, y: 152 }, "io"], [18.95, { s: 0.85 }, "out"], [19.1, { s: 1 }, "out"], [19.6, {}], [20.0, { o: 0 }]]),
-  on: track([[18.95, { o: 0 }], [19.25, { o: 1 }, "out"]]),
-  ring: track([[18.95, { o: 0, s: 0.6 }], [19.0, { o: 0.9 }], [19.9, { o: 0, s: 3.2 }, "out"]]),
-  w1: track([[23.5, { o: 0, s: 1.07 }], [23.62, { o: 1 }, "lin"], [24.2, { s: 1 }, "out"], [24.79, {}], [24.8, { o: 0 }, "lin"]]),
-  w2: track([[24.8, { o: 0, s: 1.07 }], [24.92, { o: 1 }, "lin"], [25.5, { s: 1 }, "out"], [26.09, {}], [26.1, { o: 0 }, "lin"]]),
-  w3: track([[26.1, { o: 0, s: 1.07 }], [26.22, { o: 1 }, "lin"], [26.8, { s: 1 }, "out"], [27.4, {}], [27.75, { o: 0, b: 12 }, "in"]]),
-  s7: track([[27.79, { o: 0 }], [27.8, { o: 1 }, "lin"], [30.9, {}], [31.3, { o: 0, b: 14, s: 0.985 }, "in"]]),
-  t7a: track([[0, {}], ...rise(28.1)]),
-  t7b: track([[0, {}], ...rise(28.8)]),
-  dl: track([[0, {}], ...rise(28.3, 0.8, 20, 12)]),
-  endcoin: track([[31.4, { o: 0, s: 0.7, b: 14 }], [32.3, { o: 1, s: 1, b: 0 }, "expo"]]),
-  endword: track([[0, {}], ...rise(31.7, 1.0, 40, 20)]),
-  endsub: track([[0, { y: 140 }], [32.4, { o: 0, y: 166, b: 14 }], [33.2, { o: 1, y: 140, b: 0 }, "expo"]]),
-  fine8: track([[32.9, { o: 0 }], [33.6, { o: 1 }]]),
+  c0: show(0.35, 1.85), c1: show(2.2, 3.35), c2: show(3.75, 6.6),
+  c3: show(7.6, 9.6), c4: show(9.95, 12.9), c5: show(13.6, 15.6), c6: show(15.95, 18.3),
+  c7: show(19.3, 22.4), c8: show(19.9, 22.4), c9: show(23.3, 26.3),
+  c10: track([[28.6, { o: 0, y: 26, b: 14 }], [29.4, { o: 1, y: 0, b: 0 }, "expo"]]),
+  fine: track([[29.4, { o: 0 }], [30.1, { o: 1 }]]),
+  f1: show(8.0, 12.9, 0.6), f2: show(8.3, 12.9, 0.6), f3: show(8.9, 12.9, 0.6),
+  g1: show(14.0, 18.3, 0.6), g2: show(14.3, 18.3, 0.6), g3: show(14.6, 18.3, 0.6), g4: show(16.2, 18.3, 0.6),
+  win: track([[22.9, { o: 0, y: 260, rx: 30, s: 0.86 }], [24.3, { o: 1, y: 0, rx: 0, s: 1 }, "expo"], [26.6, {}], [27.2, { o: 0, s: 0.95, b: 10 }, "in"]]),
+  scrim: track([[23.0, { o: 0 }], [23.5, { o: 1 }], [26.7, {}], [27.1, { o: 0 }]]),
+  appnote: track([[23.6, { o: 0 }], [24.2, { o: 1 }], [26.6, {}], [27.0, { o: 0 }]]),
+  // Camera on the app: focus point in app pixels and zoom (1 = the app 1440px wide).
+  cam: track([[22.9, { x: 330, y: 250, s: 1.42 }], [26.8, { s: 1.56 }, "lin"]]),
+  cursor: track([[23.9, { o: 0, x: 330, y: 330 }], [24.15, { o: 1 }], [24.65, { x: 186, y: 152 }, "io"], [24.72, { s: 0.85 }, "out"], [24.85, { s: 1 }, "out"], [25.3, {}], [25.7, { o: 0 }]]),
+  on: track([[24.72, { o: 0 }], [24.98, { o: 1 }, "out"]]),
 };
-// Sub-lines inside the hard-cut words arrive a beat after the word.
-const subs = [["w1", 23.75], ["w2", 25.05], ["w3", 26.35]].map(([id, t0]) => [$(id).querySelector(".sub"), track([[0, {}], ...rise(t0, 0.6, 18, 10)])]);
-const lines = [[$("l1"), 11.3], [$("l2"), 11.6]];
+const CLICK = 24.72;
 const els = Object.fromEntries(Object.keys(T).map((k) => [k, $(k)]));
+const BASE = 1440 / 1040;
+const camAt = (t) => { const p = sample(T.cam, t), z = BASE * p.s; return { z, tx: 960 - p.x * z, ty: 640 - p.y * z }; };
 
-// ---- Dots: every PC with a GPU. They light up from the middle, then pour into the coin. ----
-const cv = $("dots"), cx = cv.getContext("2d");
-const DOTS = [];
+// ---------- The dots ----------
+const SP = 24, COLS = Math.floor(W / SP) + 1, ROWS = Math.floor(H / SP) + 1, N = COLS * ROWS;
+let seed = 11;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const P = [];
 {
-  const sp = 34, cols = Math.floor(1920 / sp) + 1, rows = Math.floor(1080 / sp) + 1;
-  const ox = (1920 - (cols - 1) * sp) / 2, oy = (1080 - (rows - 1) * sp) / 2;
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-    const x = ox + c * sp, y = oy + r * sp;
-    const d = Math.hypot((x - 960) / 960, (y - 540) / 540) / Math.SQRT2;
-    DOTS.push({ x, y, d, j: rnd() });
+  const ox = (W - (COLS - 1) * SP) / 2, oy = (H - (ROWS - 1) * SP) / 2;
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const gx = ox + c * SP, gy = oy + r * SP;
+    P.push({ gx, gy, r1: rnd(), r2: rnd(), r3: rnd(), r4: rnd() });
   }
 }
+// A fixed shuffle hands out roles in each scene (cluster, travelers, ring...).
+const perm = [...Array(N).keys()];
+for (let i = N - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; }
+const rank = new Int32Array(N); perm.forEach((p, k) => (rank[p] = k));
+
+const GOLD = [235, 180, 71], WHITE = [236, 236, 240], GRAY = [72, 72, 78], PURPLE = [153, 69, 255], GREEN = [25, 251, 155];
+const mix = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
+const sol = (k) => (k < 0.45 ? mix(PURPLE, [110, 123, 242], k / 0.45) : mix([110, 123, 242], GREEN, (k - 0.45) / 0.55));
+
+// Text made of dots: sample the glyphs, then give each target to one dot (sorted left to right
+// so the dots sweep across rather than cross the whole screen).
+function textTargets(str, size, cx, cy, maxPts) {
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.font = `700 ${size}px Inter`; g.textAlign = "center"; g.textBaseline = "middle";
+  if ("letterSpacing" in g) g.letterSpacing = `${-0.035 * size}px`;
+  g.fillText(str, cx, cy);
+  const data = g.getImageData(0, 0, W, H).data;
+  let pts = [];
+  for (let step = 5; step < 20; step++) {
+    pts = [];
+    for (let y = 0, row = 0; y < H; y += step, row++) for (let x = (row % 2) * step / 2; x < W; x += step) {
+      if (data[(Math.round(y) * W + Math.round(x)) * 4 + 3] > 140) pts.push([x, y]);
+    }
+    if (pts.length <= maxPts) break;
+  }
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const order = [...Array(N).keys()].sort((i, j) => (P[i].gx + P[i].r1 * 70) - (P[j].gx + P[j].r1 * 70));
+  const tgt = new Int32Array(N).fill(-1);
+  const m = pts.length;
+  order.forEach((pi, j) => { const a = Math.floor((j * m) / N), b = Math.floor(((j + 1) * m) / N); if (b > a) tgt[pi] = a; });
+  let minX = W, maxX = 0;
+  for (const [x] of pts) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
+  return { pts, tgt, minX, maxX };
+}
+
+// The dim field everything rests in.
+function bg(p, t, o, a = 0.12) {
+  o.x = p.gx + Math.sin(t * 0.35 + p.r1 * 6.28) * 7;
+  o.y = p.gy + Math.cos(t * 0.3 + p.r2 * 6.28) * 7;
+  o.a = a; o.s = 1.7; o.c = GRAY;
+}
+function textScene(form, colorAt) {
+  return (p, i, t, o) => {
+    const k = form.tgt[i];
+    if (k < 0) return bg(p, t, o, 0.1);
+    const [x, y] = form.pts[k];
+    o.x = x + Math.sin(t * 2.1 + p.r1 * 40) * 1.3; o.y = y + Math.cos(t * 1.9 + p.r2 * 40) * 1.3;
+    o.a = 0.9 + 0.1 * Math.sin(t * 3 + p.r3 * 30); o.s = 2.5;
+    o.c = colorAt(x, form, p);
+  };
+}
+
+// Scene 1: the field of GPUs. A wave of light rolls across; then a shock ring dims them.
+function sGrid(p, i, t, o) {
+  const appear = E.out(clamp(t / 0.5));
+  const w = 0.5 + 0.5 * Math.sin(p.gx * 0.0062 + p.gy * 0.0041 - t * 3.2);
+  let x = p.gx, y = p.gy, a = (0.22 + 0.6 * w) * appear;
+  const dist = Math.hypot(x - CX, y - CY);
+  if (t > 2.15) {
+    const rr = (t - 2.15) * 1500, band = Math.exp(-Math.pow((dist - rr) / 70, 2));
+    const push = band * 26;
+    x += ((x - CX) / (dist || 1)) * push; y += ((y - CY) / (dist || 1)) * push;
+    a = lerp(a, 0.16, clamp((rr - dist) / 300)) + band * 0.6;
+  }
+  o.x = x; o.y = y; o.a = a; o.s = 2.3; o.c = mix(GRAY, WHITE, w * 0.7);
+}
+
+// Scene 3: payouts flow from the GPUs, through Solana, into a rising stack of buys.
+const CLUSTER = 256, RING = 150;
+const BARS = [5, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14, 17, 16, 19];
+const CELLS = []; // [x, y] for each dot of the chart, filled column by column
+BARS.forEach((h, c) => { for (let r = 0; r < h; r++) for (let d = 0; d < 2; d++) CELLS.push([1300 + c * 32 + d * 11, 710 - r * 14]); });
+const FLOW0 = 9.0, FLOW1 = 13.0, TRAVEL = 1.35;
+const qb = (a, c, b, u) => [(1 - u) * (1 - u) * a[0] + 2 * (1 - u) * u * c[0] + u * u * b[0], (1 - u) * (1 - u) * a[1] + 2 * (1 - u) * u * c[1] + u * u * b[1]];
+function sFlow(p, i, t, o) {
+  const k = rank[i];
+  if (k < CLUSTER) {
+    const c = k % 16, r = Math.floor(k / 16);
+    o.x = 330 + (c - 7.5) * 13; o.y = 540 + (r - 7.5) * 13;
+    const f = Math.max(0, Math.sin(t * 6 + p.r1 * 50));
+    o.a = 0.4 + 0.6 * f; o.s = 2.3; o.c = mix(GRAY, GOLD, f);
+    return;
+  }
+  if (k < CLUSTER + RING) {
+    const j = k - CLUSTER, ang = (j / RING) * Math.PI * 2 + t * 1.1;
+    const rad = 74 + Math.sin(j * 2.7 + t * 2.4) * 4;
+    o.x = CX + Math.cos(ang) * rad; o.y = CY + Math.sin(ang) * rad;
+    o.a = 0.95; o.s = 2.5; o.c = sol((Math.sin(ang) + 1) / 2);
+    return;
+  }
+  const j = k - CLUSTER - RING;
+  if (j < CELLS.length) {
+    const arrive = FLOW0 + (j / CELLS.length) * (FLOW1 - FLOW0), leave = arrive - TRAVEL;
+    const cell = CELLS[j];
+    const start = [445, 540 + (p.r1 - 0.5) * 150];
+    if (t < leave) { o.x = start[0]; o.y = start[1]; o.a = 0; o.s = 2.4; o.c = WHITE; return; }
+    if (t < arrive) {
+      const u = E.io((t - leave) / TRAVEL);
+      if (u < 0.5) {
+        const [x, y] = qb(start, [700, 540 + (p.r2 - 0.5) * 300], [CX, CY], u * 2);
+        o.x = x; o.y = y; o.c = WHITE;
+      } else {
+        const [x, y] = qb([CX, CY], [1180, 540 + (p.r2 - 0.5) * 220], cell, (u - 0.5) * 2);
+        o.x = x; o.y = y; o.c = GOLD;
+      }
+      o.a = clamp((t - leave) / 0.2); o.s = 2.6;
+      return;
+    }
+    const flash = clamp(1 - (t - arrive) / 0.25);
+    o.x = cell[0]; o.y = cell[1]; o.a = 1; o.s = 2.7 + flash * 1.5; o.c = mix(GOLD, WHITE, flash);
+    return;
+  }
+  bg(p, t, o, 0.09);
+}
+
+// Scene 4: the loop. Dots circle; each one flashes as it passes the tax point at the bottom.
+const LOOP = 1000, LR = 290, LCX = 960, LCY = 590;
+function sLoop(p, i, t, o) {
+  const k = rank[i];
+  if (k >= LOOP) return bg(p, t, o, 0.08);
+  const ang = (k / LOOP) * Math.PI * 2 + t * 0.75;
+  const rad = LR + (p.r1 - 0.5) * 30 + Math.sin(ang * 5 + t * 2) * 5;
+  o.x = LCX + Math.cos(ang) * rad; o.y = LCY + Math.sin(ang) * rad;
+  const a = ((ang % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const tax = Math.exp(-Math.pow((a - Math.PI / 2) / 0.22, 2));
+  const back = Math.exp(-Math.pow((a - Math.PI) / 0.3, 2));
+  o.x += Math.cos(ang) * (tax * 18 + back * (p.r2 - 0.5) * 40);
+  o.y += Math.sin(ang) * tax * 18;
+  o.a = 0.75 + 0.25 * tax; o.s = 2.4 + tax * 1.4; o.c = mix(GOLD, WHITE, tax * 0.85);
+}
+
+// Scene 6: the app. Dots hide, then burst out of the coin when it's clicked.
+const BURST = 420;
+function sApp(p, i, t, o) {
+  const k = rank[i];
+  if (k >= BURST) return bg(p, t, o, 0);
+  const cam = camAt(CLICK);
+  const cx0 = cam.tx + 183 * cam.z, cy0 = cam.ty + 147 * cam.z;
+  if (t < CLICK) { o.x = cx0; o.y = cy0; o.a = 0; o.s = 2.6; o.c = WHITE; return; }
+  const u = E.out(clamp((t - CLICK) / 1.5));
+  const ang = p.r1 * Math.PI * 2, dist = 60 + p.r2 * 700;
+  o.x = cx0 + Math.cos(ang) * dist * u; o.y = cy0 + Math.sin(ang) * dist * u * 0.8;
+  o.a = clamp(1 - (t - CLICK - 0.4) / 1.4); o.s = 2.6; o.c = mix(WHITE, GOLD, clamp((t - CLICK) * 3));
+}
+
+// Scenes in order: [start, function, transition seconds]. Each dot blends from the previous
+// scene to the next with its own small delay, curving on the way. Built once fonts are ready.
+let SCENES = null;
+function buildScenes() {
+  const goldAt = (x, f, p) => mix(GOLD, [255, 222, 150], p.r4 * 0.6);
+  const solAt = (x, f) => sol((x - f.minX) / (f.maxX - f.minX));
+  SCENES = [
+    [0, sGrid, 0],
+    [3.85, textScene(textTargets("It buys it.", 300, CX, 560, N * 0.92), goldAt), 1.25],
+    [7.3, sFlow, 1.2],
+    [13.2, sLoop, 1.3],
+    [18.75, textScene(textTargets("Solana", 330, CX, 520, N * 0.92), solAt), 1.25],
+    [22.6, sApp, 0.9],
+    [27.0, textScene(textTargets("$HASH", 360, CX, 450, N * 0.92), goldAt), 1.4],
+  ];
+}
+
+const cv = $("fx"), g = cv.getContext("2d");
+const A = {}, B = {};
 function drawDots(t) {
-  cx.clearRect(0, 0, 1920, 1080);
-  if (t < 3.3 || t > 8.2) { cv.style.visibility = "hidden"; return; }
-  cv.style.visibility = "visible";
-  const appear = E.out(clamp((t - 3.3) / 0.8));
-  for (const p of DOTS) {
-    const lit = E.out(clamp((t - (4.5 + p.d * 1.5 + p.j * 0.25)) / 0.35));
-    // Collapse toward the center, outer dots first so it reads as a pour.
-    const c = E.in(clamp((t - (6.5 + (1 - p.d) * 0.5 + p.j * 0.15)) / 0.9));
-    const x = p.x + (960 - p.x) * c, y = p.y + (540 - p.y) * c;
-    const a = appear * (1 - clamp((c - 0.75) / 0.25));
+  g.clearRect(0, 0, W, H);
+  let s = 0;
+  while (s + 1 < SCENES.length && t >= SCENES[s + 1][0]) s++;
+  const [start, cur, dur] = SCENES[s];
+  const prev = s > 0 ? SCENES[s - 1][1] : null;
+  for (let i = 0; i < N; i++) {
+    const p = P[i];
+    cur(p, i, t, A);
+    let x = A.x, y = A.y, a = A.a, sz = A.s, c = A.c;
+    if (prev) {
+      const k = E.io(clamp((t - start - p.r3 * 0.45) / dur));
+      if (k < 1) {
+        prev(p, i, t, B);
+        const dx = A.x - B.x, dy = A.y - B.y, len = Math.hypot(dx, dy) || 1;
+        const swirl = Math.sin(Math.PI * k) * (p.r2 - 0.5) * Math.min(260, len * 0.5);
+        x = lerp(B.x, A.x, k) - (dy / len) * swirl;
+        y = lerp(B.y, A.y, k) + (dx / len) * swirl;
+        a = lerp(B.a, A.a, k); sz = lerp(B.s, A.s, k); c = mix(B.c, A.c, k);
+      }
+    }
     if (a <= 0.01) continue;
-    const rad = 3.1 * (1 - 0.5 * c);
-    if (lit > 0.02) {
-      cx.globalAlpha = a * lit * 0.22;
-      cx.fillStyle = "#EBB447";
-      cx.beginPath(); cx.arc(x, y, rad * 3.2, 0, 7); cx.fill();
-    }
-    cx.globalAlpha = a;
-    const g = Math.round(44 + (235 - 44) * lit), gg = Math.round(44 + (180 - 44) * lit), gb = Math.round(46 + (71 - 46) * lit);
-    cx.fillStyle = `rgb(${g},${gg},${gb})`;
-    cx.beginPath(); cx.arc(x, y, rad, 0, 7); cx.fill();
+    g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+    if (a > 0.35 && c[0] > 120) { g.globalAlpha = a * 0.09; g.beginPath(); g.arc(x, y, sz * 2.6, 0, 6.283); g.fill(); }
+    g.globalAlpha = a; g.beginPath(); g.arc(x, y, sz, 0, 6.283); g.fill();
   }
-  cx.globalAlpha = 1;
+  g.globalAlpha = 1;
 }
 
-// ---- Donut ----
-const R = 200, CIRC = 2 * Math.PI * R;
-const ARCS = [[$("a1"), 0, 0.6], [$("a2"), 0.6, 0.32], [$("a3"), 0.92, 0.08]];
-function drawDonut(t) {
-  ARCS.forEach(([el, start, len], i) => {
-    const k = E.io(clamp((t - (28.0 + i * 0.35)) / 0.9));
-    const gap = 6;
-    const l = Math.max(0, len * CIRC * k - gap);
-    el.setAttribute("stroke-dasharray", `${l} ${CIRC}`);
-    el.setAttribute("stroke-dashoffset", String(-start * CIRC));
-  });
-}
-
-const BASE = 1440 / 1040; // the app at zoom 1 is 1440px wide
 function seek(t) {
+  if (!SCENES) buildScenes();
   for (const k in T) {
-    const p = sample(T[k], t);
-    if (k === "cam") {
-      const z = BASE * p.s;
-      els.cam.style.transform = `translate(${960 - p.x * z}px, ${650 - p.y * z}px) scale(${z})`;
-      // Keep the cursor the same size on screen whatever the zoom.
-      els.cursor.dataset.inv = String(1 / z);
-      continue;
-    }
-    apply(els[k], p);
+    if (k === "cam" || k === "cursor") continue;
+    apply(els[k], sample(T[k], t));
   }
-  // The cursor lives in app pixels; undo the camera zoom on its size.
-  const cp = sample(T.cursor, t), inv = Number(els.cursor.dataset.inv || 1);
-  els.cursor.style.transform = `translate(${cp.x}px, ${cp.y}px) scale(${cp.s * inv * 1.15})`;
+  const cam = camAt(t);
+  els.cam.style.transform = `translate(${cam.tx}px, ${cam.ty}px) scale(${cam.z})`;
+  const cp = sample(T.cursor, t);
+  els.cursor.style.opacity = cp.o; els.cursor.style.visibility = cp.o < 0.002 ? "hidden" : "visible";
+  els.cursor.style.transform = `translate(${cp.x}px, ${cp.y}px) scale(${(cp.s / cam.z) * 1.15})`;
   els.cursor.style.filter = "drop-shadow(0 4px 10px rgba(0,0,0,.6))";
-  const rp = sample(T.ring, t);
-  els.ring.style.transform = `scale(${rp.s})`;
-  els.ring.style.filter = "none";
-  for (const [el, tr] of subs) apply(el, sample(tr, t));
-  for (const [el, t0] of lines) {
-    const k = E.expo(clamp((t - t0) / 1.0));
-    el.style.transform = `translateY(${(1 - k) * 110}%)`;
-  }
-  // Sheen sweeps across the coin once it has landed.
-  const sh = E.io(clamp((t - 8.7) / 1.0));
-  $("sheen").firstElementChild.style.transform = `translateX(${-120 + sh * 360}%)`;
   drawDots(t);
-  drawDonut(t);
 }
 window.seek = seek;
 window.DURATION = DURATION;
@@ -298,9 +361,11 @@ window.DURATION = DURATION;
 if (!navigator.webdriver) {
   const fit = () => { const k = Math.min(innerWidth / 1920, innerHeight / 1080); $("stage").style.transform = `scale(${k})`; };
   fit(); addEventListener("resize", fit);
-  const fixed = new URLSearchParams(location.search).get("t");
-  if (fixed !== null) seek(Number(fixed));
-  else { const t0 = performance.now(); const loop = (n) => { seek(((n - t0) / 1000) % (DURATION + 1)); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  document.fonts.load("700 100px Inter").then(() => {
+    const fixed = new URLSearchParams(location.search).get("t");
+    if (fixed !== null) seek(Number(fixed));
+    else { const t0 = performance.now(); const loop = (n) => { seek(((n - t0) / 1000) % (DURATION + 1)); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  });
 }
 </script>
 </body>
