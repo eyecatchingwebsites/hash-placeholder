@@ -28,7 +28,7 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 
 | File | What it is |
 |---|---|
-| `index.html` | Home: hero ("The first token your GPU gets paid to buy.", hold it / mine it / or both) beside two animated flywheels (the coin, your bag), then a topic explorer showing one topic at a time: what you'd make, how it works, levels, tokenomics, mining, launch, FAQ |
+| `index.html` | Home: hero ("The first token your GPU gets paid to buy.", hold it / mine it / or both) beside two animated flywheels (the coin, your bag), then a topic explorer showing one topic at a time: what you'd make, how it works, levels, tokenomics, mining (with screenshots of the real app), launch, FAQ |
 | `calculator.html` | Full calculator: GPU, power, electricity, miner level, bag and holder level, volume per GPU, average GPU and miner level mix |
 | `faq.html` | FAQ and docs: getting started, mining, payouts, levels, token, safety, risks |
 
@@ -36,11 +36,12 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 
 | Path | Purpose |
 |---|---|
-| `assets/css/site.css` | All styles. Design tokens are at the top (`--bg #0B0C0D`, `--gold #EBB447`, 8px radius) |
+| `assets/css/site.css` | All styles. Design tokens are at the top (`--bg #0B0C0D`, `--gold #EBB447`, 8px radius), then the light theme. Gold used as text goes through `--gold-text-mix` so it darkens in light mode |
+| `assets/img/app-dark.jpg`, `app-light.jpg` | Screenshots of the miner app (`apps/desktop/ui`) with a sample wallet, shown on the Mining tab; the one matching the site theme shows. Retake them when the app changes |
 | `assets/js/config.js` | **Launch settings:** `launchAt`, `ca` (contract address), `x`, `discord`, `github`. All `null` until launch |
-| `assets/js/site.js` | Shared behavior: header, mobile menu, placeholder toasts, countdown, contract-address button, scroll reveal |
+| `assets/js/site.js` | Shared behavior: header, light/dark button (dark by default; a choice is stored as `hc-theme` and applied before paint by a one-line script in each page's head), mobile menu, placeholder toasts, countdown, contract-address button, scroll reveal |
 | `standalone/` | Generated single-file copies of the pages (see above) |
-| `assets/js/model.js` | The pre-launch estimate for the decided design: 5% tax, 0.5% dev, miner chest = min(4 × a, 3.5% × (V/N + a)) per GPU (5× target), holders get the rest of 4.5% (at least 1%). Miner cut = chest per GPU × √(your GPU) × M-level ÷ (√a × average level); holder reward = bag × daily yield for the H-level. Default $750 volume per GPU (30% volume/mcap × $1,000 mcap per holder ÷ 40% of holders mining) |
+| `assets/js/model.js` | The pre-launch estimate for the decided design: a 2–5% tax (the lowest rate where miners reach 5× their mining and holders still get at least 1% of volume); dev 5–10% of the tax, miners 45–75%, holders the rest (at least 20%). Miner weight = √(GPU $/day) × M-level; holder weight = bag × H-level. Default $750 volume per GPU a day |
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic. Home: topic tabs (one section shown at a time, `#hash` links open tabs), earnings with auto-cycling levels, GPU meter, tax-pot simulation; on big screens `fitExplore` scales the explorer to fill the screen |
 | `assets/js/cycle.js` | Hero flywheels: two rings (the coin, your bag) built from one `makeWheel` engine, with a controller for the tabs, shared caption, step buttons and pause |
 | `assets/js/gpus.js` | **Generated** GPU list (133 cards: 91 from `data/hashrate-no-gpus-2026-10-03.json`, plus 42 laptop GPUs estimated from desktop siblings and marked `est`) |
@@ -62,7 +63,7 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 From `CLAUDE.md` and `docs/DESIGN-BRIEF.md`:
 - Never promise returns. Avoid "pays for itself", "free" and "guaranteed". Price charts are fine (the user never ruled them out).
 - Show one estimate, based on daily volume per GPU mining ($750 by default, launch-week trading), labeled "Estimate, not a promise". The math is on the home page (`#math`, inside How it works).
-- Tax wording: 5% tax; 0.5% development; up to 3.5% to miners (what reaches 5× their mining); at least 1% to holders. Levels are M1–M3 and H1–H3; always explain them in plain words before using the codes. Level colors: 1 mint, 2 violet, 3 gold.
+- Tax wording: a 2–5% tax set by a public formula; up to 3.75% to miners (what reaches 5× their mining on average); at least 1% to holders; 5–10% of the tax to development. Levels are M1–M3 and H1–H3; always explain them in plain words before using the codes. Level colors: 1 mint, 2 violet, 3 gold.
 - Audience wording: "your GPU" / "any PC with a graphics card" (gaming PCs, laptops, AI rigs, editing and render workstations), not just "gaming PC". Keep copy to a line or two per block.
 - Say "tax" rather than "fee" on the site; that's the word traders use.
 - Keep "we will never ask for your seed phrase" and the risk disclaimer in the footer.

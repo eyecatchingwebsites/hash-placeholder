@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build single-file copies of the site pages into apps/web/standalone/ (stdlib only).
 
-Each page gets its CSS, JS and logo inlined, so it renders correctly even when the
+Each page gets its CSS, JS, logo and screenshots inlined, so it renders correctly even when the
 HTML file is opened or shared on its own, without the assets/ and brand/ folders.
 
 Usage (from the repo root):
@@ -17,7 +17,7 @@ PAGES = ["index.html", "calculator.html", "faq.html"]
 
 
 def data_uri(path: Path) -> str:
-    mime = {".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon"}[path.suffix]
+    mime = {".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon", ".jpg": "image/jpeg"}[path.suffix]
     return f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"
 
 
@@ -38,6 +38,7 @@ def build(name: str) -> str:
         return f'{attr}="{data_uri(WEB / path)}"'
 
     html = re.sub(r'(src|data-logo|href)="(brand/logo/[^"]+\.(?:svg|ico))"', inline_asset, html)
+    html = re.sub(r'(src)="(assets/img/[^"]+\.jpg)"', inline_asset, html)
     return html
 
 

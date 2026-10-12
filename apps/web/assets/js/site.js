@@ -29,6 +29,22 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
+  // ---------- Light / dark ----------
+  // Dark by default; the head script applies a stored "light" before paint.
+  const root = document.documentElement, themeMeta = $('meta[name="theme-color"]');
+  const showTheme = () => {
+    const light = root.dataset.theme === "light";
+    $$(".theme-btn").forEach((b) => b.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode"));
+    if (themeMeta) themeMeta.content = light ? "#F4F5F7" : "#0B0C0D";
+  };
+  $$(".theme-btn").forEach((b) => b.addEventListener("click", () => {
+    const light = root.dataset.theme !== "light";
+    if (light) root.dataset.theme = "light"; else delete root.dataset.theme;
+    try { localStorage.setItem("hc-theme", light ? "light" : "dark"); } catch (e) { /* storage blocked: still switches for this visit */ }
+    showTheme();
+  }));
+  showTheme();
+
   const menuBtn = $(".menu-btn"), mobileNav = $(".mobile-nav");
   if (menuBtn && mobileNav) {
     const set = (open) => {
