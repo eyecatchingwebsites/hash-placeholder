@@ -36,7 +36,7 @@
   .node img.full { width: 100%; height: 100%; }
   .node .badge { position: absolute; right: -4%; bottom: -4%; width: 34%; height: 34%; border-radius: 50%; background: #0C0C0E; box-shadow: inset 0 0 0 2px rgba(255,255,255,.14); display: grid; place-items: center; }
   .node .badge img { width: 52%; }
-  .nl { position: absolute; left: 50%; top: calc(100% + 26px); transform: translateX(-50%); white-space: nowrap; font-size: 34px; font-weight: 600; letter-spacing: -.015em; color: #C7C7CC; }
+  .nl { position: absolute; left: 50%; top: calc(100% + 30px); transform: translateX(-50%); white-space: nowrap; font-size: 46px; font-weight: 600; letter-spacing: -.015em; color: #C7C7CC; }
   /* Slides (screen space) */
   .slide { position: absolute; inset: 0; }
   #fx2, #fx3 { position: absolute; left: 0; top: 0; }
@@ -58,6 +58,11 @@
   #endcoin { position: absolute; left: 50%; top: 250px; width: 200px; height: 200px; margin-left: -100px; }
   #endglow { position: absolute; left: 50%; top: 350px; width: 1400px; height: 1400px; margin: -700px 0 0 -700px; border-radius: 50%; background: radial-gradient(closest-side, rgba(235,180,71,.22), rgba(235,180,71,.06) 50%, transparent 75%); }
   #endword { position: absolute; left: 0; right: 0; top: 490px; text-align: center; font-size: 200px; font-weight: 720; letter-spacing: -.055em; line-height: 1; }
+  #chips { position: absolute; left: 0; right: 0; top: 818px; display: flex; justify-content: center; gap: 28px; }
+  .chip { display: flex; align-items: center; gap: 20px; padding: 20px 34px 20px 26px; border-radius: 26px; background: #111114; box-shadow: inset 0 0 0 2px rgba(255,255,255,.12); text-align: left; }
+  .chip svg { width: 46px; height: 46px; fill: none; stroke: #EBB447; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .chip b { display: block; font-size: 34px; font-weight: 650; letter-spacing: -.015em; }
+  .chip span { display: block; font-size: 26px; color: var(--gray); font-weight: 520; margin-top: 2px; }
   #fine { position: absolute; left: 0; right: 0; bottom: 54px; text-align: center; font-size: 26px; color: var(--fine); font-weight: 500; }
 </style>
 </head>
@@ -71,13 +76,17 @@
     <div id="endglow"></div>
     <img id="endcoin" src="assets/coin.svg" alt="">
     <div id="endword">$HASH</div>
+    <div id="chips">
+      <div class="chip" id="chip1"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9S9.4 5.6 12 3z"/></svg><div><b>Website</b><span>Coming soon</span></div></div>
+      <div class="chip" id="chip2"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg><div><b>Windows app</b><span>Coming soon</span></div></div>
+    </div>
     <div id="fine">Not financial advice. Never share your seed phrase. Not affiliated with Pearl, Quantus, QubitCoin or the Solana Foundation.</div>
   </div>
 </div>
 
 <script>
 "use strict";
-const DURATION = 84;
+const DURATION = 80;
 const W = 1920, H = 1080, FX = 960, FY = 600; // the camera's focus point on screen
 const $ = (id) => document.getElementById(id);
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -185,15 +194,15 @@ const rad = (d) => (d * Math.PI) / 180;
 const P = (deg, r = R) => [Math.cos(rad(deg)) * r, Math.sin(rad(deg)) * r];
 const ANG = { A: 180, B: 235, C: 305, D: 360, E: 415, F: 485 };
 const [Ax, Ay] = P(ANG.A), [Bx, By] = P(ANG.B), [Cx, Cy] = P(ANG.C), [Dx, Dy] = P(ANG.D), [Ex, Ey] = P(ANG.E), [Fx, Fy] = P(ANG.F);
-const [Qx, Qy] = [Bx - 250, By - 250], [Ux, Uy] = [Bx + 250, By - 250]; // the other two coins sit above Pearl
+const [Qx, Qy] = [Bx - 330, By - 320], [Ux, Uy] = [Bx + 330, By - 320]; // the other two coins sit above Pearl
 
 const T = {
   pour: 5.7, coin: 6.4,
-  toA: [8.0, 10.2], A: 10.3, toB: [13.8, 15.6], B: 15.6, pick: [16.2, 16.8, 17.4],
-  toC: [19.8, 21.6], C: 21.6, toD: [25.4, 27.1], D: 27.1, toE: [30.6, 32.3], E: 32.3,
-  dive: [35.6, 37.0],
-  s1: [36.8, 44.6], s2: [44.6, 50.2], s3: [50.2, 57.0], s4: [57.0, 63.6], s5: [63.6, 70.0],
-  ret: [69.9, 71.7], back: [72.0, 74.8], out: [77.4, 78.6], end: 78.6,
+  toA: [8.0, 9.4], A: 9.5, toB: [12.8, 13.9], B: 13.9, pick: [14.4, 14.9, 15.4],
+  toC: [17.6, 18.7], C: 18.7, toD: [22.2, 23.3], D: 23.3, toE: [26.6, 27.7], E: 27.7,
+  dive: [30.9, 32.1],
+  s1: [31.9, 39.7], s2: [39.7, 45.3], s3: [45.3, 52.1], s4: [52.1, 58.7], s5: [58.7, 65.1],
+  ret: [65.0, 66.6], back: [66.9, 69.6], out: [72.6, 73.8], end: 73.8,
 };
 
 const world = $("world");
@@ -208,17 +217,17 @@ function addNode(id, x, y, r, inner, label, tr) {
 }
 const arrive = (a, extra = []) => track([[a, { o: 0, s: 0.6, b: 10 }], [a + 1.0, { o: 1, s: 1, b: 0 }, "back"], ...extra]);
 
-addNode("C", Cx, Cy, 120, '<img class="full" src="assets/coin.svg" alt=""><div class="badge" id="solbadge"><img src="assets/solana.svg" alt=""></div>', "$HASH", arrive(T.coin));
-addNode("A", Ax, Ay, 130, gpuSvg("n"), "Your GPU", arrive(T.toA[1] - 0.9));
-addNode("Q", Qx, Qy, 76, '<img class="icon" src="assets/quantus.png" alt="">', "Quantus",
-  arrive(T.toB[1] - 0.9, [[T.pick[0], {}], [T.pick[0] + 0.25, { g: 1 }], [T.pick[1], {}], [T.pick[1] + 0.25, { g: 0 }], [18.0, {}], [18.7, { o: 0.32 }]]));
-addNode("PRL", Bx, By, 84, '<img class="icon" src="assets/pearl-mark.png" alt="" style="width:52%">', "Pearl",
+addNode("C", Cx, Cy, 165, '<img class="full" src="assets/coin.svg" alt=""><div class="badge" id="solbadge"><img src="assets/solana.svg" alt=""></div>', "$HASH", arrive(T.coin));
+addNode("A", Ax, Ay, 185, gpuSvg("n"), "Your GPU", arrive(T.toA[1] - 0.9));
+addNode("Q", Qx, Qy, 100, '<img class="icon" src="assets/quantus.png" alt="">', "Quantus",
+  arrive(T.toB[1] - 0.9, [[T.pick[0], {}], [T.pick[0] + 0.25, { g: 1 }], [T.pick[1], {}], [T.pick[1] + 0.25, { g: 0 }], [T.pick[2] + 0.6, {}], [T.pick[2] + 1.3, { o: 0.32 }]]));
+addNode("PRL", Bx, By, 118, '<img class="icon" src="assets/pearl-mark.png" alt="" style="width:52%">', "Pearl",
   arrive(T.toB[1] - 0.75, [[T.pick[2], {}], [T.pick[2] + 0.3, { g: 1, s: 1.06 }, "out"], [T.pick[2] + 0.9, { s: 1 }]]));
-addNode("U", Ux, Uy, 76, '<img class="icon" src="assets/qubitcoin.png" alt="">', "QubitCoin",
-  arrive(T.toB[1] - 0.6, [[T.pick[1], {}], [T.pick[1] + 0.25, { g: 1 }], [T.pick[2], {}], [T.pick[2] + 0.25, { g: 0 }], [18.0, {}], [18.7, { o: 0.32 }]]));
-addNode("D", Dx, Dy, 115, CHART, "Traders", arrive(T.toD[1] - 0.8));
-addNode("E", Ex, Ey, 115, vaultSvg("n"), "2–5% tax", arrive(T.toE[1] - 0.8, [[T.E + 1.0, {}], [T.E + 1.6, { g: 1 }]]));
-addNode("F", Fx, Fy, 115, walletSvg("n"), "Holders and miners", arrive(T.ret[0] + 0.3));
+addNode("U", Ux, Uy, 100, '<img class="icon" src="assets/qubitcoin.png" alt="">', "QubitCoin",
+  arrive(T.toB[1] - 0.6, [[T.pick[1], {}], [T.pick[1] + 0.25, { g: 1 }], [T.pick[2], {}], [T.pick[2] + 0.25, { g: 0 }], [T.pick[2] + 0.6, {}], [T.pick[2] + 1.3, { o: 0.32 }]]));
+addNode("D", Dx, Dy, 160, CHART, "Traders", arrive(T.toD[1] - 0.8));
+addNode("E", Ex, Ey, 160, vaultSvg("n"), "2–5% tax", arrive(T.toE[1] - 0.8, [[T.E + 1.0, {}], [T.E + 1.6, { g: 1 }]]));
+addNode("F", Fx, Fy, 160, walletSvg("n"), "Holders and miners", arrive(T.ret[0] + 0.3));
 const solbadge = $("solbadge");
 const BADGE = track([[T.toC[1] - 0.4, { o: 0, s: 0.4 }], [T.toC[1] + 0.5, { o: 1, s: 1 }, "back"]]);
 
@@ -226,16 +235,16 @@ const BADGE = track([[T.toC[1] - 0.4, { o: 0, s: 0.4 }], [T.toC[1] + 0.5, { o: 1
 const at = (x, y, z = 1) => ({ x, y, z });
 const CAM = track([
   [0, at(Cx, Cy)], [T.toA[0], {}], [T.toA[1], at(Ax, Ay), "sine"],
-  [T.toB[0], {}], [T.toB[1], at(Bx, By - 90, 0.94), "sine"],
+  [T.toB[0], {}], [T.toB[1], at(Bx, By - 150, 0.8), "sine"],
   [T.toC[0], {}], [T.toC[1], at(Cx, Cy), "sine"],
-  [T.toD[0], {}], [T.toD[1], at(Dx + 60, Dy), "sine"],
+  [T.toD[0], {}], [T.toD[1], at(Dx + 90, Dy, 0.92), "sine"],
   [T.toE[0], {}], [T.toE[1], at(Ex, Ey), "sine"],
   // Into the tax: a straight push-in through the vault.
   [T.dive[0], {}], [T.dive[1], { z: 7 }, "in"],
   // Out again at holders and miners, then pull back to the whole loop.
-  [T.ret[0] - 0.01, {}], [T.ret[0], at(Fx, Fy - 120, 2.6), "lin"], [T.ret[1], at(Fx, Fy - 120, 0.9), "out"],
-  [T.back[0], {}], [T.back[1], at(0, 18, 0.355), "sine"],
-  [T.out[0], { z: 0.37 }, "lin"], [T.out[1], { z: 0.3 }, "io"],
+  [T.ret[0] - 0.01, {}], [T.ret[0], at(Fx, Fy - 150, 2.6), "lin"], [T.ret[1], at(Fx, Fy - 150, 0.85), "out"],
+  [T.back[0], {}], [T.back[1], at(0, -40, 0.33), "sine"],
+  [T.out[0], { z: 0.345 }, "lin"], [T.out[1], { z: 0.28 }, "io"],
 ], { x: 0, y: 0, z: 1 });
 function camera(t) { const c = sample(CAM, t); return { z: c.z, tx: FX - c.x * c.z, ty: FY - c.y * c.z }; }
 const WORLD = track([[0, { o: 1 }], [T.dive[0] + 0.7, {}], [T.dive[1], { o: 0 }, "in"], [T.ret[0], {}], [T.ret[0] + 0.6, { o: 1 }, "out"], [T.out[0], {}], [T.out[1], { o: 0 }, "in"]]);
@@ -262,22 +271,24 @@ line("It picks the coin that pays most.", T.B + 0.1, T.toC[0] - 0.3);
 line("Then it buys $HASH on {SOL}Solana.", T.C + 0.1, T.toD[0] - 0.3);
 line("People buy and sell $HASH.", T.D + 0.1, T.toE[0] - 0.3);
 line("Every trade pays a 2–5% tax.", T.E + 0.1, T.dive[0] + 0.1);
-line("Slow trading? The tax goes up.", T.s1[0] + 0.5, 40.4);
-line("Busy trading? It goes down.", 40.95, T.s1[1] - 0.7);
+line("Slow trading? The tax goes up.", T.s1[0] + 0.5, T.s1[0] + 3.6);
+line("Busy trading? It goes down.", T.s1[0] + 4.15, T.s1[1] - 0.7);
 line("The tax is split three ways.", T.s2[0] + 0.4, T.s2[1] - 0.7);
-line("Miners get a bonus on top.", T.s3[0] + 0.4, 53.4);
-line("Up to 5× their mining, on average.", 53.95, T.s3[1] - 0.7);
-line("Holders get paid just for holding.", T.s4[0] + 0.4, 60.1);
-line("At least 1% of every trade.", 60.65, T.s4[1] - 0.7);
-line("Hold longer and mine more.", T.s5[0] + 0.4, 66.6);
-line("Level up for up to 4× the share.", 67.15, T.s5[1] - 0.6);
+line("Miners get a bonus on top.", T.s3[0] + 0.4, T.s3[0] + 3.2);
+line("Up to 5× their mining, on average.", T.s3[0] + 3.75, T.s3[1] - 0.7);
+line("Holders get paid just for holding.", T.s4[0] + 0.4, T.s4[0] + 3.1);
+line("At least 1% of every trade.", T.s4[0] + 3.65, T.s4[1] - 0.7);
+line("Hold longer and mine more.", T.s5[0] + 0.4, T.s5[0] + 3.0);
+line("Level up for up to 4× the share.", T.s5[0] + 3.55, T.s5[1] - 0.6);
 line("One loop. Around the clock.", T.back[1] - 1.0, T.out[0] - 0.2);
-caption("On {SOL}Solana. Coming soon.", 726, 56, T.end + 1.2, 99, true);
+caption("On {SOL}Solana.", 718, 56, T.end + 1.2, 99, true);
 const SCREEN = [
   [$("endcoin"), track([[T.end, { o: 0, s: 0.7, b: 14 }], [T.end + 1.2, { o: 1, s: 1, b: 0 }, "back"]])],
   [$("endglow"), track([[T.end + 0.1, { o: 0, s: 0.7 }], [T.end + 1.8, { o: 1, s: 1 }, "out"]])],
   [$("endword"), track([[T.end + 0.5, { o: 0, y: 30, b: 18 }], [T.end + 1.6, { o: 1, y: 0, b: 0 }, "expo"]])],
-  [$("fine"), track([[T.end + 2.2, { o: 0 }], [T.end + 3.0, { o: 1 }]])],
+  [$("chip1"), track([[T.end + 1.8, { o: 0, y: 18, b: 10 }], [T.end + 2.6, { o: 1, y: 0, b: 0 }, "expo"]])],
+  [$("chip2"), track([[T.end + 2.0, { o: 0, y: 18, b: 10 }], [T.end + 2.8, { o: 1, y: 0, b: 0 }, "expo"]])],
+  [$("fine"), track([[T.end + 2.8, { o: 0 }], [T.end + 3.6, { o: 1 }]])],
 ];
 
 // ---------- Slides ----------
@@ -304,14 +315,14 @@ const pop = (a) => track([[a, { o: 0, s: 0.8, b: 8, y: 14 }], [a + 0.8, { o: 1, 
 
 // 1. The tax follows trading
 const s1 = slide(...T.s1);
-const RATE = track([[T.s1[0], { v: 3.25 }], [37.8, {}], [40.3, { v: 5.0 }, "io"], [41.1, {}], [43.8, { v: 2.25 }, "io"]], { v: 3.25 });
+const RATE = track([[T.s1[0], { v: 3.25 }], [T.s1[0] + 1.0, {}], [T.s1[0] + 3.5, { v: 5.0 }, "io"], [T.s1[0] + 4.3, {}], [T.s1[0] + 7.0, { v: 2.25 }, "io"]], { v: 3.25 });
 const rateEl = put(s1, "3.25%", "big-num", "top:520px;font-size:150px;", null);
 put(s1, "tax", "big-num", "top:690px;font-size:36px;font-weight:550;color:#8E8E93;letter-spacing:0;", null);
 put(s1, "2%", "t-lab", "left:578px;top:750px;", null);
 put(s1, "5%", "t-lab", "left:1300px;top:750px;", null);
 put(s1, "Trading", "t-lab", "left:360px;top:982px;font-size:28px;", null);
 const VOL = (tb) => {
-  const busy = E.io(clamp((tb - 40.3) / 1.0));
+  const busy = E.io(clamp((tb - (T.s1[0] + 3.5)) / 1.0));
   return 0.14 + 0.78 * busy + 0.07 * Math.sin(tb * 9.1) + 0.05 * Math.sin(tb * 23.7);
 };
 // 2. The split
@@ -322,10 +333,10 @@ const SPLIT = [{ name: "Miners", pct: "45–75%", w: 0.6, c: [235, 180, 71] }, {
 const s3 = slide(...T.s3);
 put(s3, gpuSvg("m"), "", "left:240px;top:420px;width:640px;", pop(T.s3[0] + 0.6)).firstElementChild.style.width = "100%";
 const UNIT = 104, BASE_Y = 900, BAR_X = 1150, BAR_W = 210;
-put(s3, "Your mining", "t-lab", `left:${BAR_X + BAR_W + 40}px;top:${BASE_Y - UNIT / 2 - 22}px;color:#F5F5F7;`, pop(51.4));
-put(s3, "<b style='color:#EBB447'>Bonus</b>", "t-lab", `left:${BAR_X + BAR_W + 40}px;top:${BASE_Y - UNIT * 3 - 22}px;`, pop(52.6));
-put(s3, "up to 5×", "t-lab", `left:${BAR_X + BAR_W + 40}px;top:${BASE_Y - UNIT * 5 - 26}px;color:#EBB447;font-weight:700;`, pop(54.4));
-const MINE = track([[51.0, { v: 0 }], [51.8, { v: 1 }, "out"], [52.4, {}], [55.2, { v: 5 }, "io"]], { v: 0 });
+put(s3, "Your mining", "t-lab", `left:${BAR_X + BAR_W + 40}px;top:${BASE_Y - UNIT / 2 - 22}px;color:#F5F5F7;`, pop(T.s3[0] + 1.2));
+put(s3, "<b style='color:#EBB447'>Bonus</b>", "t-lab", `left:${BAR_X + BAR_W + 40}px;top:${BASE_Y - UNIT * 3 - 22}px;`, pop(T.s3[0] + 2.6));
+put(s3, "up to 5×", "t-lab", `left:${BAR_X + BAR_W + 40}px;top:${BASE_Y - UNIT * 5 - 26}px;color:#EBB447;font-weight:700;`, pop(T.s3[0] + 4.4));
+const MINE = track([[T.s3[0] + 0.9, { v: 0 }], [T.s3[0] + 2.1, { v: 1 }, "io"], [T.s3[0] + 2.5, {}], [T.s3[0] + 5.1, { v: 5 }, "io"]], { v: 0 });
 // 4. Holders: paid just for holding
 const s4 = slide(...T.s4);
 put(s4, walletSvg("h"), "", "left:720px;top:470px;width:480px;", pop(T.s4[0] + 0.5)).firstElementChild.style.width = "100%";
@@ -392,12 +403,12 @@ function drawWorldDots(t, cam, fade) {
 }
 // Links along the loop. Each draws itself on, then carries comets.
 const LINKS = [
-  { a0: ANG.A, r0: 130, a1: ANG.B, r1: 84, draw: [T.toB[0] + 0.2, T.toB[1] - 0.1], from: T.B - 0.2, n: 3, c: WHITE },
-  { a0: ANG.B, r0: 84, a1: ANG.C, r1: 120, draw: [T.toC[0] + 0.2, T.toC[1] - 0.1], from: T.C - 0.2, n: 3, c: GOLD },
-  { a0: ANG.C, r0: 120, a1: ANG.D, r1: 115, draw: [T.toD[0] + 0.2, T.toD[1] - 0.1], from: T.D - 0.2, n: 3, c: GOLD },
-  { a0: ANG.D, r0: 115, a1: ANG.E, r1: 115, draw: [T.toE[0] + 0.2, T.toE[1] - 0.1], from: T.E - 0.2, n: 4, c: GOLD, small: true },
-  { a0: ANG.E, r0: 115, a1: ANG.F, r1: 115, draw: [T.ret[0] + 0.2, T.ret[1] - 0.2], from: T.ret[1] - 0.6, n: 3, c: GOLD },
-  { a0: ANG.F, r0: 115, a1: ANG.A + 360, r1: 130, draw: [T.ret[0] + 0.5, T.ret[1]], from: T.ret[1] - 0.4, n: 3, c: GOLD },
+  { a0: ANG.A, r0: 185, a1: ANG.B, r1: 118, draw: [T.toB[0] + 0.2, T.toB[1] - 0.1], from: T.B - 0.2, n: 3, c: WHITE },
+  { a0: ANG.B, r0: 118, a1: ANG.C, r1: 165, draw: [T.toC[0] + 0.2, T.toC[1] - 0.1], from: T.C - 0.2, n: 3, c: GOLD },
+  { a0: ANG.C, r0: 165, a1: ANG.D, r1: 160, draw: [T.toD[0] + 0.2, T.toD[1] - 0.1], from: T.D - 0.2, n: 3, c: GOLD },
+  { a0: ANG.D, r0: 160, a1: ANG.E, r1: 160, draw: [T.toE[0] + 0.2, T.toE[1] - 0.1], from: T.E - 0.2, n: 4, c: GOLD, small: true },
+  { a0: ANG.E, r0: 160, a1: ANG.F, r1: 160, draw: [T.ret[0] + 0.2, T.ret[1] - 0.2], from: T.ret[1] - 0.6, n: 3, c: GOLD },
+  { a0: ANG.F, r0: 160, a1: ANG.A + 360, r1: 185, draw: [T.ret[0] + 0.5, T.ret[1]], from: T.ret[1] - 0.4, n: 3, c: GOLD },
 ];
 const SPEED = 430;
 function drawLinks(t, fade) {
@@ -429,7 +440,7 @@ function drawGpuRings(t, fade) {
   for (let k = 0; k < 3; k++) {
     const ph = (((t - (T.A - 0.4)) / 2.1 + k / 3) % 1);
     g.strokeStyle = rgba(GOLD, (1 - ph) * 0.14 * fade); g.lineWidth = 2;
-    g.beginPath(); g.arc(Ax, Ay, 150 + ph * 120, 0, 6.2832); g.stroke();
+    g.beginPath(); g.arc(Ax, Ay, 205 + ph * 150, 0, 6.2832); g.stroke();
   }
 }
 function coinPulse(t) {
@@ -446,7 +457,7 @@ function drawTrades(t, fade) {
     const born = t0 + k * 0.62, life = 2.2, u = (t - born) / life;
     if (u < 0 || u > 1) continue;
     const buy = [0, 1, 0, 0, 1, 0, 1, 0][k % 8] === 0, c = buy ? GREEN : RED;
-    const x = Dx + 250 + ((k * 53) % 3 - 1) * 46, y = Dy + 60 - E.out(u) * 230;
+    const x = Dx + 310 + ((k * 53) % 3 - 1) * 46, y = Dy + 80 - E.out(u) * 280;
     const a = clamp(u / 0.15) * clamp((1 - u) / 0.3) * fade;
     g.fillStyle = rgba(c, 0.16 * a); roundRect(g, x - 62, y - 24, 124, 48, 24); g.fill();
     g.fillStyle = rgba(c, a); g.fillText(buy ? "BUY" : "SELL", x, y + 1);
@@ -455,7 +466,19 @@ function drawTrades(t, fade) {
 
 // ---------- Slide drawings ----------
 const slideAlpha = (i, t) => sample([s1, s2, s3, s4, s5][i]._tr, t).o;
-const coinImg = $("endcoin");
+const coinImg = $("endcoin"), pearlImg = document.querySelector('img[src$="pearl-mark.png"]');
+// A token seen edge-on as it flips (flip = cos of its turn).
+function token(c2, x, y, r, flip, kind, a) {
+  if (a <= 0.01) return;
+  glow(c2, x, y, r * 2.4, kind === "pearl" ? WHITE : GOLD, 0.18 * a);
+  c2.save(); c2.globalAlpha = a; c2.translate(x, y); c2.scale(Math.max(0.08, Math.abs(flip)), 1);
+  if (kind === "pearl") {
+    c2.fillStyle = "#1A1A1F"; c2.beginPath(); c2.arc(0, 0, r, 0, 6.2832); c2.fill();
+    c2.lineWidth = 3; c2.strokeStyle = "rgba(255,255,255,.85)"; c2.stroke();
+    c2.drawImage(pearlImg, -r * 0.56, -r * 0.44, r * 1.12, r * 0.88);
+  } else c2.drawImage(coinImg, -r, -r, 2 * r, 2 * r);
+  c2.restore();
+}
 function drawSlides(t) {
   g2.clearRect(0, 0, W, H);
   // 1. Gauge: 2% to 5%, the needle follows the rate; trading bars scroll below.
@@ -506,13 +529,20 @@ function drawSlides(t) {
       g2.fillStyle = gr; roundRect(g2, BAR_X, BASE_Y - mine - bonus - 6, BAR_W, bonus, 10); g2.fill();
       glow(g2, BAR_X + BAR_W / 2, BASE_Y - mine - bonus, 160, GOLD, 0.22 * a);
     }
-    // Comets from the GPU's top edge into the bar while it grows.
-    if (t > 51.0 && t < 55.6) for (let k = 0; k < 6; k++) {
-      const u = ((t - 51.0) * 0.9 + k / 6) % 1;
-      const sx = 860, sy = 520, ex = BAR_X - 10, ey = BASE_Y - mine - bonus + 20;
-      const x = lerp(sx, ex, u), y = lerp(sy, ey, u) - Math.sin(u * Math.PI) * 120;
-      disc(g2, x, y, 6, v > 1 ? GOLD : WHITE, a * Math.sin(u * Math.PI));
-      glow(g2, x, y, 36, v > 1 ? GOLD : WHITE, 0.25 * a * Math.sin(u * Math.PI));
+    // Pearl tokens flip out of the graphics card into "your mining"...
+    for (let k = 0; k < 9; k++) {
+      const born = T.s3[0] + 0.7 + k * 0.16, u = (t - born) / 0.95;
+      if (u < 0 || u > 1) continue;
+      const sx = 380 + (k % 5) * 95, sy = 480, ex = BAR_X + BAR_W / 2 + ((k % 3) - 1) * 46, ey = BASE_Y - mine + 8;
+      const x = lerp(sx, ex, E.io(u)), y = lerp(sy, ey, E.in(u)) - Math.sin(u * Math.PI) * 240;
+      token(g2, x, y, 32, Math.cos(u * Math.PI * 3), "pearl", a * clamp(u / 0.1) * clamp((1 - u) / 0.12));
+    }
+    // ...then $HASH coins drop in from the tax as the bonus.
+    for (let k = 0; k < 16; k++) {
+      const born = T.s3[0] + 2.3 + k * 0.17, u = (t - born) / 0.8;
+      if (u < 0 || u > 1) continue;
+      const x = BAR_X + BAR_W / 2 + (((k * 37) % 5) - 2) * 34, y = lerp(250, BASE_Y - mine - bonus + 26, E.in(u));
+      token(g2, x, y, 32, Math.cos(u * Math.PI * 2), "hash", a * clamp(u / 0.1) * clamp((1 - u) / 0.12));
     }
   }
   // 4. Holders: $HASH coins arcing into the wallet.
