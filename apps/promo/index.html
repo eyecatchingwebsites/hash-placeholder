@@ -101,7 +101,7 @@
 
 <script>
 "use strict";
-const DURATION = 58.5;
+const STORY = 58.5; // the timeline below is written at this length; the reading pace stretches it (see PACE)
 const W = 1920, H = 1080, CX = 960, CY = 630; // the coin sits here; the orbit turns around it
 const $ = (id) => document.getElementById(id);
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -723,7 +723,7 @@ function drawD(s, t) {
 const DRAW = [drawA, drawB, drawC, drawD];
 
 // ================= seek =================
-function seek(t) {
+function seekStory(t) {
   const cam = camera(t);
   const N = layout(t);
   const fade = V(WORLD, t);
@@ -811,6 +811,35 @@ function seek(t) {
 
   for (const [el, tr] of CAPS) apply(el, sample(tr, t));
   for (const [el, tr] of SCREEN) apply(el, sample(tr, t));
+}
+// ---------- Pace: slow down where there is something to read, keep the moves at full speed ----------
+// [from, to, rate] in story time; rate 0.7 plays that stretch at 70% speed. Rates ease in and out
+// over 0.4 s so nothing visibly changes gear.
+const PACE = [
+  [0.4, 4.7, 0.85],                                            // opening lines
+  [7.2, 9.5, 0.7], [10.5, 12.7, 0.7], [13.7, 15.6, 0.7], [16.6, 18.5, 0.7], // one line per step
+  [19.6, 28.4, 0.66], [29.4, 34.3, 0.7], [35.2, 41.1, 0.68], [42.0, 48.4, 0.68], // slides
+  [49.6, 52.0, 0.8], [53.4, STORY, 0.8],                       // the loop and the end card
+];
+function rateAt(x) {
+  let r = 1;
+  for (const [a, b, v] of PACE) {
+    const k = clamp((x - (a - 0.4)) / 0.4) * clamp(((b + 0.4) - x) / 0.4);
+    r = Math.min(r, lerp(1, v, E.sine(k)));
+  }
+  return r;
+}
+// Story time for every 1/600 s of film time.
+const WARP = [0];
+{
+  const dt = 1 / 600;
+  let x = 0;
+  while (x < STORY) { x = Math.min(STORY, x + rateAt(x) * dt); WARP.push(x); }
+}
+const DURATION = Math.floor(((WARP.length - 1) / 600) * 10) / 10;
+function seek(t) {
+  const i = clamp(t * 600, 0, WARP.length - 1), i0 = Math.floor(i), i1 = Math.min(WARP.length - 1, i0 + 1);
+  seekStory(lerp(WARP[i0], WARP[i1], i - i0));
 }
 window.seek = seek;
 window.DURATION = DURATION;

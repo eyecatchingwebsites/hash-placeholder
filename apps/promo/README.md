@@ -1,8 +1,10 @@
 # Promo reel (`apps/promo`)
 
-A 58-second launch film (v7). The opening is a field of dots (every dot a PC) pouring into the $HASH coin. Then the system: the coin stays large in the centre and every other step orbits it on a tilted ring (graphics card, Pearl with Quantus and QubitCoin, traders, the tax vault, holders and miners). The ring turns one step per beat to bring the next icon to the front-left, with a slow drift so nothing sits still; flows run between icons and into the coin. An iris opens out of the vault into slides that push left one after another (the tax and its split moving with the market, the miner bonus, a holder example, the levels), then closes back onto the whole system spinning, which collapses into the coin for the end card. One short line per beat, a grey second line where needed. 1920×1080, 60 fps, silent (add music when posting).
+A 79-second launch film (v7, paced for reading). The opening is a field of dots (every dot a PC) pouring into the $HASH coin. Then the system: the coin stays large in the centre and every other step orbits it on a tilted ring (graphics card, Pearl with Quantus and QubitCoin, traders, the tax vault, holders and miners). The ring turns one step per beat to bring the next icon to the front-left, with a slow drift so nothing sits still; flows run between icons and into the coin. An iris opens out of the vault into slides that push left one after another (the tax and its split moving with the market, the miner bonus, a holder example, the levels), then closes back onto the whole system spinning, which collapses into the coin for the end card. One short line per beat, a grey second line where needed. 1920×1080, 60 fps, motion blur, silent (add music when posting).
 
-| Time | Line on screen | Picture |
+**Pace.** The timeline is written at 58.5 s of story time; `PACE` in `index.html` then plays the stretches with something to read at 66–85% speed (eased in and out over 0.4 s) and the moves between them at full speed, which gives about 78.6 s of film. The times in the table below are story time. To change the pace, edit `PACE`; nothing else needs retiming.
+
+| Story time | Line on screen | Picture |
 |---|---|---|
 | 0–6.9 s | Most coins need buyers. / $HASH makes its own. | Dots light up gold and pour into the coin; the orbit unfolds around it |
 | 6.9–9.6 s | Your GPU mines whatever pays most. | The graphics card (fans spinning) checks Quantus, QubitCoin and Pearl; Pearl wins |

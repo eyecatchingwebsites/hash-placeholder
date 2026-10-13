@@ -30,6 +30,7 @@ page.on("pageerror", (e) => errors.push(e.message));
 await page.goto(pathToFileURL(path.join(here, "index.html")).href);
 await page.evaluate(async () => { await document.fonts.load("700 100px Inter"); await document.fonts.ready; await Promise.all([...document.images].map((i) => i.decode())); });
 const duration = await page.evaluate(() => window.DURATION);
+console.log("duration", duration);
 
 if (stills) {
   for (const s of stills.split(",").map(Number)) {
