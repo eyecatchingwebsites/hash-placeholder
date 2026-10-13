@@ -1,28 +1,28 @@
 # Promo reel (`apps/promo`)
 
-An 80-second launch film (v6). The opening is a field of dots (every dot a PC) pouring into the $HASH coin. Then the loop: every step sits on one loop and the camera pans straight from step to step (about a second per move, smooth sine easing, no zoom dips). After the tax, the camera pushes into the vault and the film switches to slides for the parts that need a picture of their own (the self-adjusting tax, the split, miner bonus, holder rewards, levels), then comes back out at holders and miners and pulls back to the whole loop. Illustrated icons: a graphics card whose fans spin once it mines, a candlestick chart, a vault whose dial turns, a wallet with coins. One short line per step. Motion blur from blended sub-frames. 1920×1080, 60 fps, silent (add music when posting).
+A 58-second launch film (v7). The opening is a field of dots (every dot a PC) pouring into the $HASH coin. Then the system: the coin stays large in the centre and every other step orbits it on a tilted ring (graphics card, Pearl with Quantus and QubitCoin, traders, the tax vault, holders and miners). The ring turns one step per beat to bring the next icon to the front-left, with a slow drift so nothing sits still; flows run between icons and into the coin. An iris opens out of the vault into slides that push left one after another (the tax and its split moving with the market, the miner bonus, a holder example, the levels), then closes back onto the whole system spinning, which collapses into the coin for the end card. One short line per beat, a grey second line where needed. 1920×1080, 60 fps, silent (add music when posting).
 
 | Time | Line on screen | Picture |
 |---|---|---|
-| 0–8 s | Most coins need buyers. / $HASH makes its own. | Dots light up gold and pour into the coin |
-| 8–12.8 s | Your GPU mines in the background. | The graphics card, fans spinning, rings breathing out |
-| 12.8–17.6 s | It picks the coin that pays most. | Quantus, QubitCoin and Pearl; the app checks each, Pearl wins |
-| 17.6–22.2 s | Then it buys $HASH on Solana. | Light runs into the $HASH coin (Solana badge), which beats as each buy lands |
-| 22.2–26.6 s | People buy and sell $HASH. | The chart, with BUY and SELL tags rising |
-| 26.6–32 s | Every trade pays a 2–5% tax. | Trails run into the vault; the camera pushes into it |
-| 32–39.7 s | Slow trading? The tax goes up. / Busy trading? It goes down. | A 2%–5% gauge over a strip of trading bars: quiet bars, the rate climbs to 5%; busy bars, it falls to 2.25% |
-| 39.7–45.3 s | The tax is split three ways. | One bar: miners 45–75%, holders 20–50%, dev 5–10% |
-| 45.3–52.1 s | Miners get a bonus on top. / Up to 5× their mining, on average. | Pearl tokens flip out of the graphics card into "your mining", then gold $HASH coins drop in as the bonus, stacking to 5× |
-| 52.1–58.7 s | Holders get paid just for holding. / At least 1% of every trade. | $HASH coins arcing into a wallet |
-| 58.7–65 s | Hold longer and mine more. / Level up for up to 4× the share. | Level 1, 2, 3 cards: 1×, 2×, 4×, with dot bars 1 : 2 : 4 |
-| 65–72.6 s | One loop. Around the clock. | Back out at holders and miners, then the whole loop |
-| 72.6–80 s | $HASH. On Solana. | End card: Website and Windows app, both "Coming soon", and fine print |
+| 0–6.9 s | Most coins need buyers. / $HASH makes its own. | Dots light up gold and pour into the coin; the orbit unfolds around it |
+| 6.9–9.6 s | Your GPU mines whatever pays most. | The graphics card (fans spinning) checks Quantus, QubitCoin and Pearl; Pearl wins |
+| 9.6–12.8 s | Then it buys $HASH on Solana. | Pearl tokens flip into $HASH on the way into the coin, which beats as they land (Solana badge) |
+| 12.8–15.7 s | People buy and sell $HASH. | The chart, BUY/SELL tags rising, buys and sells running in and out of the coin |
+| 15.7–19.2 s | Every trade pays a 2–5% tax. | Coins from each trade drop into the vault; an iris opens out of it |
+| 19.2–28.6 s | The tax is split three ways. It shifts with the market. / Slow trading? The tax goes up. Most of it goes to miners. / Busy trading? The tax goes down. Holders get a bigger cut. | Trading bars, the rate (2–5% track) and one split bar, all moving together: typical 2.75% (miners 48 / holders 43 / dev 9), slow 5% (75 / 20 / 5), busy 2.25% (45 / 45 / 10). Numbers from the engine's formula (`apps/web/assets/js/model.js`) |
+| 28.6–34.4 s | Miners get a bonus on top. Up to 5× their mining, on average. | Pearl tokens flip out of the graphics card into "your mining", then $HASH coins stack the bonus to 5× |
+| 34.4–41.2 s | Holders get paid just for holding. At least 1% of every trade goes to them. / What can a holder earn? Example: Level 3, 5% tax, busy trading. | Coins arc into a wallet; a one-day ring sweeps round it while "+2.8% of your bag, every day" and "$2,500 bag: about $70 a day" count up, with an "Example only … not guaranteed" line |
+| 41.2–48.6 s | Bigger bag, higher level. Hold it longer to unlock the next one. / Higher level, bigger share. Level 3 counts your bag 4 times. | Three cards as steps: $50+ (no wait), $500+ (held 1 day), $2,500+ (held 7 days), coin stacks growing; then 1×, 2×, 4× land and each stack splits into 1, 2 and 4 copies |
+| 48.6–53.4 s | One loop. Around the clock. | The iris closes onto the whole system spinning, labelled, comets running round the ring; it collapses into the coin |
+| 53.4–58.5 s | $HASH. On Solana. | End card: Website and Windows app, both "Coming soon", and fine print |
+
+The holder example is `model.js` at a forced 5% tax, Level 3, 30% of market cap traded a day (the site's default turnover): holders get 50% of the tax (2.5% of volume) and a Level 3 bag earns 2.79% a day. It is labelled as an example and not guaranteed on screen.
 
 Third-party marks, used unaltered: the Pearl, Quantus and QubitCoin marks the user supplied (`assets/pearl-mark.png`, `quantus.png`, `qubitcoin.png`, turned light-on-transparent for the dark nodes) and the Solana logomark (`assets/solana.svg`, from solana.com/branding, which forbids implying endorsement). The end card says we aren't affiliated with any of them.
 
 ## Files
 
-- `index.html`: the film. The world (nodes in DOM, links and light on a canvas) sits under one camera transform; the words are in screen space, built word by word. Every frame is a pure function of time (`seek(t)`), so renders are exact. Open it in a browser to watch it loop, or add `?t=19.5` to freeze a moment.
+- `index.html`: the film. The system (coin and orbiting icons in DOM, the ring, beams and tokens on canvases under and over them) sits under one camera transform; the slides are a clipped layer (the iris) of slides that push; the words are in screen space, built word by word. Every frame is a pure function of time (`seek(t)`), so renders are exact. Open it in a browser to watch it loop, or add `?t=19.5` to freeze a moment.
 - `render.mjs`: steps through the film with Playwright and pipes frames to ffmpeg. `--sub 4` (the default) renders four sub-frames per frame over half a frame and blends them (ffmpeg `tmix`), which is the motion blur.
 - `assets/`: the coin, Inter (OFL), the Pearl and Solana marks above, and 3× screenshots of the app (`app-off.jpg`, `app-on.jpg`, used by earlier cuts) taken from `apps/desktop/ui` with a sample wallet.
 
@@ -33,6 +33,6 @@ node apps/promo/render.mjs                    # apps/promo/out/hashcoin-promo.mp
 node apps/promo/render.mjs --stills 2,12,19.5 # PNG stills for checking
 ```
 
-Needs Playwright and ffmpeg (on PATH, or `FFMPEG=<path>`; the `ffmpeg-static` npm package works). A full render with motion blur takes about 45 minutes; `--sub 1` drafts in about 10.
+Needs Playwright and ffmpeg (on PATH, or `FFMPEG=<path>`; the `ffmpeg-static` npm package works). A full render with motion blur (`--sub 4`) takes about 30 minutes; `--sub 1` (no blur) about 5.
 
-Copy rules from `CLAUDE.md` apply: no promised returns; the app shot carries "Sample wallet and numbers." and the end card says "Estimates, not promises."
+Copy rules from `CLAUDE.md` apply: no promised returns. The only earnings figure (the holder example) states its assumptions on screen and says payouts change with trading and are not guaranteed; the end card says "Not financial advice."
