@@ -69,7 +69,14 @@ async function mix() {
   }
   const fadeOut = music ? music.fadeOut : 1.5, fadeIn = music ? music.fadeIn : 0;
   if (process.env.MIXDEBUG) console.log(inputs.join(" "), "\n", chains.join(";\n"));
-  chains.push(`${mixIn.join("")}amix=inputs=${mixIn.length}:normalize=0:duration=longest,atrim=0:${duration},afade=t=in:d=${fadeIn},afade=t=out:st=${(duration - fadeOut).toFixed(2)}:d=${fadeOut},alimiter=limit=0.95[aout]`);
+  const tail = `atrim=0:${duration},afade=t=in:d=${fadeIn},afade=t=out:st=${(duration - fadeOut).toFixed(2)}:d=${fadeOut},alimiter=limit=0.95[aout]`;
+  if (music && sfx) {
+    // Effects on their own bus, lifted together; the music dips under them (sidechain), then both mix.
+    const fx = mixIn.slice(1), d = sfx.duck;
+    chains.push(`${fx.join("")}amix=inputs=${fx.length}:normalize=0:duration=longest,volume=${sfx.gain}dB,apad=whole_dur=${duration},asplit=2[fxbus][fxkey]`);
+    chains.push(`[mus][fxkey]sidechaincompress=threshold=${d.threshold}:ratio=${d.ratio}:attack=${d.attack}:release=${d.release}[ducked]`);
+    chains.push(`[ducked][fxbus]amix=inputs=2:normalize=0:duration=first,${tail}`);
+  } else chains.push(`${mixIn.join("")}amix=inputs=${mixIn.length}:normalize=0:duration=longest,${sfx ? `volume=${sfx.gain}dB,` : ""}${tail}`);
   await done(ffmpeg([...inputs, "-filter_complex", chains.join(";"), "-map", "0:v", "-map", "[aout]", "-dn", "-map_chapters", "-1", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-t", String(duration), "-movflags", "+faststart", file]));
   console.log(`wrote ${file}${music ? " with music" : ""}${sfx ? ` and ${sfx.cues.length} sound effects` : ""}`);
 }

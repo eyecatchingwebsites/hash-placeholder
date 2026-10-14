@@ -929,7 +929,9 @@ function sfxCues() {
   at(T.end + 1.6, "tick", 0); at(T.end + 1.8, "tick", 0);
   return cues.sort((a, b) => a.t - b.t);
 }
-window.SFX = { dir: "audio/sfx/", files: SFX_FILES, cues: sfxCues() };
+// gain lifts every effect together; duck dips the music under them (a sidechain compressor keyed by
+// the effects): threshold (0-1), ratio, and how fast it lets go (ms).
+window.SFX = { dir: "audio/sfx/", files: SFX_FILES, cues: sfxCues(), gain: 6, duck: { threshold: 0.1, ratio: 2.5, attack: 5, release: 180 } };
 window.seek = seek;
 window.DURATION = DURATION;
 
