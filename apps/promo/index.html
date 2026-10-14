@@ -869,6 +869,67 @@ function seek(t) {
 }
 window.MUSIC = MUSIC;
 window.storyAt = (t) => WARP[Math.round(clamp(t * FPS_WARP, 0, WARP.length - 1))];
+
+// ---------- Sound effects ----------
+// Files in audio/sfx/ (licensed, kept out of git). hit = seconds into the file where the sound lands,
+// which is what gets lined up with the picture. render.mjs mixes these under the music.
+const SFX_FILES = {
+  coin1: { file: "coin1.wav", hit: 0.0 }, coin2: { file: "coin2.wav", hit: 0.05 }, coin3: { file: "coin3.wav", hit: 0.33 },
+  pop: { file: "pop.wav", hit: 0.07, len: 0.4 }, tick: { file: "tick.wav", hit: 0.0 }, success: { file: "success.wav", hit: 0.15 },
+  stamp: { file: "stampthud.ogg", hit: 0.0 }, woosh: { file: "woosh.flac", hit: 0.33, len: 1.7 },
+  deep: { file: "deepwhoosh.wav", hit: 0.65 },
+  rise: { file: "deepwhoosh.wav", hit: 1.57, reverse: true }, // the deep whoosh backwards: it builds into the hit
+};
+// Story time -> film time (the first film moment that reaches it).
+function filmAt(story) {
+  let lo = 0, hi = WARP.length - 1;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (WARP[m] < story) lo = m + 1; else hi = m; }
+  return lo / FPS_WARP;
+}
+function sfxCues() {
+  const cues = [];
+  // The music is mastered loud (about -11 dB RMS, peaks near 0), so each kind of sound gets a lift.
+  const LIFT = { coin1: 9, coin2: 9, coin3: 9, tick: 2, pop: 4, woosh: 2, deep: 2, rise: 2, success: 2, stamp: 0 };
+  const at = (story, id, gain = 0, extra = {}) => cues.push({ t: +filmAt(story).toFixed(3), id, gain: gain + LIFT[id], ...extra });
+  const coin = (story, k, gain) => at(story, ["coin1", "coin2", "coin3"][k % 3], gain + [0, 3, 2][k % 3] - (k * 7 % 3));
+  // Dots pour into the coin.
+  at(T.coin, "rise", -5);
+  // The app checks each coin; Pearl wins.
+  at(T.pick[0] + 0.05, "tick", 6); at(T.pick[1] + 0.05, "tick", 6);
+  at(T.pick[2] + 0.05, "success", -9);
+  // The orbit turns; slides push.
+  for (const [a, b] of [T.rot1, T.rot2, T.rot3]) at((a + b) / 2, "woosh", -9);
+  for (const t0 of [T.B, T.C, T.D]) at(t0 + T.push * 0.45, "woosh", -8);
+  // Solana badge; tokens land in the coin.
+  at(T.pearl[0] + 0.45, "pop", -8);
+  for (let k = 0; k < 12; k++) coin(T.pearl[0] + 1.1 + k * 0.19, k, -17);
+  // BUY/SELL tags.
+  for (let k = 0; k < 6; k++) at(T.rot2[1] - 0.3 + k * 0.42 + 0.1, "pop", -20 - (k % 2) * 3);
+  // Tax drops into the vault.
+  for (let k = 0; k < 13; k++) coin(T.rot3[1] - 0.2 + k * 0.17 + 0.9, k + 1, -20);
+  // The iris opens out of the vault.
+  at(T.iris[0] + 0.6, "deep", -6);
+  // The tax steps as the market moves (one tick per 0.25% shown), the holder counter (one per 0.2%).
+  let last = null;
+  for (let x = T.A; x < T.B; x += 0.004) { const r = (Math.round(market(V(MKT, x)).r * 4) / 4).toFixed(2); if (last !== null && r !== last) at(x, "tick", 2); last = r; }
+  last = null;
+  for (let x = 38.6; x < 40.8; x += 0.004) { const v = Math.floor(HOLD_PCT * V(DAY, x) * 5); if (last !== null && v !== last) at(x, "tick", -1); last = v; }
+  // Miners: Pearl tokens into "your mining", then the bonus.
+  for (let k = 0; k < 9; k++) coin(b0 + 0.4 + k * 0.16 + 0.95, k, -18);
+  for (let k = 0; k < 16; k++) coin(b0 + 2.0 + k * 0.16 + 0.8, k + 2, -18 + Math.min(4, k * 0.3));
+  // Holders: coins into the wallet.
+  for (let k = 0; k < 19; k++) coin(c0 + 0.6 + k * 0.26 + 1.0, k, -21);
+  // Levels: coins stack, then 1x, 2x, 4x land.
+  LEVELS.forEach((l, i) => { for (let k = 0; k < l.coins; k++) coin(T.D + 1.0 + i * 0.35 + k * 0.1, k + i, -20); });
+  LEVELS.forEach((l, i) => at(l.tm + 0.22, "stamp", -10 + i * 2.5));
+  // Back out: the iris closes, the system collapses into the coin, the end card.
+  at(T.close[0] + 0.75, "rise", -7);
+  at(T.collapse[1] - 0.05, "rise", -6);
+  at(T.end - 0.05, "stamp", -14, { lowpass: 1800 });
+  at(T.end + 1.6, "tick", 0); at(T.end + 1.8, "tick", 0);
+  return cues.sort((a, b) => a.t - b.t);
+}
+window.SFX = { dir: "audio/sfx/", files: SFX_FILES, cues: sfxCues() };
 window.seek = seek;
 window.DURATION = DURATION;
 
