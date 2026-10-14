@@ -2,6 +2,7 @@
 //   node apps/promo/render.mjs                  -> apps/promo/out/hashcoin-promo.mp4 (1920x1080, 60 fps, motion blur)
 //   node apps/promo/render.mjs --stills 1,8.6   -> PNG stills at those seconds, for checking
 //   node apps/promo/render.mjs --fps 30 --sub 1 -> quicker draft, no motion blur
+//   add --no-music for a silent render (the music file and its offset are window.MUSIC in index.html)
 // Motion blur: each output frame blends --sub sub-frames spread over half a frame (a 180° shutter).
 // Needs Playwright (global install is fine) and ffmpeg: on PATH, or set FFMPEG to its path
 // (for example the binary from the ffmpeg-static npm package).
@@ -30,7 +31,8 @@ page.on("pageerror", (e) => errors.push(e.message));
 await page.goto(pathToFileURL(path.join(here, "index.html")).href);
 await page.evaluate(async () => { await document.fonts.load("700 100px Inter"); await document.fonts.ready; await Promise.all([...document.images].map((i) => i.decode())); });
 const duration = await page.evaluate(() => window.DURATION);
-console.log("duration", duration);
+const music = process.argv.includes("--no-music") ? null : await page.evaluate(() => window.MUSIC || null);
+console.log("duration", duration, music ? `music ${music.file} from ${music.start}s` : "no music");
 
 if (stills) {
   for (const s of stills.split(",").map(Number)) {
@@ -41,9 +43,16 @@ if (stills) {
 } else {
   const file = path.join(out, "hashcoin-promo.mp4");
   const blur = sub > 1 ? ["-vf", `tmix=frames=${sub},select='eq(mod(n,${sub}),${sub - 1})'`, "-fps_mode", "cfr", "-r", String(fps)] : [];
+  // The music (window.MUSIC in index.html): played from music.start, faded in and out, cut at the film's end.
+  const audio = music ? [
+    "-ss", String(music.start), "-i", path.join(here, music.file),
+    "-map", "0:v", "-map", "1:a",
+    "-af", `afade=t=in:d=${music.fadeIn},afade=t=out:st=${(duration - music.fadeOut).toFixed(2)}:d=${music.fadeOut}`,
+    "-c:a", "aac", "-b:a", "256k", "-t", String(duration),
+  ] : [];
   const ff = spawn(process.env.FFMPEG || "ffmpeg", [
     "-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(fps * sub), "-c:v", sub > 1 ? "mjpeg" : "png", "-i", "-",
-    ...blur, "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-movflags", "+faststart", file,
+    ...audio, ...blur, "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-movflags", "+faststart", file,
   ], { stdio: ["pipe", "inherit", "inherit"] });
   const total = Math.round(duration * fps);
   const started = Date.now();

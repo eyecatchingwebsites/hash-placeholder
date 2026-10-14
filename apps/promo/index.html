@@ -829,18 +829,46 @@ function rateAt(x) {
   }
   return r;
 }
-// Story time for every 1/600 s of film time.
+// ---------- Music sync ----------
+// The film is locked to apps/promo/audio/hashmusic.mp3, played from its 0:10 mark (a quiet spot in
+// the intro). Film t plays track t + MUSIC.start. Sync points, as [story time, track time]:
+// the orbit unfolds on the drop (0:17.5) and the end screen lands as the track falls into its outro
+// (1:21). Between sync points the reading pace above is deepened or eased (one factor per stretch)
+// so each point lands exactly; moves keep their speed as far as possible.
+const MUSIC = { file: "audio/hashmusic.mp3", start: 10.0, fadeIn: 1.2, fadeOut: 3.5 };
+const SYNC = [[0, MUSIC.start], [T.unfold, 17.5], [T.collapse[1] - 0.3, 81.0]];
+const FILM_END = 80.0; // the end card holds after the story ends; picture and music fade out
+const FPS_WARP = 600;
 const WARP = [0];
 {
-  const dt = 1 / 600;
-  let x = 0;
-  while (x < STORY) { x = Math.min(STORY, x + rateAt(x) * dt); WARP.push(x); }
+  const dt = 1 / FPS_WARP;
+  const rate = (x, k) => Math.max(0.2, 1 - k * (1 - rateAt(x)));
+  const filmLen = (s0, s1, k) => { let x = s0, n = 0; while (x < s1) { x += rate(x, k) * dt; n++; } return n * dt; };
+  for (let i = 1; i < SYNC.length; i++) {
+    const [s0, a0] = SYNC[i - 1], [s1, a1] = SYNC[i], want = a1 - a0;
+    let lo = 0, hi = 4;
+    for (let it = 0; it < 40; it++) { const k = (lo + hi) / 2; if (filmLen(s0, s1, k) < want) lo = k; else hi = k; }
+    const k = (lo + hi) / 2, n = Math.round(want / dt), out = [];
+    let x = s0;
+    for (let j = 0; j < n; j++) { x += rate(x, k) * dt; out.push(x); }
+    // land exactly on the sync point (the fit is already within a frame; this removes the rest)
+    const fix = (s1 - s0) / (out[n - 1] - s0);
+    for (const v of out) WARP.push(s0 + (v - s0) * fix);
+  }
+  let x = WARP[WARP.length - 1];
+  while (WARP.length - 1 < FILM_END * FPS_WARP) { x = Math.min(STORY, x + rateAt(x) * dt); WARP.push(x); }
 }
-const DURATION = Math.floor(((WARP.length - 1) / 600) * 10) / 10;
+const DURATION = FILM_END;
+const black = document.createElement("div");
+black.style.cssText = "position:absolute;inset:0;background:#000;pointer-events:none;opacity:0";
+$("stage").appendChild(black);
 function seek(t) {
-  const i = clamp(t * 600, 0, WARP.length - 1), i0 = Math.floor(i), i1 = Math.min(WARP.length - 1, i0 + 1);
+  const i = clamp(t * FPS_WARP, 0, WARP.length - 1), i0 = Math.floor(i), i1 = Math.min(WARP.length - 1, i0 + 1);
   seekStory(lerp(WARP[i0], WARP[i1], i - i0));
+  black.style.opacity = E.io(clamp((t - (FILM_END - 1.4)) / 1.4)).toFixed(3);
 }
+window.MUSIC = MUSIC;
+window.storyAt = (t) => WARP[Math.round(clamp(t * FPS_WARP, 0, WARP.length - 1))];
 window.seek = seek;
 window.DURATION = DURATION;
 
