@@ -2,7 +2,7 @@
 """Regenerate assets/js/gpus.js from data/hashrate-no-gpus-*.json (stdlib only).
 
 Usage (from the repo root):
-    python3 apps/web/scripts/gen_gpus.py data/hashrate-no-gpus-2026-10-03.json
+    python3 apps/web/scripts/gen_gpus.py data/hashrate-no-gpus-2026-10-14.json
 
 The site loads GPU data as a plain script (not fetch) so it also works when
 the HTML is opened straight from disk.
@@ -17,10 +17,10 @@ import re
 import sys
 from pathlib import Path
 
-src = Path(sys.argv[1] if len(sys.argv) > 1 else "data/hashrate-no-gpus-2026-10-03.json")
+src = Path(sys.argv[1] if len(sys.argv) > 1 else "data/hashrate-no-gpus-2026-10-14.json")
 date = re.search(r"(\d{4}-\d{2}-\d{2})", src.name)
 rows = json.loads(src.read_text(encoding="utf-8"))
-PRO = re.compile(r"^(CMP |RTX PRO |RTX A\d|TITAN|P10\d)")
+PRO = re.compile(r"^(CMP |RTX PRO |RTX A\d|RTX \d000 Ada|TITAN|P10\d|BC-)")
 
 # (laptop name, desktop reference on hashrate.no, factor, approx. mining watts)
 # Factors: the measured laptops run at 0.72-0.76x their desktop sibling with the

@@ -631,7 +631,9 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
   .xtabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .xtabs button { min-height: 84px; padding: 12px 6px; font-size: .86rem; gap: 8px; }
   .xtabs button svg { width: 24px; height: 24px; }
+  .xtabs button:last-child { grid-column: 1 / -1; min-height: 52px; grid-auto-flow: column; justify-content: center; }
 }
+.xhead h2 { text-wrap: balance; }
 .xpanels { padding-top: clamp(36px, 5vw, 56px); padding-bottom: clamp(64px, 8vw, 96px); }
 .xpanel { animation: panelIn .45s var(--ease); }
 .xpanel:focus { outline: none; }
@@ -774,6 +776,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .bal-bar i { display: flex; align-items: center; min-width: 0; overflow: hidden; white-space: nowrap; font: 700 .86rem/1 var(--font-display); color: var(--gold-ink); padding: 0 12px; transition: width .35s var(--ease); }
 .bal-bar .m { background: var(--gold); }
 .bal-bar .h { background: var(--gold-2); justify-content: flex-end; }
+.bal-bar .d { background: var(--panel-2); color: var(--muted); justify-content: center; padding: 0 4px; font-weight: 600; font-size: .78rem; }
 .bal-note { font-size: 1rem; color: var(--muted); min-height: 1.5em; }
 .bal-note b { color: color-mix(in srgb, var(--gold) var(--gold-text-mix), #000); font-family: var(--font-display); font-weight: 800; }
 
@@ -1031,6 +1034,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 @keyframes wayOn { to { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); } }
 .art-figure .fig-extra { margin-top: 2px; font: 600 .58rem/1.2 var(--font-body); color: var(--dim); }
 .hero h1 { text-wrap: balance; }
+.hero h1 .h1-line { display: block; }
+.hero h1 .gold { color: color-mix(in srgb, var(--gold) var(--gold-text-mix), #000); }
 
 /* Hero: one-sentence lede that tells what's new */
 .hero-lede { margin: clamp(16px, 2.4vh, 28px) 0 0; max-width: 32em; color: var(--muted); font-size: clamp(1.05rem, calc(.6vw + .45rem), 1.75rem); line-height: 1.45; }
@@ -1163,7 +1168,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
             </details>
             <details>
               <summary>Where do the revenue numbers come from?</summary>
-              <div class="a"><p>The calculator uses hashrate.no's 24-hour revenue for each card on its best coin, fetched October 3, 2026. These change daily with coin prices and network difficulty, and they're before electricity.</p></div>
+              <div class="a"><p>The calculator uses hashrate.no's 24-hour revenue for each card on its best coin, fetched October 14, 2026. These change daily with coin prices and network difficulty, and they're before electricity.</p></div>
             </details>
             <details>
               <summary>Will mining slow down my PC?</summary>

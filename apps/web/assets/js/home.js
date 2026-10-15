@@ -163,7 +163,7 @@
     cards.forEach((c) => (c.tabIndex = +c.dataset.lv === L ? 0 : -1));
 
     // If you mine (M2 and M3 also need a small bag: H1 and H2)
-    $("#mine-needs").textContent = ["No buying needed", "Needs $50 held", "Needs $500 held a day"][L - 1];
+    $("#mine-needs").textContent = ["No buying needed", "Needs $50 held", "Needs $500 held 1 day"][L - 1];
     const r = M.miner({ myRev: g.rev, level: L });
     const top = M.miner({ myRev: g.rev, level: 3 }).total || 1;
     tween($("#earn-day"), r.total, money);
@@ -225,12 +225,14 @@
     const paintBal = () => {
       const v = toV(+bal.value);
       const mk = M.market({ volPerGpu: v });
-      const m = mk.shares.miners, ho = mk.shares.holders, pool = m + ho;
+      const m = mk.shares.miners, ho = mk.shares.holders, d = mk.shares.dev;
       $("#bal-vol-o").textContent = `${whole(v)} traded per GPU a day`;
-      $("#bal-m").style.width = (100 * m) / pool + "%";
-      $("#bal-h").style.width = (100 * ho) / pool + "%";
+      $("#bal-m").style.width = 100 * m + "%";
+      $("#bal-h").style.width = 100 * ho + "%";
+      $("#bal-d").style.width = 100 * d + "%";
       $("#bal-m-t").textContent = `Miners ${(100 * m).toFixed(0)}%`;
       $("#bal-h-t").textContent = `Holders ${(100 * ho).toFixed(0)}%`;
+      $("#bal-d-t").textContent = `Dev ${(100 * d).toFixed(0)}%`;
       const mult = F.mult(1 + mk.chestPerGpu / mk.avgRev);
       $("#bal-note").innerHTML = mk.targetMet
         ? `Tax <b>${pct2(mk.rate)}</b>. Miners are at <b>${mk.chestPerGpu / mk.avgRev > 4.05 ? mult : "5×"}</b> their mining; holders get <b>${pct2(mk.holderRate)}</b> of every trade.`

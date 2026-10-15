@@ -215,6 +215,20 @@ describe("tax split", () => {
     const at = splitTax({ taxUsd: 0.0275 * 750_000, rate: 0.0275, minedUsd: 2_500 }, R);
     expect(at.holderUsd / 750_000).toBeGreaterThanOrEqual(0.01);
   });
+
+  it("matches the site's estimate at $3.50 per GPU (Oct 14: PRL ~$1.87)", () => {
+    // 1,000 GPUs mining $3.50/day need $14,000/day of bonus. With $750/GPU of trading plus the
+    // platform's own buys, 3.25% is the first rate where holders keep >= 1% of volume once miners
+    // reach 5x (3% leaves holders 0.89%).
+    const volumeUsd = 753_500;
+    expect(targetTaxRate({ volumeUsd, minedUsd: 3_500 }, R)).toBeCloseTo(0.0325, 6);
+    const at = splitTax({ taxUsd: 0.0325 * volumeUsd, rate: 0.0325, minedUsd: 3_500 }, R);
+    expect(at.targetMet).toBe(true);
+    expect(at.shares.miners).toBeCloseTo(0.572, 3);
+    expect(at.shares.holders).toBeCloseTo(0.349, 3);
+    // Below ~$370/GPU even 5% can't lift miners to 5x.
+    expect(targetTaxRate({ volumeUsd: 360_000 + 3_500, minedUsd: 3_500 }, R)).toBeCloseTo(0.05, 6);
+  });
 });
 
 describe("holder payout", () => {

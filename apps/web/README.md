@@ -44,7 +44,7 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 | `assets/js/model.js` | The pre-launch estimate for the decided design: a 2–5% tax (the lowest rate where miners reach 5× their mining and holders still get at least 1% of volume); dev 5–10% of the tax, miners 45–75%, holders the rest (at least 20%). Miner weight = √(GPU $/day) × M-level; holder weight = bag × H-level. Default $750 volume per GPU a day |
 | `assets/js/home.js`, `assets/js/calculator.js` | Page logic. Home: topic tabs (one section shown at a time, `#hash` links open tabs), earnings with auto-cycling levels, GPU meter, tax-pot simulation; on big screens `fitExplore` scales the explorer to fill the screen |
 | `assets/js/cycle.js` | Hero flywheels: two rings (the coin, your bag) built from one `makeWheel` engine, with a controller for the tabs, shared caption, step buttons and pause |
-| `assets/js/gpus.js` | **Generated** GPU list (133 cards: 91 from `data/hashrate-no-gpus-2026-10-03.json`, plus 42 laptop GPUs estimated from desktop siblings and marked `est`) |
+| `assets/js/gpus.js` | **Generated** GPU list (145 cards: 103 from `data/hashrate-no-gpus-2026-10-14.json`, plus 42 laptop GPUs estimated from desktop siblings and marked `est`) |
 | `scripts/build_standalone.py`, `scripts/artifact_page.py` | Build the single-file pages; turn them into the artifact files |
 | `scripts/check_site.mjs` | Browser check at six screen sizes (Playwright) |
 | `scripts/gen_gpus.py` | Regenerates `gpus.js`: `python3 apps/web/scripts/gen_gpus.py data/<file>.json` (from the repo root) |

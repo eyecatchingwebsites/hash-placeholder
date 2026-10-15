@@ -271,13 +271,13 @@
   const bagRoot = document.getElementById("fw-bag");
   const bagCore = bagRoot.querySelector("[data-core-lvl]").parentElement;
   const HM = window.HashModel;
-  const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 10.71 };
+  const gpu = (window.GPUS || []).find((g) => g.name === "RTX 5090") || { rev: 14.91 };
   const usd = (v) => "$" + (v >= 100 ? fmt(v) : v.toFixed(2));
   const EXAMPLE_BAG = [450, 2200, 6000];
-  const NEXT_NEEDS = { 2: "$500+ for a day", 3: "$2,500+ for 7 days" };
+  const NEXT_NEEDS = { 2: "$500+ held 1 day", 3: "$2,500+ held 7 days" };
   const B = (key) => bagRoot.querySelector(`[data-b="${key}"]`);
   const bagNums = (L) => {
-    const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 10.71, chestShare: 9.86 * L };
+    const r = HM ? HM.miner({ myRev: gpu.rev, level: L }) : { mining: 14.91, chestShare: 13.76 * L };
     const bag = EXAMPLE_BAG[L - 1];
     const h = HM ? HM.holder(bag, L) : { perDay: bag * 0.0088 * L, yieldPct: 0.88 * L };
     return { r, bag, h, weekHold: 7 * h.perDay, weekGpu: 7 * (r.mining + r.chestShare) };

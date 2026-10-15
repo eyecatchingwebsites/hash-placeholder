@@ -39,7 +39,7 @@ window.HashModel = (function () {
     turnover: 30,       // % of market cap traded per day (launch weeks)
     capPerHolder: 1000, // $ of market cap per holder
     minerShare: 40,     // % of holders who mine
-    avgRev: 2.5,        // average mining GPU's revenue, $/day (a)
+    avgRev: 3.5,        // average mining GPU's revenue, $/day (a); about an RTX 3080 (hashrate.no, Oct 14, PRL ~$1.87)
     mMix: [30, 50, 20], // % of miners at M1 / M2 / M3
     heldShare: 60,      // % of market cap held by wallets that can earn holder rewards
     hMix: [15, 30, 35, 20], // % of that value below H1 / at H1 / H2 / H3
