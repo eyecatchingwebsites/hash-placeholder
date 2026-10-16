@@ -1,6 +1,5 @@
-// The launch route we're waiting for: Meteora Dynamic Bonding Curve 0.2.2 with a Token-2022 tax.
-// Devnet already runs 0.2.2 (mainnet ETA Oct 16, 2026). Uses Meteora's unreleased SDK 1.6.0
-// (packages/chain/vendor, built from their `sync/program-0.2.2` branch; swap for the npm release).
+// The launch route: Meteora Dynamic Bonding Curve 0.2.2 with a Token-2022 tax (live on mainnet since
+// Oct 16, 2026; devnet runs the same program). Uses Meteora's released SDK 2.0.0 from npm.
 //   1. config (create_config2): 21M Token-2022 supply, 5% tax, tax collected by us (Partner),
 //      and the rate authority handed to us at graduation (MigratedTransferFeeAuthorityOption.Partner)
 //   2. the pool (the token launches), and who holds which authority while on the curve

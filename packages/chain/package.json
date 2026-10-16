@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hashcoin/engine": "*",
-    "@meteora-ag/dynamic-bonding-curve-sdk": "file:vendor/meteora-ag-dynamic-bonding-curve-sdk-1.6.0.tgz",
+    "@meteora-ag/dynamic-bonding-curve-sdk": "2.0.0",
     "@raydium-io/raydium-sdk-v2": "^0.2.73-alpha",
     "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.99.0"

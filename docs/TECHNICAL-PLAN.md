@@ -40,7 +40,7 @@ These block real mining. Each one is research plus a decision from the user.
      - Regions.
    - Output: fill in `services/api/config/coins.json`.
    - Fallback if no pool fits: run our own pool for that coin (more work, see Phase 6).
-3. **Launchpad.** The tax is now 5%, which LaunchLab's reward launch probably can't do (it appeared to allow 1% or 3%), so the likely route is our own Token-2022 token + Raydium CPMM pool. Verify LaunchLab anyway. 🔑 decision.
+3. **Launchpad: Meteora Dynamic Bonding Curve 0.2.2 (decided Oct 12; live on mainnet Oct 16).** Token-2022 with the 2–5% tax via `create_config2`; the rate is fixed on the curve and the fee authority is ours from graduation (DAMM v2). Rehearsed end to end on devnet with Meteora's released SDK 2.0.0 (Oct 16, `packages/chain/scripts/meteora-devnet.ts`), same results as the Oct 12 pre-release run. Raydium LaunchLab is the tested fallback (fixed rate). Still open 🔑: the mainnet graduation target (SOL) and the pool fee.
 4. **Accounts** 🔑:
    - .com domain.
    - Hosting:
