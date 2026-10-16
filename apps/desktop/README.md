@@ -22,7 +22,7 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
 ## Safety
 - **Temperature:** each card pauses at the limit (default 83 °C, choices 70–83) and resumes 8 °C cooler. ForgeMiner
   and BzMiner get the limit as flags (`{tempLimit}`/`{tempResume}` in the manifest) and pause the card themselves; the
-  app also reads NVIDIA temperatures (nvidia-smi) and stops a card's miner 4 °C above the limit as a backstop
+  app also reads NVIDIA temperatures (NVML) and stops a card's miner 4 °C above the limit as a backstop
   (at the limit itself for a miner without its own).
 - **Power cap (optional, off):** passed as the miner's power flag (`powerArgs`, ForgeMiner `--plimit <watts>`).
   NVIDIA only allows this to an administrator, and the app never asks for admin rights, so it applies only if the user
@@ -31,6 +31,28 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
 - **Pause while a game is fullscreen (off):** Windows' fullscreen/busy state, or a foreground window covering its
   monitor; resumes 20 s after the game leaves fullscreen.
 - Pauses stop the miner process but keep the assignment, so mining picks up by itself. Card rows show why.
+
+## Antivirus (Microsoft Defender)
+- **Oct 16, 6:19 PM: Defender quarantined the unsigned test build** (commit 182e964) when the user clicked Start:
+  `Trojan:Script/Conteban.A!ml` (ThreatID 2147735508, severity 5, a machine-learning detection by real-time
+  protection). It hit the app itself (`%LOCALAPPDATA%\Hashcoin Miner\hashcoin-miner.exe`, its Start menu shortcut and
+  uninstall entry), not ForgeMiner: the app was stopped before ForgeMiner 1.8.8 was even saved to disk.
+- **What we do about it:** submit every installer to Microsoft's false-positive portal
+  (https://www.microsoft.com/wdsi/filesubmission) and VirusTotal; **code-sign with Azure Artifact Signing before
+  launch** (an unsigned app that downloads and starts another program is exactly what this kind of ML model scores
+  high); never ask users to add exclusions or change Defender, and never pack or obfuscate.
+- **Changed after it (Oct 17) so the app looks less like a dropper, verification unchanged:**
+  - No helper programs: GPU names, memory and temperatures come from NVIDIA's own library (`nvml.dll`, loaded from
+    System32 only) and from DirectX, read in-process. The app used to start a hidden PowerShell
+    (`Get-CimInstance Win32_VideoController`) at launch and a hidden `nvidia-smi` every 5 seconds while mining.
+    Now the only program it ever starts is the verified miner.
+  - An explicit Windows manifest (`src-tauri/app.manifest`): runs as the signed-in user (`asInvoker`), never asks
+    for admin; plus a copyright line next to the existing company, product and version in the exe's version info.
+  - Unchanged on purpose: miners still live in the app's own data folder
+    (`%LOCALAPPDATA%\com.hashcoin.miner\miners\<id>\<version>`), with an ordinary command line; the miner still runs
+    without a console window (its output goes to `gpu-N.log`).
+- Whether these changes are enough is unknown until the signed build is checked; Defender's ML can't be tested here
+  without the user starting the app.
 
 ## Settings
 Gear button in the header. Saved to `%APPDATA%\com.hashcoin.miner\settings.json`; every field has a default, so a
@@ -99,7 +121,8 @@ To test an update: build again with `-Version 0.1.1`, serve `target\release\bund
 - [ ] Update key: `npx @tauri-apps/cli@2 signer generate -w hashcoin-updater.key`; public half in `tauri.conf.json`,
       private half and password as GitHub secrets, backed up offline (losing it means installed apps can't update).
 - [ ] `HASHCOIN_API_BASE` variable; the production API serving `/v1/app/update/...`.
-- [ ] Azure Artifact Signing account approved, then the signing variables/secrets and `WINDOWS_SIGNING=azure`.
+- [ ] **Launch-critical:** Azure Artifact Signing account approved, then the signing variables/secrets and
+      `WINDOWS_SIGNING=azure` (Defender quarantined the unsigned build on Oct 16, see "Antivirus").
 - [ ] PRL platform payout address in `services/api/config/coins.json` (now the user's own test address).
 - [ ] One live run of ForgeMiner 1.8.8 (Defender, shares), the safety pauses and the power cap on the user's PC.
 - [ ] Submit each release to Microsoft's false-positive portal and VirusTotal vendors.

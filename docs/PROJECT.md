@@ -318,6 +318,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
   - Submit each release to Microsoft and VirusTotal vendors.
   - Open source with published checksums.
   - Some antivirus will still label any miner as "potentially unwanted": the FAQ explains, and users only ever allow the Hashcoin folder.
+  - **Oct 16: Windows Defender quarantined the unsigned test app itself** (`Trojan:Script/Conteban.A!ml`, an ML detection by real-time protection, when the user clicked Start; ForgeMiner hadn't been saved yet). Code signing (Azure Artifact Signing) is now on the launch critical path, and each installer is submitted to Microsoft's false-positive portal. The app no longer starts hidden helper programs (PowerShell, nvidia-smi); the verified miner is the only program it starts. Details: `apps/desktop/README.md`, "Antivirus".
 
 ## 11. Open decisions
 - Exact hold clocks (24h / 72h) and holder payout cadence (hourly vs daily).

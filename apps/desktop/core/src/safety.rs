@@ -30,7 +30,7 @@ pub struct Readings {
     /// Time since the last keyboard or mouse input. None when unknown (never pauses).
     pub idle: Option<Duration>,
     pub fullscreen: bool,
-    /// Temperature per GPU slot, where the app can read it (NVIDIA, through nvidia-smi).
+    /// Temperature per GPU slot, where the app can read it (NVIDIA, through NVML).
     pub temps: HashMap<u32, u32>,
 }
 

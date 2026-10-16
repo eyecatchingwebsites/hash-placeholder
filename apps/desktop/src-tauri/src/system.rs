@@ -1,8 +1,145 @@
-//! What the safety guard needs to know about the PC: how long since the last input, whether an app
-//! is fullscreen, and how hot each NVIDIA card is. Windows APIs only; elsewhere these report nothing.
+//! What the app needs to know about the PC: the graphics cards, how hot each NVIDIA card is, how
+//! long since the last input, and whether an app is fullscreen. Windows APIs only, read in-process:
+//! the app starts no helper programs (no PowerShell, no nvidia-smi), so the verified miner is the
+//! only program it ever runs. Elsewhere these report nothing.
 
+use hashcoin_core::{Gpu, Vendor};
 use std::collections::HashMap;
 use std::time::Duration;
+
+/// NVIDIA cards, numbered like nvidia-smi and the miners' `--gpu` flag (PCI bus order).
+pub fn nvidia_gpus() -> Vec<Gpu> {
+    #[cfg(windows)]
+    if let Some(api) = nvml::api() {
+        return api.gpus();
+    }
+    Vec::new()
+}
+
+/// Temperature (°C) per NVIDIA card index.
+pub fn nvidia_temps() -> HashMap<u32, u32> {
+    #[cfg(windows)]
+    if let Some(api) = nvml::api() {
+        return api.temps();
+    }
+    HashMap::new()
+}
+
+/// The names of the PC's graphics adapters, from DirectX (software renderers left out).
+#[cfg(windows)]
+pub fn display_adapters() -> Vec<String> {
+    use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory1, IDXGIFactory1, DXGI_ADAPTER_FLAG_SOFTWARE};
+    let mut names = Vec::new();
+    // SAFETY: DXGI calls on a factory we own; the description is a fixed, nul-padded array.
+    unsafe {
+        let Ok(factory) = CreateDXGIFactory1::<IDXGIFactory1>() else { return names };
+        let mut i = 0;
+        while let Ok(adapter) = factory.EnumAdapters1(i) {
+            i += 1;
+            let Ok(d) = adapter.GetDesc1() else { continue };
+            if d.Flags & DXGI_ADAPTER_FLAG_SOFTWARE.0 as u32 != 0 { continue; }
+            let len = d.Description.iter().position(|&c| c == 0).unwrap_or(d.Description.len());
+            names.push(String::from_utf16_lossy(&d.Description[..len]));
+        }
+    }
+    names
+}
+
+#[cfg(not(windows))]
+pub fn display_adapters() -> Vec<String> { Vec::new() }
+
+/// NVIDIA's management library (nvml.dll, installed with the driver), loaded from System32 only.
+#[cfg(windows)]
+mod nvml {
+    use super::*;
+    use std::ffi::c_void;
+    use std::sync::OnceLock;
+    use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryExW, LOAD_LIBRARY_SEARCH_SYSTEM32};
+
+    type Device = *mut c_void;
+
+    #[repr(C)]
+    #[derive(Default)]
+    struct Memory { total: u64, free: u64, used: u64 }
+
+    type InitFn = unsafe extern "C" fn() -> i32;
+    type CountFn = unsafe extern "C" fn(*mut u32) -> i32;
+    type HandleFn = unsafe extern "C" fn(u32, *mut Device) -> i32;
+    type NameFn = unsafe extern "C" fn(Device, *mut u8, u32) -> i32;
+    type MemoryFn = unsafe extern "C" fn(Device, *mut Memory) -> i32;
+    type TemperatureFn = unsafe extern "C" fn(Device, u32, *mut u32) -> i32;
+
+    pub struct Api { count: CountFn, handle: HandleFn, name: NameFn, memory: MemoryFn, temperature: TemperatureFn }
+
+    pub fn api() -> Option<&'static Api> {
+        static API: OnceLock<Option<Api>> = OnceLock::new();
+        API.get_or_init(load).as_ref()
+    }
+
+    fn wide(s: &str) -> Vec<u16> { s.encode_utf16().chain(Some(0)).collect() }
+
+    fn load() -> Option<Api> {
+        // SAFETY: the library stays loaded for the life of the process, and each symbol is cast to
+        // the signature NVML documents for it.
+        unsafe {
+            let mut lib = LoadLibraryExW(wide("nvml.dll").as_ptr(), std::ptr::null_mut(), LOAD_LIBRARY_SEARCH_SYSTEM32);
+            if lib.is_null() {
+                // Older drivers keep it next to nvidia-smi. A full path, so nothing else is searched.
+                let pf = std::env::var("ProgramW6432").or_else(|_| std::env::var("ProgramFiles")).ok()?;
+                lib = LoadLibraryExW(wide(&format!(r"{pf}\NVIDIA Corporation\NVSMI\nvml.dll")).as_ptr(), std::ptr::null_mut(), 0);
+            }
+            if lib.is_null() { return None; }
+            macro_rules! sym {
+                ($name:literal as $t:ty) => {
+                    std::mem::transmute::<unsafe extern "system" fn() -> isize, $t>(GetProcAddress(lib, concat!($name, "\0").as_ptr())?)
+                };
+            }
+            let init = sym!("nvmlInit_v2" as InitFn);
+            if init() != 0 { return None; }
+            Some(Api {
+                count: sym!("nvmlDeviceGetCount_v2" as CountFn),
+                handle: sym!("nvmlDeviceGetHandleByIndex_v2" as HandleFn),
+                name: sym!("nvmlDeviceGetName" as NameFn),
+                memory: sym!("nvmlDeviceGetMemoryInfo" as MemoryFn),
+                temperature: sym!("nvmlDeviceGetTemperature" as TemperatureFn),
+            })
+        }
+    }
+
+    impl Api {
+        fn devices(&self) -> Vec<(u32, Device)> {
+            // SAFETY: NVML is initialised and thread-safe; out-parameters are locals.
+            unsafe {
+                let mut n = 0;
+                if (self.count)(&mut n) != 0 { return Vec::new(); }
+                (0..n).filter_map(|i| {
+                    let mut d: Device = std::ptr::null_mut();
+                    ((self.handle)(i, &mut d) == 0).then_some((i, d))
+                }).collect()
+            }
+        }
+
+        pub fn gpus(&self) -> Vec<Gpu> {
+            self.devices().into_iter().map(|(index, d)| {
+                let mut buf = [0u8; 96];
+                let mut mem = Memory::default();
+                // SAFETY: as above; the name buffer's length is passed in.
+                let (name_ok, mem_ok) = unsafe { ((self.name)(d, buf.as_mut_ptr(), buf.len() as u32) == 0, (self.memory)(d, &mut mem) == 0) };
+                let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+                let name = if name_ok { String::from_utf8_lossy(&buf[..len]).into_owned() } else { "NVIDIA GPU".into() };
+                Gpu { index, name, vendor: Vendor::Nvidia, memory_mb: mem_ok.then_some((mem.total / (1024 * 1024)) as u32) }
+            }).collect()
+        }
+
+        pub fn temps(&self) -> HashMap<u32, u32> {
+            self.devices().into_iter().filter_map(|(i, d)| {
+                let mut t = 0;
+                // SAFETY: as above. Sensor 0 = the GPU die.
+                (unsafe { (self.temperature)(d, 0, &mut t) } == 0).then_some((i, t))
+            }).collect()
+        }
+    }
+}
 
 /// Time since the last keyboard or mouse input in this user's session.
 #[cfg(windows)]
@@ -54,33 +191,20 @@ pub fn idle_time() -> Option<Duration> { None }
 #[cfg(not(windows))]
 pub fn fullscreen_app() -> bool { false }
 
-/// Temperature (°C) per nvidia-smi index.
-pub fn nvidia_temps() -> HashMap<u32, u32> {
-    let mut cmd = std::process::Command::new("nvidia-smi");
-    cmd.args(["--query-gpu=index,temperature.gpu", "--format=csv,noheader,nounits"]);
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x0800_0000);
-    }
-    cmd.output().map(|o| parse_temps(&String::from_utf8_lossy(&o.stdout))).unwrap_or_default()
-}
-
-fn parse_temps(out: &str) -> HashMap<u32, u32> {
-    out.lines()
-        .filter_map(|l| {
-            let (i, t) = l.split_once(',')?;
-            Some((i.trim().parse().ok()?, t.trim().parse().ok()?))
-        })
-        .collect()
-}
-
-#[cfg(test)]
+#[cfg(all(test, windows))]
 mod tests {
+    /// Reads this PC's real cards (whatever they are); checks the calls work and agree.
     #[test]
-    fn parses_nvidia_smi_temps() {
-        let t = super::parse_temps("0, 71\r\n1, [N/A]\n");
-        assert_eq!(t.get(&0), Some(&71));
-        assert_eq!(t.len(), 1);
+    fn reads_cards_without_helper_programs() {
+        let nvidia = super::nvidia_gpus();
+        let temps = super::nvidia_temps();
+        for g in &nvidia {
+            assert!(!g.name.is_empty());
+            assert!(temps.get(&g.index).is_some_and(|&t| t > 0 && t < 120), "{g:?} {temps:?}");
+        }
+        let adapters = super::display_adapters();
+        for g in &nvidia {
+            assert!(adapters.iter().any(|a| a == &g.name), "DirectX and NVML name {} the same: {adapters:?}", g.name);
+        }
     }
 }

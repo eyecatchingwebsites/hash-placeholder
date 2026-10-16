@@ -126,7 +126,7 @@ Status Oct 16 (branch `claude/vigorous-ptolemy-5f1a4b`; details in `apps/desktop
 1. ✅ **Real miner and pool:** ForgeMiner on Kryptex PRL mined live from the app on Oct 4 (1.8.4). The config now pins **1.8.8** (Oct 14; SHA-256 matches the release notes and GitHub's digest) for its 8 GB-card, RTX 30 and pool-timeout fixes. 🔑 One live run of 1.8.8 by the user (Start, then check shares and Defender).
 2. ⬜ **Benchmarks:** on first run, 60–120 s per supported algo per card, reading hashrate from the miner's local API. Report it in check-ins (the API already accepts `benchmarks`).
 3. ✅ **Safety** (`core/src/safety.rs`, tested; `src-tauri/src/system.rs`):
-   - Temperature limit, default 83 °C (resumes 8 °C lower), passed to the miner; the app also stops a card's miner 4 °C above it as a backstop (nvidia-smi).
+   - Temperature limit, default 83 °C (resumes 8 °C lower), passed to the miner; the app also stops a card's miner 4 °C above it as a backstop (NVML, read in-process).
    - Power cap through the miner's flag (`powerArgs`, ForgeMiner `--plimit` in watts). Off by default. NVIDIA only lets an administrator change it and the app never asks for admin, so it applies only when the user runs the app elevated.
    - Pause while a game is fullscreen (Windows' fullscreen/busy state, or a window covering its monitor; 20 s grace). Off by default (mining PRL doesn't affect games in the user's experience).
    - "Mine only when I'm away" (no input for 2–30 min). Off by default.
@@ -134,9 +134,10 @@ Status Oct 16 (branch `claude/vigorous-ptolemy-5f1a4b`; details in `apps/desktop
 5. ✅ **Updates:** Tauri updater; the feed comes from the API (`/v1/app/update/...`, serving the workflow's `latest.json`), signed with the update key; installs only on the user's click and resumes mining after. 🔑 The production update key.
 6. **Release:**
    - 🔑 Production assignment key in `TRUSTED_KEYS` (placeholder; the workflow refuses to release without it).
-   - ✅ Code signing wired for Azure Artifact Signing (formerly Trusted Signing), off until the repository variable `WINDOWS_SIGNING=azure`. 🔑 The account and its credentials.
+   - ⚠️ **Defender quarantined the unsigned test build (Oct 16, 6:19 PM)** when the user clicked Start: `Trojan:Script/Conteban.A!ml` (ML, real-time protection, severity 5) on the app itself, before ForgeMiner was even saved. So **code signing is on the launch critical path**, and each installer goes to Microsoft's false-positive portal. Never ask users for exclusions. Oct 17: the app no longer starts any helper program (hidden PowerShell at launch and `nvidia-smi` every 5 s replaced by DirectX and NVML read in-process), so the verified miner is the only program it starts; explicit `asInvoker` manifest and copyright in the version info. Not yet known whether that changes Defender's verdict (`apps/desktop/README.md`, "Antivirus").
+   - ✅ Code signing wired for Azure Artifact Signing (formerly Trusted Signing), off until the repository variable `WINDOWS_SIGNING=azure`. 🔑 The account and its credentials (launch-critical).
    - ✅ `desktop-release.yml`: test builds on desktop pushes; a tag makes a draft release with the installer, `.sig`, `latest.json` and the SHA-256.
-   - ⬜ Submit to Microsoft's false-positive portal and VirusTotal vendors.
+   - 🟡 Submit to Microsoft's false-positive portal and VirusTotal vendors (the user is submitting the Oct 16 test installer).
    - ⬜ Publish the SHA-256 on the website (from the release run's summary or `SHA256SUMS.txt`).
 7. ⬜ **Proof video:** unedited install → first payout, with the Solscan link on screen.
 

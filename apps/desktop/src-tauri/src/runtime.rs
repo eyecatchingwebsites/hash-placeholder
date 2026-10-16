@@ -2,14 +2,13 @@
 
 use crate::system;
 use hashcoin_core::{
-    gpu::{parse_nvidia_smi, parse_video_controllers},
+    gpu::parse_video_controllers,
     manifest::{extract_zip, platform_key, verify_download},
     miner::{render_command, MinerState, Supervisor},
     plan, Action, Assignment, Envelope, Gpu, Guard, KeyRing, Limits, MinerManifest, Readings, SafetySettings, Vendor,
 };
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub const CHECK_IN_EVERY: Duration = Duration::from_secs(5 * 60);
@@ -135,28 +134,12 @@ fn now_ms() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
 }
 
-fn quiet(cmd: &mut Command) -> &mut Command {
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x0800_0000);
-    }
-    cmd
-}
-
-/// Find GPUs: NVIDIA through nvidia-smi (gives the device index miners use), AMD and Intel Arc
-/// through the Windows video controller list.
+/// Find GPUs: NVIDIA through NVIDIA's own library (gives the device index miners use), AMD and
+/// Intel Arc through DirectX's adapter list. Read in-process: no helper programs.
 pub fn detect_gpus() -> Vec<Gpu> {
-    let mut gpus = Vec::new();
-    if let Ok(out) = quiet(Command::new("nvidia-smi").args(["--query-gpu=index,name,memory.total", "--format=csv,noheader,nounits"])).output() {
-        gpus.extend(parse_nvidia_smi(&String::from_utf8_lossy(&out.stdout)));
-    }
-    #[cfg(windows)]
-    if let Ok(out) = quiet(Command::new("powershell").args(["-NoProfile", "-Command", "Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name"])).output() {
-        gpus.extend(parse_video_controllers(&String::from_utf8_lossy(&out.stdout)));
-    }
-    #[cfg(not(windows))]
-    let _ = parse_video_controllers;
+    let mut gpus = system::nvidia_gpus();
+    gpus.extend(parse_video_controllers(&system::display_adapters().join("
+")));
     gpus
 }
 

@@ -45,10 +45,9 @@ pub fn parse_nvidia_smi(out: &str) -> Vec<Gpu> {
         .collect()
 }
 
-/// Parse the names printed by
-/// `Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name` (one per line),
-/// keeping AMD and Intel Arc cards. NVIDIA cards come from nvidia-smi instead, which gives
-/// the device index the miners use. AMD/Intel indexes count per vendor, in listed order.
+/// Parse a list of graphics adapter names, one per line (the app reads them from DirectX),
+/// keeping AMD and Intel Arc cards. NVIDIA cards come from NVIDIA's own library instead, which
+/// gives the device index the miners use. AMD/Intel indexes count per vendor, in listed order.
 /// Graphics built into the processor ("AMD Radeon(TM) Graphics", "AMD Radeon 780M Graphics"):
 /// too weak to be worth mining, and not what a user means by their GPU. Discrete AMD cards carry
 /// an RX / Pro / Instinct model name.
