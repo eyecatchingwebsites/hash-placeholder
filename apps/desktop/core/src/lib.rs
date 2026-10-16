@@ -4,6 +4,7 @@
 //! that decides *what* runs lives here so it can be unit tested on any machine.
 
 pub mod agent;
+pub mod blocked;
 pub mod gpu;
 pub mod manifest;
 pub mod miner;

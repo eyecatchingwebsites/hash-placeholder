@@ -1,3 +1,4 @@
+use crate::blocked::ExitInfo;
 use crate::manifest::MinerSpec;
 use crate::signed::Assignment;
 use std::path::PathBuf;
@@ -73,17 +74,35 @@ pub struct Supervisor {
     failures: u32,
     /// Where the miner's output goes (appended), so a crash can be diagnosed. None = discard.
     log: Option<PathBuf>,
+    /// Log size when the current run started, to tell whether the miner printed anything.
+    log_len_at_start: u64,
+    /// How the last run ended, until someone takes it (see `take_exit`).
+    last_exit: Option<ExitInfo>,
+    /// The OS error of the last failed start, until taken (see `take_spawn_error`).
+    spawn_error: Option<i32>,
 }
 
 impl Supervisor {
     pub fn new(exe: PathBuf, args: Vec<String>) -> Self {
-        Self { exe, args, child: None, state: MinerState::Stopped, failures: 0, log: None }
+        Self { exe, args, child: None, state: MinerState::Stopped, failures: 0, log: None, log_len_at_start: 0, last_exit: None, spawn_error: None }
     }
 
     /// Send the miner's output to this file (appended) instead of discarding it.
     pub fn with_log(mut self, path: PathBuf) -> Self {
         self.log = Some(path);
         self
+    }
+
+    pub fn exe(&self) -> &std::path::Path { &self.exe }
+
+    /// How the last run ended, once.
+    pub fn take_exit(&mut self) -> Option<ExitInfo> { self.last_exit.take() }
+
+    /// The OS error code of the last failed start, once.
+    pub fn take_spawn_error(&mut self) -> Option<i32> { self.spawn_error.take() }
+
+    fn log_len(&self) -> u64 {
+        self.log.as_ref().and_then(|p| std::fs::metadata(p).ok()).map_or(0, |m| m.len())
     }
 
     pub fn start(&mut self) -> Result<(), String> {
@@ -102,7 +121,11 @@ impl Supervisor {
             // Run without a console window. The app's tray icon is the visible sign that mining is on.
             cmd.creation_flags(0x0800_0000);
         }
-        let child = cmd.spawn().map_err(|e| format!("could not start {}: {e}", self.exe.display()))?;
+        self.log_len_at_start = self.log_len();
+        let child = cmd.spawn().map_err(|e| {
+            self.spawn_error = e.raw_os_error();
+            format!("could not start {}: {e}", self.exe.display())
+        })?;
         self.state = MinerState::Running { pid: child.id(), since: Instant::now() };
         self.child = Some(child);
         Ok(())
@@ -124,6 +147,7 @@ impl Supervisor {
                 if let Some(c) = self.child.as_mut() {
                     if let Some(status) = c.try_wait().map_err(|e| e.to_string())? {
                         self.child = None;
+                        self.last_exit = Some(ExitInfo { ran: since.elapsed(), code: status.code(), wrote_output: self.log_len() > self.log_len_at_start });
                         if let Some(log) = &self.log {
                             use std::io::Write;
                             if let Ok(mut f) = std::fs::OpenOptions::new().append(true).open(log) {
@@ -194,6 +218,36 @@ mod tests {
         assert!(render_args(&["{pass}".into()], &a, 0, 1, &Limits::default()).is_err());
         a.pool.pass = "--evil".into();
         assert!(render_args(&["{pass}".into()], &a, 0, 1, &Limits::default()).is_err());
+    }
+
+    #[test]
+    fn records_a_silent_quick_exit_and_a_blocked_start() {
+        let log = std::env::temp_dir().join(format!("hashcoin-sup-{}.log", std::process::id()));
+        std::fs::write(&log, "--- header\n").unwrap();
+        #[cfg(windows)]
+        let (exe, args) = (PathBuf::from(r"C:\Windows\System32\cmd.exe"), vec!["/C".to_string(), "exit 5".to_string()]);
+        #[cfg(unix)]
+        let (exe, args) = (PathBuf::from("/bin/sh"), vec!["-c".to_string(), "exit 5".to_string()]);
+        let mut s = Supervisor::new(exe, args).with_log(log.clone());
+        s.start().unwrap();
+        let mut exit = None;
+        for _ in 0..50 {
+            std::thread::sleep(Duration::from_millis(100));
+            s.tick().unwrap();
+            if let Some(e) = s.take_exit() { exit = Some(e); break; }
+        }
+        let exit = exit.expect("the program exited");
+        assert_eq!(exit.code, Some(5));
+        assert!(!exit.wrote_output, "printed nothing");
+        assert!(crate::blocked::exit_looks_blocked(&exit, &crate::blocked::ExeState::Ok).is_some());
+        assert_eq!(s.take_exit(), None, "reported once");
+        s.stop();
+
+        // A miner file that's gone by the time it should start.
+        let mut gone = Supervisor::new(std::env::temp_dir().join("hashcoin-no-such-miner.exe"), vec![]);
+        assert!(gone.start().is_err());
+        assert!(crate::blocked::spawn_blocked(gone.take_spawn_error()));
+        std::fs::remove_file(&log).ok();
     }
 
     #[cfg(unix)]

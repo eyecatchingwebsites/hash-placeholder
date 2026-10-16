@@ -2,6 +2,7 @@
 
 use crate::system;
 use hashcoin_core::{
+    blocked::{exe_blocked, exe_state, exit_looks_blocked, spawn_blocked, StartMarker},
     gpu::parse_video_controllers,
     manifest::{extract_zip, platform_key, verify_download},
     miner::{render_command, MinerState, Supervisor},
@@ -100,7 +101,37 @@ pub struct Status {
     pub gpus: Vec<GpuStatus>,
     pub last_check_in: Option<String>,
     pub error: Option<String>,
+    /// Set when antivirus looks to have stopped the miner or the app; the window explains it.
+    pub blocked: Option<Blocked>,
 }
+
+/// Antivirus (in practice Microsoft Defender) looks to have stopped mining.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Blocked {
+    /// "miner": the miner was removed or killed. "app": the app itself was closed while it started one.
+    pub what: String,
+    /// What the app saw, in plain words.
+    pub detail: String,
+}
+
+/// Why a miner couldn't be started.
+enum LaunchError {
+    /// It looks like antivirus stopped it: mining stops and the window explains.
+    Blocked(String),
+    /// Anything else: shown on the card, retried at the next check-in.
+    Other(String),
+}
+
+impl From<String> for LaunchError {
+    fn from(e: String) -> Self { LaunchError::Other(e) }
+}
+impl From<&str> for LaunchError {
+    fn from(e: &str) -> Self { LaunchError::Other(e.into()) }
+}
+
+/// A miner that has run this long has got past the point where Defender kills it on sight.
+const STARTED_OK_AFTER: Duration = Duration::from_secs(30);
 
 struct Slot {
     /// Unique per GPU on this rig, used with the server (assignments, pool worker names). `gpu.index`
@@ -128,6 +159,9 @@ pub struct Runtime {
     last_check_in_at: Option<String>,
     error: Option<String>,
     guard: Guard,
+    blocked: Option<Blocked>,
+    /// Exists while a miner is starting (see `blocked::StartMarker`).
+    marker: StartMarker,
 }
 
 fn now_ms() -> u64 {
@@ -145,7 +179,8 @@ pub fn detect_gpus() -> Vec<Gpu> {
 
 impl Runtime {
     pub fn new(settings: Settings, api_base: String, keys: KeyRing, data_dir: PathBuf) -> Self {
-        Self { settings, api_base, keys, data_dir, slots: Vec::new(), manifest: None, mining: false, last_check_in: None, last_check_in_at: None, error: None, guard: Guard::default() }
+        Self { settings, api_base, keys, slots: Vec::new(), manifest: None, mining: false, last_check_in: None, last_check_in_at: None, error: None, guard: Guard::default(),
+            blocked: None, marker: StartMarker::new(data_dir.join("miner-starting")), data_dir }
     }
 
     pub fn set_gpus(&mut self, gpus: Vec<Gpu>) {
@@ -173,8 +208,28 @@ impl Runtime {
             return Err("No supported GPU found. Hashcoin needs an NVIDIA, AMD or Intel Arc graphics card.".into());
         }
         self.mining = true;
+        self.blocked = None; // the user chose to try again
         self.last_check_in = None; // check in right away
         Ok(())
+    }
+
+    /// At launch: if the last run was closed while it started a miner, say so (Defender's kill of
+    /// the app looks like that).
+    pub fn check_start_marker(&mut self) {
+        if self.marker.left_over() {
+            self.blocked = Some(Blocked { what: "app".into(), detail: "Hashcoin was closed while it started the miner".into() });
+        }
+    }
+
+    pub fn is_blocked(&self) -> bool { self.blocked.is_some() }
+
+    /// "Not now": hide the explanation. Mining stays off.
+    pub fn dismiss_blocked(&mut self) { self.blocked = None; }
+
+    /// Antivirus looks to have stopped the miner: stop everything and explain.
+    fn block(&mut self, detail: String) {
+        self.stop();
+        self.blocked = Some(Blocked { what: "miner".into(), detail });
     }
 
     pub fn stop(&mut self) {
@@ -185,6 +240,7 @@ impl Runtime {
             s.reason = "stopped".into();
             s.paused = None;
         }
+        self.marker.clear();
     }
 
     /// Called every few seconds by the background thread.
@@ -201,10 +257,15 @@ impl Runtime {
         }
         self.update_guard();
         let safety = self.settings.safety();
+        let mut blocked = None;
         for i in 0..self.slots.len() {
             let s = &mut self.slots[i];
             if let Some(sup) = s.supervisor.as_mut() {
                 if let Err(e) = sup.tick() { s.reason = e; }
+                if let Some(why) = blocked_by(sup) { blocked = Some(why); }
+                if self.marker.is_set() && matches!(sup.state, MinerState::Running { since, .. } if since.elapsed() >= STARTED_OK_AFTER) {
+                    self.marker.clear();
+                }
             }
             // Never keep mining on an expired assignment (e.g. the server is unreachable for long).
             if s.assignment.as_ref().is_some_and(|a| now_ms() >= a.expires_at) {
@@ -221,11 +282,13 @@ impl Runtime {
                     let (id, device) = (s.id, s.gpu.index);
                     match self.launch(&a, id, device) {
                         Ok(sup) => self.slots[i].supervisor = Some(sup),
-                        Err(e) => { self.slots[i].assignment = None; self.slots[i].reason = e; }
+                        Err(LaunchError::Blocked(why)) => { blocked = Some(why); break; }
+                        Err(LaunchError::Other(e)) => { self.slots[i].assignment = None; self.slots[i].reason = e; }
                     }
                 }
             }
         }
+        if let Some(why) = blocked { self.block(why); }
     }
 
     /// Measure what the safety settings need (temperatures always; input and fullscreen only when
@@ -299,7 +362,7 @@ impl Runtime {
         Ok(())
     }
 
-    fn launch(&self, a: &Assignment, slot: u32, device: u32) -> Result<Supervisor, String> {
+    fn launch(&self, a: &Assignment, slot: u32, device: u32) -> Result<Supervisor, LaunchError> {
         let manifest = self.manifest.as_ref().ok_or("no miner list")?;
         let spec = manifest.find(&a.miner_id).ok_or_else(|| format!("miner {} not in signed list", a.miner_id))?;
         let build = spec.builds.get(&platform_key()).ok_or_else(|| format!("{} has no build for {}", spec.id, platform_key()))?;
@@ -308,13 +371,19 @@ impl Runtime {
         if !exe.exists() {
             download_verified(&build.url, &build.sha256, &dir)?;
         }
+        // Verified and unpacked, but quarantined straight away?
+        if let Some(why) = exe_blocked(&exe_state(&exe)) { return Err(LaunchError::Blocked(why)); }
         let args = render_command(spec, a, device, 4067 + slot as u16, &self.settings.limits())?;
         // One log per GPU next to the miner, kept small: started fresh on each launch.
         let log = dir.join(format!("gpu-{slot}.log"));
         let _ = std::fs::write(&log, format!("--- {} {}
 ", exe.display(), args.join(" ")));
         let mut sup = Supervisor::new(exe, args).with_log(log);
-        sup.start()?;
+        self.marker.set();
+        if let Err(e) = sup.start() {
+            self.marker.clear();
+            return Err(if spawn_blocked(sup.take_spawn_error()) { LaunchError::Blocked(format!("Windows wouldn't start the miner ({e})")) } else { LaunchError::Other(e) });
+        }
         Ok(sup)
     }
 
@@ -324,6 +393,7 @@ impl Runtime {
             mining: self.mining,
             last_check_in: self.last_check_in_at.clone(),
             error: self.error.clone(),
+            blocked: self.blocked.clone(),
             gpus: self.slots.iter().map(|s| GpuStatus {
                 gpu: s.gpu.clone(),
                 temp_c: if self.mining { self.guard.temp(s.id) } else { None },
@@ -339,6 +409,15 @@ impl Runtime {
             }).collect(),
         }
     }
+}
+
+/// After a supervisor tick: does the way the miner ended (or failed to restart) look like antivirus?
+fn blocked_by(sup: &mut Supervisor) -> Option<String> {
+    if spawn_blocked(sup.take_spawn_error()) {
+        return Some("Windows wouldn't start the miner again".into());
+    }
+    let exit = sup.take_exit()?;
+    exit_looks_blocked(&exit, &exe_state(sup.exe()))
 }
 
 /// Download a miner, check its SHA-256 against the signed manifest, then unpack it.
@@ -360,7 +439,64 @@ fn download_verified(url: &str, sha256: &str, dir: &Path) -> Result<(), String> 
 
 #[cfg(test)]
 mod tests {
-    use super::Settings;
+    use super::*;
+
+    fn runtime(dir: &str) -> (Runtime, PathBuf) {
+        let data = std::env::temp_dir().join(format!("hashcoin-rt-{}-{dir}", std::process::id()));
+        std::fs::create_dir_all(&data).unwrap();
+        let s = Settings { wallet: "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF".into(), rig_id: "pc".into(), ..Default::default() };
+        (Runtime::new(s, "http://127.0.0.1:9".into(), KeyRing::default(), data.clone()), data)
+    }
+
+    #[test]
+    fn explains_when_the_app_was_closed_while_starting_a_miner() {
+        let (mut rt, data) = runtime("marker");
+        rt.check_start_marker();
+        assert_eq!(rt.status().blocked, None, "a normal launch");
+        // The last run set the marker and was killed before the miner got going.
+        StartMarker::new(data.join("miner-starting")).set();
+        let (mut rt, _) = runtime("marker");
+        rt.check_start_marker();
+        assert_eq!(rt.status().blocked.map(|b| b.what), Some("app".into()));
+        assert!(!rt.mining, "mining stays off until the user starts it");
+        rt.dismiss_blocked(); // "Not now"
+        assert_eq!(rt.status().blocked, None);
+        assert!(!rt.mining);
+        let (mut rt, _) = runtime("marker");
+        rt.check_start_marker();
+        assert_eq!(rt.status().blocked, None, "reported once");
+        std::fs::remove_dir_all(&data).ok();
+    }
+
+    #[test]
+    fn a_miner_killed_on_start_is_reported_and_mining_stops() {
+        #[cfg(windows)]
+        let (exe, args) = (PathBuf::from(r"C:\Windows\System32\cmd.exe"), vec!["/C".to_string(), "exit 5".to_string()]);
+        #[cfg(unix)]
+        let (exe, args) = (PathBuf::from("/bin/sh"), vec!["-c".to_string(), "exit 5".to_string()]);
+        let mut sup = Supervisor::new(exe, args);
+        sup.start().unwrap();
+        let mut why = None;
+        for _ in 0..50 {
+            std::thread::sleep(Duration::from_millis(100));
+            let _ = sup.tick();
+            if let Some(w) = blocked_by(&mut sup) { why = Some(w); break; }
+        }
+        assert!(why.is_some(), "an instant exit with access denied and no output looks blocked");
+        sup.stop();
+
+        let (mut rt, data) = runtime("block");
+        rt.mining = true;
+        rt.block(why.unwrap());
+        let st = rt.status();
+        assert!(!st.mining);
+        assert_eq!(st.blocked.map(|b| b.what), Some("miner".into()));
+        assert!(!data.join("miner-starting").exists());
+        rt.set_gpus(vec![Gpu { index: 0, name: "NVIDIA GeForce RTX 4070".into(), vendor: Vendor::Nvidia, memory_mb: None }]);
+        rt.start().unwrap();
+        assert_eq!(rt.status().blocked, None, "starting again clears it");
+        std::fs::remove_dir_all(&data).ok();
+    }
 
     const BUILT_IN: &str = "http://127.0.0.1:8787";
 

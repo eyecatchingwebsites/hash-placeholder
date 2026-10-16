@@ -51,8 +51,26 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   - Unchanged on purpose: miners still live in the app's own data folder
     (`%LOCALAPPDATA%\com.hashcoin.miner\miners\<id>\<version>`), with an ordinary command line; the miner still runs
     without a console window (its output goes to `gpu-N.log`).
-- Whether these changes are enough is unknown until the signed build is checked; Defender's ML can't be tested here
-  without the user starting the app.
+- **Retest of that build (52145e3, Oct 16): no change.** Defender quarantined the app again
+  (`Trojan:Script/Conteban.A!ml`) and this time also ForgeMiner's `forge.exe` right after it started
+  (`Trojan:Script/Wacatac.H!ml`, `...\miners\forgeminer\1.8.8\ForgeMiner-1.8.8-windows\forge.exe`). Both are ML
+  guesses. Signing and Microsoft's review are the real fixes; until then the app explains what happened.
+- **When Defender blocks Hashcoin, the app says so** (approved by the user, Oct 17). It notices, without any helper
+  programs (`core/src/blocked.rs`, tested):
+  - the miner file vanished or can't be read after download and verification (quarantined or locked);
+  - the miner died within 20 s with an access-denied / virus exit code, or without printing anything;
+  - Windows refused to start the miner (access denied, "contains a virus", blocked by policy);
+  - the app itself was killed while starting a miner: a `miner-starting` marker in the app's data folder is set just
+    before each start and cleared once the miner has run 30 s (or on Stop). Found at the next launch = killed mid-start.
+  Then mining stops, the window opens (also from the tray), and a short message says Defender flagged Hashcoin or the
+  miner, that mining software is often flagged because it uses the GPU the way some malware does and Defender's AI
+  guesses, that Hashcoin only runs files matching their published SHA-256 (links: the release page's checksums, and
+  the website's safety page once `HASHCOIN_SAFETY_URL` is set at build time), and that allowing it is the user's
+  choice, with the steps: Windows Security → Virus & threat protection → Protection history → the Hashcoin item →
+  Actions → Allow on device (both items if there are two), then reopen Hashcoin. "Not now" closes it and leaves mining
+  off; after a block the app never starts mining by itself (login start and update resume are skipped).
+- **The app never changes Defender itself**, never offers to, adds no exclusions and never asks for admin. Verification
+  is unchanged.
 
 ## Settings
 Gear button in the header. Saved to `%APPDATA%\com.hashcoin.miner\settings.json`; every field has a default, so a

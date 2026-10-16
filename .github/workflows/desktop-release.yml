@@ -11,6 +11,7 @@ name: Desktop release (Windows)
 #                                                goes in tauri.conf.json plugins.updater.pubkey
 #   secret   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password, if it has one
 #   variable HASHCOIN_API_BASE                   production API, e.g. https://api.example.com
+#   variable HASHCOIN_SAFETY_URL                 the website's antivirus/safety page (linked when Defender blocks the app)
 #   variable WINDOWS_SIGNING                     "azure" turns code signing on; anything else = unsigned
 #   variable AZURE_SIGNING_ENDPOINT / AZURE_SIGNING_ACCOUNT / AZURE_SIGNING_PROFILE
 #   secret   AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET   (app registration with the
@@ -82,10 +83,13 @@ jobs:
           KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           API: ${{ vars.HASHCOIN_API_BASE }}
+          SAFETY_URL: ${{ vars.HASHCOIN_SAFETY_URL }}
         run: |
           echo "TAURI_SIGNING_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
           echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
           echo "HASHCOIN_API_BASE=$API" >> "$GITHUB_ENV"
+          # Linked from the in-app Defender message; until set, the app shows only the checksums link.
+          [ -n "$SAFETY_URL" ] && echo "HASHCOIN_SAFETY_URL=$SAFETY_URL" >> "$GITHUB_ENV" || true
 
       - name: Throwaway update key (test build)
         if: env.TEST_BUILD == 'true'

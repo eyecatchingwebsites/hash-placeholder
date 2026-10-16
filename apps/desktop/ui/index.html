@@ -181,6 +181,18 @@
   .switch:checked::after { transform: translateX(14px); background: var(--gold-ink); }
   .version { color: var(--dim); font-size: 11.5px; margin: 8px 0 0; }
 
+  /* Defender message */
+  .blocked { display: grid; gap: 9px; border-color: var(--line-2); }
+  .blocked h2 { margin: 0; font-size: 15px; }
+  .blocked p { margin: 0; color: var(--muted); }
+  .blocked p.lead { color: var(--text); }
+  .blocked ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .blocked ol b { font-weight: 600; }
+  .blocked .links { display: flex; gap: 14px; }
+  .blocked .links .link { font-size: 12.5px; color: var(--gold-text); }
+  .blocked .seen { color: var(--dim); font-size: 12px; }
+  .btn.plain { background: transparent; border: 1px solid var(--line-2); color: var(--text); justify-self: start; }
+
   /* Update banner */
   .update { display: flex; align-items: center; gap: 12px; justify-content: space-between; border-color: var(--gold-line); background: var(--gold-soft); padding: 12px 14px; }
   .update b { font-weight: 700; }
@@ -213,6 +225,23 @@
 
   <div class="main">
     <div class="col">
+      <div class="panel blocked" id="blocked" role="alert" hidden>
+        <h2 class="d" id="blocked-title">Windows Defender stopped mining</h2>
+        <p class="lead" id="blocked-lead"></p>
+        <p>Mining software often gets flagged because it uses your graphics card the way some malware does. Defender's AI guesses; it doesn't know.</p>
+        <p>Hashcoin only runs miner files that match their published SHA-256 checksum, and it never changes your security settings.</p>
+        <div class="links"><button class="link" id="l-sums">Published checksums</button><button class="link" id="l-safety" hidden>Is Hashcoin safe?</button></div>
+        <p>Allowing it is your choice. To allow it:</p>
+        <ol>
+          <li>Open <b>Windows Security</b>.</li>
+          <li>Go to <b>Virus &amp; threat protection</b> → <b>Protection history</b>.</li>
+          <li>Select the Hashcoin item, then <b>Actions</b> → <b>Allow on device</b>. If there are two (the app and the miner), allow both.</li>
+          <li>Reopen Hashcoin.</li>
+        </ol>
+        <p class="seen" id="blocked-seen"></p>
+        <button class="btn plain" id="blocked-close">Not now</button>
+      </div>
+
       <div class="panel update" id="update" hidden>
         <div><b>Update ready</b> <span class="muted" id="update-v"></span></div>
         <button class="btn gold" id="update-go">Install</button>
@@ -457,6 +486,15 @@
       : s.mining ? (mining.length ? `<span class="n">${usd(perDay)}/day</span> paid in $HASH` : allPaused ? esc(paused[0].reason) : "Getting your cards ready…")
       : "Click the coin to start.";
     $("error").hidden = !s.error; $("error").textContent = s.error || "";
+    const b = s.blocked;
+    $("blocked").hidden = !b;
+    if (b) {
+      $("blocked-title").textContent = b.what === "app" ? "Hashcoin closed while starting" : "Windows Defender stopped mining";
+      $("blocked-lead").textContent = b.what === "app"
+        ? "That usually means Windows Defender flagged Hashcoin or its miner. Mining is off."
+        : "Defender flagged Hashcoin or its miner, so mining is off.";
+      $("blocked-seen").textContent = `What the app saw: ${b.detail}.`;
+    }
     $("gpus").innerHTML = s.gpus.length ? s.gpus.map((g) => {
       const on = g.state === "mining";
       const temp = on && g.tempC != null ? ` · ${g.tempC} °C` : "";
@@ -502,6 +540,11 @@
     } catch { updateNote = "Couldn't check for updates"; }
     versionLine();
   }
+  $("blocked-close").onclick = () => run("dismiss_blocked");
+  const link = (which) => invoke("open_link", { which }).catch((e) => { $("error").hidden = false; $("error").textContent = String(e); });
+  $("l-sums").onclick = () => link("checksums");
+  $("l-safety").onclick = () => link("safety");
+
   $("update-go").onclick = () => {
     $("update-go").disabled = true; $("update-go").textContent = "Installing…";
     invoke("install_update").catch((e) => {
@@ -509,7 +552,10 @@
       $("error").hidden = false; $("error").textContent = String(e);
     });
   };
-  invoke("app_info").then((i) => { info = i; versionLine(); setTimeout(checkUpdate, 5000); });
+  invoke("app_info").then((i) => {
+    info = i; versionLine(); setTimeout(checkUpdate, 5000);
+    $("l-safety").hidden = !i.safetyUrl || i.safetyUrl.includes(".invalid"); // the site's page isn't up yet
+  });
   setInterval(checkUpdate, 6 * 3600 * 1000);
 
   const get = (what) => invoke("server_get", { what }).catch(() => null);

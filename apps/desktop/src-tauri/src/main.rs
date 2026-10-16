@@ -37,6 +37,20 @@ const DEFAULT_API: &str = match option_env!("HASHCOIN_API_BASE") {
     _ => "https://api.hashcoin.invalid",
 };
 
+/// Where the published checksums are (the release page lists each installer's SHA-256; the miners'
+/// pinned SHA-256 are in the signed miner list). Shown when Defender blocks Hashcoin.
+const CHECKSUMS_URL: &str = match option_env!("HASHCOIN_CHECKSUMS_URL") {
+    Some(u) if !u.is_empty() => u,
+    _ => "https://github.com/eyecatchingwebsites/hash-placeholder/releases",
+};
+
+/// The website's page on why antivirus flags miners and how to check Hashcoin. Placeholder until the
+/// site has it (the window hides a `.invalid` link); the release workflow sets it.
+const SAFETY_URL: &str = match option_env!("HASHCOIN_SAFETY_URL") {
+    Some(u) if !u.is_empty() => u,
+    _ => "https://hashcoin.invalid/safety",
+};
+
 /// Passed by the Windows login entry, so the app knows it was started by "Start mining when Windows starts".
 const AUTOSTART_ARG: &str = "--autostart";
 
@@ -118,11 +132,40 @@ fn status(rt: State<Shared>) -> Status { rt.lock().unwrap().status() }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct AppInfo { version: String, test_build: bool, updates: bool }
+struct AppInfo { version: String, test_build: bool, updates: bool, checksums_url: String, safety_url: String }
 
 #[tauri::command]
 fn app_info(app: AppHandle) -> AppInfo {
-    AppInfo { version: app.package_info().version.to_string(), test_build: TEST_TRUSTED_KEY.is_some(), updates: updates_configured(&app) }
+    AppInfo {
+        version: app.package_info().version.to_string(), test_build: TEST_TRUSTED_KEY.is_some(), updates: updates_configured(&app),
+        checksums_url: CHECKSUMS_URL.into(), safety_url: SAFETY_URL.into(),
+    }
+}
+
+/// "Not now" on the Defender message: hide it, mining stays off.
+#[tauri::command]
+fn dismiss_blocked(rt: State<Shared>) -> Status {
+    let mut r = rt.lock().unwrap();
+    r.dismiss_blocked();
+    r.status()
+}
+
+/// Open one of our two pages in the default browser (only these two, never a URL from the window).
+#[tauri::command]
+fn open_link(which: String) -> Result<(), String> {
+    let url = match which.as_str() { "checksums" => CHECKSUMS_URL, "safety" => SAFETY_URL, _ => return Err("unknown link".into()) };
+    if url.contains(".invalid") { return Err("That page isn't up yet.".into()); }
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::Shell::ShellExecuteW;
+        use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+        let wide = |s: &str| s.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
+        let (op, file) = (wide("open"), wide(url));
+        // SAFETY: nul-terminated UTF-16 strings that outlive the call.
+        let r = unsafe { ShellExecuteW(std::ptr::null_mut(), op.as_ptr(), file.as_ptr(), std::ptr::null(), std::ptr::null(), SW_SHOWNORMAL) };
+        if r as isize <= 32 { return Err(format!("Couldn't open {url}")); }
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -251,6 +294,8 @@ fn main() {
             eprintln!("Hashcoin Miner: settings {} | server {api}", settings_path(&config_dir).display());
             let mut rt = Runtime::new(settings, api, key_ring(), data_dir);
             rt.set_gpus(detect_gpus());
+            // Closed while starting a miner last time? Then explain before anything else.
+            rt.check_start_marker();
 
             // Mining starts only on the user's say-so: the Start button, "Start mining when Windows
             // starts" (which launches us with AUTOSTART_ARG), or mining being on before an update.
@@ -259,24 +304,33 @@ fn main() {
             let after_update = std::fs::metadata(&flag).and_then(|m| m.modified()).ok()
                 .is_some_and(|t| SystemTime::now().duration_since(t).unwrap_or_default() < Duration::from_secs(600));
             let _ = std::fs::remove_file(&flag);
-            if (at_login && rt.settings.start_with_windows) || after_update {
+            // After a Defender block, never start by itself: the user reads the message and decides.
+            let blocked = rt.status().blocked.is_some();
+            if ((at_login && rt.settings.start_with_windows) || after_update) && !blocked {
                 if let Err(e) = rt.start() { eprintln!("Hashcoin Miner: not starting ({e})"); }
             }
             let shared: Shared = Arc::new(Mutex::new(rt));
             app.manage(shared.clone());
 
-            // Started at login: stay in the tray. Otherwise show the window (hidden in the config so
-            // a login start doesn't flash it).
+            // Started at login: stay in the tray (unless there's a Defender message to show).
+            // Otherwise show the window (hidden in the config so a login start doesn't flash it).
             if let Some(w) = app.get_webview_window("main") {
                 if TEST_TRUSTED_KEY.is_some() { let _ = w.set_title("Hashcoin Miner (test build)"); }
-                if !at_login { let _ = w.show(); }
+                if !at_login || blocked { let _ = w.show(); }
             }
 
             // Background loop: check-ins, safety checks and miner supervision.
+            // If Defender stops mining while the window is in the tray, open it so the user sees why.
             let bg = shared.clone();
-            std::thread::spawn(move || loop {
-                bg.lock().unwrap().tick();
-                std::thread::sleep(Duration::from_secs(5));
+            let handle = app.handle().clone();
+            std::thread::spawn(move || {
+                let mut was_blocked = blocked;
+                loop {
+                    let now_blocked = { let mut r = bg.lock().unwrap(); r.tick(); r.is_blocked() };
+                    if now_blocked && !was_blocked { show_window(&handle); }
+                    was_blocked = now_blocked;
+                    std::thread::sleep(Duration::from_secs(5));
+                }
             });
 
             // Tray: the always-visible sign that the app is running, with Start/Stop and Quit.
@@ -307,7 +361,7 @@ fn main() {
                 api.prevent_close();
             }
         })
-        .invoke_handler(tauri::generate_handler![status, app_info, save_wallet, save_settings, detect, start, stop, server_get, check_update, install_update])
+        .invoke_handler(tauri::generate_handler![status, app_info, dismiss_blocked, open_link, save_wallet, save_settings, detect, start, stop, server_get, check_update, install_update])
         .run(tauri::generate_context!())
         .expect("error while running Hashcoin Miner");
 }
