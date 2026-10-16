@@ -40,6 +40,10 @@ function remember(w: WorkerRecord) {
 // The payout loop's public record (services/payouts), re-read on each request.
 const publicPath = process.env.HASH_PUBLIC_RECORD ?? here("../../payouts/data/public.json");
 
+// The desktop app's update feed: the latest.json from the release workflow (see apps/desktop/README.md),
+// re-read on each request. No file = no update offered.
+const appUpdatePath = process.env.HASH_APP_UPDATE ?? here("../config/app-update.json");
+
 // Price history for the app's charts: PRL from the Kryptex pool (hourly, last 30 days), cached for
 // 10 minutes. $HASH has no market until launch, so it's null until then.
 let priceCache: { at: number; body: unknown } | null = null;
@@ -66,6 +70,9 @@ const { server } = createApi({
   prices,
   publicRecord: () => {
     try { return JSON.parse(readFileSync(publicPath, "utf8")); } catch { return null; }
+  },
+  appUpdate: () => {
+    try { return JSON.parse(readFileSync(appUpdatePath, "utf8")); } catch { return null; }
   },
 });
 const port = Number(process.env.PORT ?? 8787);

@@ -1,10 +1,10 @@
 {
-  "_note": "ForgeMiner 1.8.4: official GitHub release, SHA-256 matches the one published in the release notes; Windows Defender doesn't flag it (SRBMiner 3.7.1 was quarantined as Trojan:Win32/Ravartar!rfn). Closed source; the app only downloads the official release URL with its pinned SHA-256, never a rehosted copy (user, Oct 4: no need to ask the developer). Flags confirmed by a live run on the user's RTX 4070 SUPER on Kryptex (Oct 4): 122.9 TH/s at 196 W, share accepted, worker visible in Kryptex's public API. Temperature limit 83/75 C: an 80 C limit would cycle on a normal gaming card (it reached 79 C in 3 minutes). devFee is per algorithm (%). BzMiner v100.45 (Oct 4): official GitHub release, SHA-256 matches GitHub's digest, not flagged by Defender on download or unpack (WildRig 0.51.3 was: Trojan:Script/CoinMiner!rfn). Used for Quantus on AMD and Intel Arc. Not yet run: its dev fee is only printed at startup, and --devices numbering (it counts every device it finds) and --set http_port need a live check on an AMD PC.",
+  "_note": "ForgeMiner 1.8.8 (Oct 14): official GitHub release; its SHA-256 matches both the release notes and GitHub's own asset digest (checked Oct 16; the exe path was read from the zip's index). Moved up from 1.8.4 (verified live on the user's RTX 4070 SUPER on Oct 4, SHA c61474c1...de1b; still matches GitHub, so rolling back is one edit) for public-release fixes: 8 GB cards (3060 Ti, 3070, 2060 SUPER) no longer drop to a slower profile or send only rejected shares (1.8.5), RTX 30 no longer stops with CUDA error 700 (1.8.6), Pearl about +2% on RTX 40 at -12% board power (1.8.7), dead pool connections noticed in seconds (1.8.7). Defender check of 1.8.8 and a live share still to confirm (the app downloads and verifies it on Start). Closed source; the app only downloads the official release URL with its pinned SHA-256, never a rehosted copy (user, Oct 4: no need to ask the developer). Flags confirmed by a live run on Kryptex (Oct 4, 1.8.4): 122.9 TH/s at 196 W, share accepted. {tempLimit}/{tempResume} come from the app's settings (default 83/75 C: 80 would cycle on a normal gaming card); the miner pauses a hot card itself and the app only steps in 4 C above. powerArgs: ForgeMiner's --plimit is in watts and needs Administrator on Windows; the app runs without admin, so the cap only applies when the user runs it elevated (the miner keeps mining either way, to be confirmed live). devFee is per algorithm (%). BzMiner v100.45 (Oct 4): official GitHub release, SHA-256 matches GitHub's digest, not flagged by Defender on download or unpack (WildRig 0.51.3 was: Trojan:Script/CoinMiner!rfn). Used for Quantus on AMD and Intel Arc. Not yet run: its dev fee is only printed at startup, and --devices numbering and --set http_port need a live check on an AMD PC.",
   "version": 1,
   "miners": [
     {
       "id": "forgeminer",
-      "version": "1.8.4",
+      "version": "1.8.8",
       "algos": [
         "pearlhash",
         "quantus",
@@ -18,9 +18,9 @@
       },
       "builds": {
         "windows-x86_64": {
-          "url": "https://github.com/0xHashRaptor/ForgeMiner/releases/download/v1.8.4/ForgeMiner-1.8.4-windows.zip",
-          "sha256": "c61474c1edad5052b717f5a46a1900ea4056871b042f9da97351647ac356de1b",
-          "exe": "ForgeMiner-1.8.4-windows/forge.exe"
+          "url": "https://github.com/0xHashRaptor/ForgeMiner/releases/download/v1.8.8/ForgeMiner-1.8.8-windows.zip",
+          "sha256": "5f5f2d2039d02adfe237a47691f4204095adf8b61c23e1f5416a326a6d02a6d0",
+          "exe": "ForgeMiner-1.8.8-windows/forge.exe"
         }
       },
       "args": [
@@ -35,9 +35,13 @@
         "--api-bind",
         "127.0.0.1:{apiPort}",
         "--temp-limit",
-        "83",
+        "{tempLimit}",
         "--temp-resume",
-        "75"
+        "{tempResume}"
+      ],
+      "powerArgs": [
+        "--plimit",
+        "{powerLimit}"
       ]
     },
     {
@@ -67,7 +71,7 @@
         "--set",
         "http_port={apiPort}",
         "--set",
-        "safety.max_temp_c=83"
+        "safety.max_temp_c={tempLimit}"
       ],
       "devFeeNote": "unknown: BzMiner prints each algorithm's fee at startup; check before launch"
     }

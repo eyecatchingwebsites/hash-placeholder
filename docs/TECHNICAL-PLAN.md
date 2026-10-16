@@ -11,12 +11,12 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 |---|---|---|
 | Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 33 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
-| Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
+| Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`, `/v1/wallet`, `/v1/app/update`) | ✅ 6 tests; ForgeMiner 1.8.8 on Kryptex PRL | `services/api` |
 | Collector (Kryptex per-worker stats → mining hours and mined value per wallet) | 🟡 8 tests, runs live against Kryptex inside the payout loop; not yet trued up to pool payouts | `services/collector` |
 | Payout loop (collector → transfer indexer/hold clocks → harvest → rate by formula → split → pay → public record) | 🟡 10 tests, running on devnet since Oct 5 with a simulated market; mainnet needs market buys and real settlement | `services/payouts` |
-| Desktop app (Rust core + Tauri shell) | 🟡 core 12 tests, end-to-end test passes on Windows (Oct 4), window launches; needs a real miner and pool | `apps/desktop` |
+| Desktop app (Rust core + Tauri shell) | 🟡 release-ready except keys and signing (Oct 16): real miner and pool, safety pauses, settings, auto-start, updater; core 20 tests, end-to-end passes; an unsigned test installer installs and runs on the user's PC. Needs one live mining run of ForgeMiner 1.8.8 and the 🔑 items in Phase 5 | `apps/desktop` |
 | Website (home, calculator, FAQ/docs; backend parts are placeholders) | 🟡 static front end | `apps/web` |
-| CI + Windows release workflow | 🟡 written, never run on GitHub | `.github/workflows` |
+| CI + Windows release workflow | 🟡 release workflow: a test build on every desktop push, a tag = release with key checks, switchable Azure code signing, SHA-256 in the run summary, draft GitHub release | `.github/workflows` |
 | Simulation, calculators | ✅ (defaults still on the old 5% split) | `sim/`, `calculator/` |
 
 ---
@@ -122,25 +122,23 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
 6. **Site claim to keep true:** the site says mining only uses spare GPU power and your PC works like normal (only the hashrate drops when a game or render runs). That's the user's own experience mining PRL, not a feature we build. Re-check it on other coins/miners the app switches to; if one behaves differently, change the copy.
 
 ## Phase 5: Desktop app to release 🔑 (needs a Windows PC with a GPU)
-1. Put the real miners and pools into config. Run the app against the dev API on the user's PC. Confirm GPU detection (nvidia-smi, AMD and Intel via Win32_VideoController), download, verify, and that mining starts.
-2. **Benchmarks:** on first run, 60–120 s per supported algo per card, reading hashrate from the miner's local API. Report it in check-ins (the API already accepts `benchmarks`).
-3. **Safety:**
-   - Temperature limit (pause above ~83 °C).
-   - Power limit via the miner's flags where supported.
-   - Pause while a fullscreen game or a listed game process is running (optional; mining PRL already doesn't affect games in the user's experience).
-   - "Mine only when idle" option.
-4. **Settings:**
-   - Auto-start at login (off by default).
-   - API region.
-   - A "Paid / Pending" panel read from `/wallet/[address]`.
-5. **Updates:** Tauri updater with a signed update feed.
+Status Oct 16 (branch `claude/vigorous-ptolemy-5f1a4b`; details in `apps/desktop/README.md`):
+1. ✅ **Real miner and pool:** ForgeMiner on Kryptex PRL mined live from the app on Oct 4 (1.8.4). The config now pins **1.8.8** (Oct 14; SHA-256 matches the release notes and GitHub's digest) for its 8 GB-card, RTX 30 and pool-timeout fixes. 🔑 One live run of 1.8.8 by the user (Start, then check shares and Defender).
+2. ⬜ **Benchmarks:** on first run, 60–120 s per supported algo per card, reading hashrate from the miner's local API. Report it in check-ins (the API already accepts `benchmarks`).
+3. ✅ **Safety** (`core/src/safety.rs`, tested; `src-tauri/src/system.rs`):
+   - Temperature limit, default 83 °C (resumes 8 °C lower), passed to the miner; the app also stops a card's miner 4 °C above it as a backstop (nvidia-smi).
+   - Power cap through the miner's flag (`powerArgs`, ForgeMiner `--plimit` in watts). Off by default. NVIDIA only lets an administrator change it and the app never asks for admin, so it applies only when the user runs the app elevated.
+   - Pause while a game is fullscreen (Windows' fullscreen/busy state, or a window covering its monitor; 20 s grace). Off by default (mining PRL doesn't affect games in the user's experience).
+   - "Mine only when I'm away" (no input for 2–30 min). Off by default.
+4. ✅ **Settings** (gear button): start mining when Windows starts (off by default; login entry, tray only, single instance) and the safety options above. Paid / Still coming read `/v1/wallet/<address>` (live from the payout loop). ⬜ API region (not built).
+5. ✅ **Updates:** Tauri updater; the feed comes from the API (`/v1/app/update/...`, serving the workflow's `latest.json`), signed with the update key; installs only on the user's click and resumes mining after. 🔑 The production update key.
 6. **Release:**
-   - Put the production public key in `TRUSTED_KEYS`.
-   - Enable the code-signing step.
-   - Run `desktop-release.yml`.
-   - Submit to Microsoft's false-positive portal and VirusTotal.
-   - Publish the SHA-256.
-7. **Proof video:** unedited install → first payout, with the Solscan link on screen.
+   - 🔑 Production assignment key in `TRUSTED_KEYS` (placeholder; the workflow refuses to release without it).
+   - ✅ Code signing wired for Azure Artifact Signing (formerly Trusted Signing), off until the repository variable `WINDOWS_SIGNING=azure`. 🔑 The account and its credentials.
+   - ✅ `desktop-release.yml`: test builds on desktop pushes; a tag makes a draft release with the installer, `.sig`, `latest.json` and the SHA-256.
+   - ⬜ Submit to Microsoft's false-positive portal and VirusTotal vendors.
+   - ⬜ Publish the SHA-256 on the website (from the release run's summary or `SHA256SUMS.txt`).
+7. ⬜ **Proof video:** unedited install → first payout, with the Solscan link on screen.
 
 ## Phase 6: Hardening and launch
 - Security review of the backend, payout signing and key handling. Consider an external review of `packages/chain` and the treasury flows.

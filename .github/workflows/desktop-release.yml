@@ -1,29 +1,153 @@
 name: Desktop release (Windows)
+
+# Three ways in:
+# - push a tag desktop-vX.Y.Z (X.Y.Z = version in tauri.conf.json): the real release. Needs the
+#   production keys (below), uploads the files and opens a DRAFT GitHub release to publish by hand.
+# - a push that changes the desktop app: an unsigned test build, to prove the pipeline works.
+# - Run workflow by hand: a test build by default; untick "test_build" for a release without a tag.
+#
+# Setup (Settings > Secrets and variables > Actions):
+#   secret   TAURI_SIGNING_PRIVATE_KEY           update key (from `tauri signer generate`); its public half
+#                                                goes in tauri.conf.json plugins.updater.pubkey
+#   secret   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password, if it has one
+#   variable HASHCOIN_API_BASE                   production API, e.g. https://api.example.com
+#   variable WINDOWS_SIGNING                     "azure" turns code signing on; anything else = unsigned
+#   variable AZURE_SIGNING_ENDPOINT / AZURE_SIGNING_ACCOUNT / AZURE_SIGNING_PROFILE
+#   secret   AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET   (app registration with the
+#            "Artifact Signing Certificate Profile Signer" role)
+# Plus the production assignment key in TRUSTED_KEYS (apps/desktop/src-tauri/src/main.rs).
+
 on:
   workflow_dispatch:
+    inputs:
+      test_build:
+        description: "Unsigned test build with a throwaway update key (never distribute it)"
+        type: boolean
+        default: true
   push:
     tags: ["desktop-v*"]
+    branches: ["**"]
+    paths:
+      - "apps/desktop/**"
+      - "services/api/config/miners.json"
+      - ".github/workflows/desktop-release.yml"
+
+permissions:
+  contents: write # the draft release on tags
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   windows:
     runs-on: windows-latest
+    env:
+      TEST_BUILD: ${{ !startsWith(github.ref, 'refs/tags/desktop-v') && (github.event_name != 'workflow_dispatch' || inputs.test_build) }}
+      SIGNING: ${{ vars.WINDOWS_SIGNING }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - name: Check the production public key is set
-        shell: bash
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: apps/desktop }
+
+      - name: Release checks (keys, server, version)
+        if: env.TEST_BUILD != 'true'
+        env:
+          HAS_UPDATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+          API: ${{ vars.HASHCOIN_API_BASE }}
         run: |
+          fail=0
           if grep -q REPLACE_WITH_PRODUCTION_PUBLIC_KEY apps/desktop/src-tauri/src/main.rs; then
-            echo "::error::Set TRUSTED_KEYS in apps/desktop/src-tauri/src/main.rs to the production public key before releasing."; exit 1
-          fi
+            echo "::error::Put the production assignment key in TRUSTED_KEYS (apps/desktop/src-tauri/src/main.rs)."; fail=1; fi
+          if grep -q REPLACE_WITH_UPDATER_PUBLIC_KEY apps/desktop/src-tauri/tauri.conf.json; then
+            echo "::error::Put the update key's public half in tauri.conf.json (plugins.updater.pubkey)."; fail=1; fi
+          if [ "$HAS_UPDATE_KEY" != "true" ]; then echo "::error::Add the TAURI_SIGNING_PRIVATE_KEY secret."; fail=1; fi
+          case "$API" in https://*) ;; *) echo "::error::Set the HASHCOIN_API_BASE variable to the production https API."; fail=1;; esac
+          version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          if [[ "$GITHUB_REF" == refs/tags/desktop-v* && "$GITHUB_REF_NAME" != "desktop-v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match tauri.conf.json version $version."; fail=1; fi
+          if [ "$SIGNING" != "azure" ]; then
+            echo "::warning::Code signing is off (variable WINDOWS_SIGNING is not 'azure'): the installer is unsigned and SmartScreen will warn."; fi
+          exit $fail
+
+      - name: Update key and server (release)
+        if: env.TEST_BUILD != 'true'
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          API: ${{ vars.HASHCOIN_API_BASE }}
+        run: |
+          echo "TAURI_SIGNING_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+          echo "HASHCOIN_API_BASE=$API" >> "$GITHUB_ENV"
+
+      - name: Throwaway update key (test build)
+        if: env.TEST_BUILD == 'true'
+        run: |
+          npx --yes @tauri-apps/cli@2 signer generate --ci -p test-only -w "$RUNNER_TEMP/test.key"
+          node -e "process.stdout.write(JSON.stringify({plugins:{updater:{pubkey:require('fs').readFileSync(process.argv[1],'utf8').trim()}}}))" "$RUNNER_TEMP/test.key.pub" > "$RUNNER_TEMP/test-key.conf.json"
+          echo "TAURI_SIGNING_PRIVATE_KEY=$(cat "$RUNNER_TEMP/test.key")" >> "$GITHUB_ENV"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=test-only" >> "$GITHUB_ENV"
+          echo "EXTRA_CONFIG=--config $RUNNER_TEMP/test-key.conf.json" >> "$GITHUB_ENV"
+
+      - name: Code signing setup (Azure Artifact Signing)
+        if: env.SIGNING == 'azure'
+        env:
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+        run: |
+          cargo install artifact-signing-cli --version 0.11.0 --locked
+          node apps/desktop/scripts/signing-config.mjs > "$RUNNER_TEMP/signing.conf.json"
+          echo "SIGN_CONFIG=--config $RUNNER_TEMP/signing.conf.json" >> "$GITHUB_ENV"
+
       - name: Build installer
         working-directory: apps/desktop/src-tauri
-        run: npx --yes @tauri-apps/cli@2 build
-      # Code signing: add a signing step here (e.g. Azure Trusted Signing or an OV/EV certificate) using
-      # repository secrets, then upload the signed installer. Unsigned builds trigger SmartScreen warnings.
+        env:
+          AZURE_TENANT_ID: ${{ env.SIGNING == 'azure' && secrets.AZURE_TENANT_ID || '' }}
+          AZURE_CLIENT_ID: ${{ env.SIGNING == 'azure' && secrets.AZURE_CLIENT_ID || '' }}
+          AZURE_CLIENT_SECRET: ${{ env.SIGNING == 'azure' && secrets.AZURE_CLIENT_SECRET || '' }}
+        run: npx --yes @tauri-apps/cli@2 build --config tauri.release.conf.json $EXTRA_CONFIG $SIGN_CONFIG
+
+      - name: Installer, SHA-256 and update feed
+        working-directory: apps/desktop/target/release/bundle/nsis
+        run: |
+          src=$(ls *-setup.exe | head -1)
+          version=$(echo "$src" | cut -d_ -f2)
+          out="HashcoinMiner-$version-setup.exe"
+          mkdir -p release && cp "$src" "release/$out" && cp "$src.sig" "release/$out.sig"
+          cd release
+          if [ "$SIGNING" = "azure" ]; then
+            status=$(powershell -NoProfile -Command "(Get-AuthenticodeSignature '$out').Status")
+            echo "Authenticode: $status"
+            [ "$status" = "Valid" ] || { echo "::error::The installer's code signature is $status."; exit 1; }
+          fi
+          sha256sum "$out" > SHA256SUMS.txt
+          url="https://github.com/$GITHUB_REPOSITORY/releases/download/desktop-v$version/$out"
+          node ../../../../../scripts/update-feed.mjs "$out" "$version" "$url" "Hashcoin Miner $version" > latest.json
+          {
+            echo "## Hashcoin Miner $version"
+            [ "$TEST_BUILD" = "true" ] && echo "**Test build: unsigned, throwaway update key. Do not distribute.**"
+            [ "$SIGNING" = "azure" ] && echo "Code signed (Azure Artifact Signing)." || echo "Not code signed."
+            echo; echo "SHA-256 (for the website's download page):"; echo '```'; cat SHA256SUMS.txt; echo '```'
+            echo "Update feed: put \`latest.json\` where the API serves it (services/api: HASH_APP_UPDATE or config/app-update.json) after publishing the release."
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat SHA256SUMS.txt
+
       - uses: actions/upload-artifact@v4
         with:
-          name: hashcoin-miner-windows
-          path: apps/desktop/target/release/bundle/nsis/*.exe
+          name: hashcoin-miner-windows${{ env.TEST_BUILD == 'true' && '-TEST' || '' }}
+          path: apps/desktop/target/release/bundle/nsis/release/*
+
+      - name: Draft GitHub release
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: apps/desktop/target/release/bundle/nsis/release
+        run: gh release create "$GITHUB_REF_NAME" --draft --title "Hashcoin Miner ${GITHUB_REF_NAME#desktop-v}" --notes-file SHA256SUMS.txt *

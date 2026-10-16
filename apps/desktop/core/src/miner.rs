@@ -1,11 +1,37 @@
+use crate::manifest::MinerSpec;
 use crate::signed::Assignment;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
+/// The user's safety limits, passed to miners that support them.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Limits {
+    /// Pause a card at this temperature (°C)...
+    pub temp_limit_c: u32,
+    /// ...and resume once it cools to this.
+    pub temp_resume_c: u32,
+    /// Board power cap in watts, or None to leave the card's own limit.
+    pub power_limit_w: Option<u32>,
+}
+
+impl Default for Limits {
+    fn default() -> Self { Self { temp_limit_c: 83, temp_resume_c: 75, power_limit_w: None } }
+}
+
+/// The full command line for one GPU: the miner's template, plus its power-limit flags when the
+/// user set a cap.
+pub fn render_command(spec: &MinerSpec, a: &Assignment, device: u32, api_port: u16, limits: &Limits) -> Result<Vec<String>, String> {
+    let mut args = render_args(&spec.args, a, device, api_port, limits)?;
+    if limits.power_limit_w.is_some() {
+        args.extend(render_args(&spec.power_args, a, device, api_port, limits)?);
+    }
+    Ok(args)
+}
+
 /// Fill the manifest's argument template. Arguments are passed as an array (no shell),
 /// and each value is checked so a bad assignment can't smuggle in extra flags.
-pub fn render_args(template: &[String], a: &Assignment, device: u32, api_port: u16) -> Result<Vec<String>, String> {
+pub fn render_args(template: &[String], a: &Assignment, device: u32, api_port: u16, limits: &Limits) -> Result<Vec<String>, String> {
     let safe = |s: &str, what: &str| -> Result<String, String> {
         if s.is_empty() || s.starts_with('-') || s.chars().any(|c| c.is_whitespace() || c.is_control()) {
             Err(format!("unsafe {what}: {s:?}"))
@@ -20,6 +46,9 @@ pub fn render_args(template: &[String], a: &Assignment, device: u32, api_port: u
         ("{pass}", safe(&a.pool.pass, "pass")?),
         ("{device}", device.to_string()),
         ("{apiPort}", api_port.to_string()),
+        ("{tempLimit}", limits.temp_limit_c.to_string()),
+        ("{tempResume}", limits.temp_resume_c.to_string()),
+        ("{powerLimit}", limits.power_limit_w.map(|w| w.to_string()).unwrap_or_default()),
     ];
     Ok(template
         .iter()
@@ -140,17 +169,31 @@ mod tests {
     #[test]
     fn renders_args() {
         let t: Vec<String> = ["--algo", "{algo}", "-o", "{pool}", "-u", "{user}", "-d", "{device}", "--api", "127.0.0.1:{apiPort}"].map(String::from).to_vec();
-        let args = render_args(&t, &assignment(), 1, 4067).unwrap();
+        let args = render_args(&t, &assignment(), 1, 4067, &Limits::default()).unwrap();
         assert_eq!(args, ["--algo", "pearlhash", "-o", "stratum+tcp://p:1", "-u", "W.pc-0", "-d", "1", "--api", "127.0.0.1:4067"]);
+    }
+
+    #[test]
+    fn adds_limits_only_when_set() {
+        let spec: MinerSpec = serde_json::from_value(serde_json::json!({
+            "id": "m", "version": "1", "algos": ["pearlhash"], "builds": {},
+            "args": ["--algorithm", "{algo}", "--temp-limit", "{tempLimit}", "--temp-resume", "{tempResume}"],
+            "powerArgs": ["--plimit", "{powerLimit}"],
+        })).unwrap();
+        let a = assignment();
+        let mut limits = Limits { temp_limit_c: 80, temp_resume_c: 72, power_limit_w: None };
+        assert_eq!(render_command(&spec, &a, 0, 1, &limits).unwrap(), ["--algorithm", "pearlhash", "--temp-limit", "80", "--temp-resume", "72"]);
+        limits.power_limit_w = Some(180);
+        assert_eq!(render_command(&spec, &a, 0, 1, &limits).unwrap()[6..], ["--plimit", "180"]);
     }
 
     #[test]
     fn rejects_flag_injection() {
         let mut a = assignment();
         a.pool.pass = "x --donate 100".into();
-        assert!(render_args(&["{pass}".into()], &a, 0, 1).is_err());
+        assert!(render_args(&["{pass}".into()], &a, 0, 1, &Limits::default()).is_err());
         a.pool.pass = "--evil".into();
-        assert!(render_args(&["{pass}".into()], &a, 0, 1).is_err());
+        assert!(render_args(&["{pass}".into()], &a, 0, 1, &Limits::default()).is_err());
     }
 
     #[cfg(unix)]
