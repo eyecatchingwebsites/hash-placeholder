@@ -22,7 +22,11 @@ const MAX_DOWNLOAD: u64 = 200 * 1024 * 1024;
 pub struct Settings {
     pub wallet: String,
     pub rig_id: String,
-    pub api_base: String,
+    /// A server set on purpose (by hand in the file), instead of the one built into the app. Empty =
+    /// the built-in server, and the app never writes one here. Versions before Oct 17 saved their
+    /// built-in address as `apiBase`, which then pinned every later build to it; that key is ignored.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub api_override: String,
     /// Open in the tray and start mining when Windows starts. Off until the user turns it on.
     pub start_with_windows: bool,
     /// Mine only after `idle_minutes` without keyboard or mouse input.
@@ -39,7 +43,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            wallet: String::new(), rig_id: String::new(), api_base: String::new(),
+            wallet: String::new(), rig_id: String::new(), api_override: String::new(),
             start_with_windows: false, only_when_idle: false, idle_minutes: 5, pause_when_fullscreen: false,
             temp_limit_c: 83, power_limit_w: None,
         }
@@ -47,6 +51,14 @@ impl Default for Settings {
 }
 
 impl Settings {
+    /// The server to use: the override if there is a real one, else the app's built-in server.
+    /// A placeholder address (`*.invalid`) never wins.
+    pub fn server(&self, built_in: &str) -> String {
+        let o = self.api_override.trim().trim_end_matches('/');
+        let real = (o.starts_with("https://") || o.starts_with("http://")) && !o.contains(".invalid");
+        if real { o.to_string() } else { built_in.trim_end_matches('/').to_string() }
+    }
+
     /// Keep the safety values in a sane range, whatever the file or the window sent.
     pub fn clamped(mut self) -> Self {
         self.temp_limit_c = self.temp_limit_c.clamp(65, 83);
@@ -106,6 +118,8 @@ struct Slot {
 
 pub struct Runtime {
     pub settings: Settings,
+    /// The server in use (`Settings::server`), resolved once at start.
+    pub api_base: String,
     keys: KeyRing,
     data_dir: PathBuf,
     slots: Vec<Slot>,
@@ -147,8 +161,8 @@ pub fn detect_gpus() -> Vec<Gpu> {
 }
 
 impl Runtime {
-    pub fn new(settings: Settings, keys: KeyRing, data_dir: PathBuf) -> Self {
-        Self { settings, keys, data_dir, slots: Vec::new(), manifest: None, mining: false, last_check_in: None, last_check_in_at: None, error: None, guard: Guard::default() }
+    pub fn new(settings: Settings, api_base: String, keys: KeyRing, data_dir: PathBuf) -> Self {
+        Self { settings, api_base, keys, data_dir, slots: Vec::new(), manifest: None, mining: false, last_check_in: None, last_check_in_at: None, error: None, guard: Guard::default() }
     }
 
     pub fn set_gpus(&mut self, gpus: Vec<Gpu>) {
@@ -256,7 +270,7 @@ impl Runtime {
     }
 
     fn check_in(&mut self) -> Result<(), String> {
-        let base = self.settings.api_base.trim_end_matches('/').to_string();
+        let base = self.api_base.clone();
         if self.manifest.is_none() {
             let env: Envelope = ureq::get(&format!("{base}/v1/miners")).timeout(Duration::from_secs(20)).call().map_err(|e| format!("server unreachable: {e}"))?
                 .into_json().map_err(|e| e.to_string())?;
@@ -361,6 +375,40 @@ fn download_verified(url: &str, sha256: &str, dir: &Path) -> Result<(), String> 
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::Settings;
+
+    const BUILT_IN: &str = "http://127.0.0.1:8787";
+
+    #[test]
+    fn an_old_saved_server_never_overrides_the_built_in_one() {
+        // Written by builds before Oct 17 (the placeholder came from the settings fallback bug).
+        for old in [
+            r#"{"wallet":"W","rigId":"pc","apiBase":"https://api.hashcoin.invalid"}"#,
+            r#"{"wallet":"W","rigId":"pc","apiBase":"http://127.0.0.1:8787","startWithWindows":true}"#,
+        ] {
+            let s: Settings = serde_json::from_str(old).unwrap();
+            assert_eq!(s.server("https://api.example.com"), "https://api.example.com", "{old}");
+            assert_eq!(s.wallet, "W");
+            // Saving it back drops the old key and writes no server at all.
+            let saved = serde_json::to_string(&s).unwrap();
+            assert!(!saved.contains("apiBase") && !saved.contains("apiOverride"), "{saved}");
+        }
+    }
+
+    #[test]
+    fn a_deliberate_override_wins_unless_it_is_a_placeholder() {
+        let mut s = Settings { api_override: "https://staging.example.com/".into(), ..Default::default() };
+        assert_eq!(s.server(BUILT_IN), "https://staging.example.com");
+        assert!(serde_json::to_string(&s).unwrap().contains(r#""apiOverride":"https://staging.example.com/""#));
+        for bad in ["https://api.hashcoin.invalid", "not a url", ""] {
+            s.api_override = bad.into();
+            assert_eq!(s.server(BUILT_IN), BUILT_IN, "{bad}");
+        }
+    }
+}
+
 // The configured miner (ForgeMiner) only has a Windows build, so the end-to-end test runs on Windows.
 #[cfg(all(test, windows))]
 mod e2e {
@@ -386,7 +434,7 @@ mod e2e {
             .unwrap_or_else(|e| panic!("stand-in miner not built at {}: {e}", built.display()));
 
         let wallet = "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF";
-        let mut rt = Runtime::new(Settings { wallet: wallet.into(), rig_id: "e2e".into(), api_base: api, ..Default::default() }, keys, data.clone());
+        let mut rt = Runtime::new(Settings { wallet: wallet.into(), rig_id: "e2e".into(), ..Default::default() }, api, keys, data.clone());
         // An NVIDIA and an AMD card are both device 0 to their miners; the app must keep them apart
         // (this used to apply the AMD card's "no coin" answer to the NVIDIA card and stop it).
         rt.set_gpus(vec![

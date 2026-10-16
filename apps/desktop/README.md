@@ -35,6 +35,9 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
 ## Settings
 Gear button in the header. Saved to `%APPDATA%\com.hashcoin.miner\settings.json`; every field has a default, so a
 partial file still loads (a file without `rigId` used to fall back to all defaults, the Oct 4 "placeholder server" bug).
+The server is the one built into the app (`HASHCOIN_API_BASE` at build time). The app never saves it; only an
+`apiOverride` typed into the file by hand replaces it, and never a `*.invalid` placeholder. Builds before Oct 17 saved
+their built-in server as `apiBase`, which pinned every later build to it; that key is now ignored.
 - **Start mining when Windows starts** (off): adds a login entry (`HKCU\...\Run`) that starts the app in the tray with
   `--autostart` and starts mining. A second launch just opens the running app (single instance).
 - Balance / Paid / Still coming come from the API's `/v1/wallet/<address>` (the payout loop's public record).

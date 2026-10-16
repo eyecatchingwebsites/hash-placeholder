@@ -30,8 +30,8 @@ const TEST_TRUSTED_KEY: Option<&str> = match option_env!("HASHCOIN_TEST_TRUSTED_
     _ => None,
 };
 
-/// The server, set at build time by the release workflow (`HASHCOIN_API_BASE`). The settings file's
-/// `apiBase` overrides it.
+/// The server, set at build time by the release workflow (`HASHCOIN_API_BASE`). Only a deliberate
+/// `apiOverride` in the settings file replaces it (see `Settings::server`).
 const DEFAULT_API: &str = match option_env!("HASHCOIN_API_BASE") {
     Some(api) if !api.is_empty() => api,
     _ => "https://api.hashcoin.invalid",
@@ -64,13 +64,17 @@ fn load_settings(dir: &Path) -> Settings {
         let host = std::env::var("COMPUTERNAME").or_else(|_| std::env::var("HOSTNAME")).unwrap_or_default();
         s.rig_id = wallet::rig_id_from_hostname(&host);
     }
-    if s.api_base.is_empty() { s.api_base = DEFAULT_API.into(); }
+    s.clamped()
+}
+
+/// The server: the built-in one (`DEFAULT_API`), unless the settings file has a deliberate override.
+fn server(s: &Settings) -> String {
     // Development only: point a debug build at a local API without editing the settings file.
     #[cfg(all(debug_assertions, feature = "dev-key"))]
     if let Ok(api) = std::env::var("HASHCOIN_API") {
-        s.api_base = api;
+        return api.trim_end_matches('/').to_string();
     }
-    s.clamped()
+    s.server(DEFAULT_API)
 }
 
 fn write_settings(app: &AppHandle, s: &Settings) -> Result<(), String> {
@@ -140,7 +144,7 @@ fn save_wallet(rt: State<Shared>, app: AppHandle, address: String) -> Result<Sta
 #[tauri::command]
 fn save_settings(rt: State<Shared>, app: AppHandle, settings: Settings) -> Result<Status, String> {
     let mut r = rt.lock().unwrap();
-    let next = Settings { wallet: r.settings.wallet.clone(), rig_id: r.settings.rig_id.clone(), api_base: r.settings.api_base.clone(), ..settings }.clamped();
+    let next = Settings { wallet: r.settings.wallet.clone(), rig_id: r.settings.rig_id.clone(), api_override: r.settings.api_override.clone(), ..settings }.clamped();
     if next.start_with_windows != r.settings.start_with_windows {
         let login = app.autolaunch();
         let res = if next.start_with_windows { login.enable() } else { login.disable() };
@@ -156,7 +160,7 @@ fn save_settings(rt: State<Shared>, app: AppHandle, settings: Settings) -> Resul
 /// Runs off the main thread so a slow server doesn't freeze the window.
 #[tauri::command]
 async fn server_get(rt: State<'_, Shared>, what: String) -> Result<Option<serde_json::Value>, String> {
-    let (base, wallet) = { let r = rt.lock().unwrap(); (r.settings.api_base.trim_end_matches('/').to_string(), r.settings.wallet.clone()) };
+    let (base, wallet) = { let r = rt.lock().unwrap(); (r.api_base.clone(), r.settings.wallet.clone()) };
     let path = match what.as_str() {
         "stats" => "/v1/stats".to_string(),
         "prices" => "/v1/prices".to_string(),
@@ -180,7 +184,7 @@ struct UpdateInfo { version: String, notes: Option<String> }
 #[tauri::command]
 async fn check_update(app: AppHandle, rt: State<'_, Shared>, pending: State<'_, PendingUpdate>) -> Result<Option<UpdateInfo>, String> {
     if !updates_configured(&app) { return Ok(None); }
-    let base = rt.lock().unwrap().settings.api_base.trim_end_matches('/').to_string();
+    let base = rt.lock().unwrap().api_base.clone();
     let endpoint = format!("{base}/v1/app/update/") + "{{target}}/{{arch}}/{{current_version}}";
     let update = app.updater_builder()
         .endpoints(vec![endpoint.parse().map_err(|e| format!("bad update address: {e}"))?]).map_err(|e| e.to_string())?
@@ -243,8 +247,9 @@ fn main() {
             let config_dir = app.path().app_config_dir()?;
             let data_dir = app.path().app_local_data_dir()?;
             let settings = load_settings(&config_dir);
-            eprintln!("Hashcoin Miner: settings {} | server {}", settings_path(&config_dir).display(), settings.api_base);
-            let mut rt = Runtime::new(settings, key_ring(), data_dir);
+            let api = server(&settings);
+            eprintln!("Hashcoin Miner: settings {} | server {api}", settings_path(&config_dir).display());
+            let mut rt = Runtime::new(settings, api, key_ring(), data_dir);
             rt.set_gpus(detect_gpus());
 
             // Mining starts only on the user's say-so: the Start button, "Start mining when Windows
