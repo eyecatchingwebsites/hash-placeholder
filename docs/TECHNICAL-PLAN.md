@@ -148,8 +148,14 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
 - Load test the epoch job (5,000 wallets → transfer batching and RPC limits).
 - Our own pool for any coin without a suitable pool (open-source stratum server + node), only if Phase 1 found no option.
 - **Mining entry ticket (user, Oct 4):** as GPUs grow, require a $HASH bag in every mining wallet before it gets any chest share. It also stops one GPU being split across many wallets for extra √ weight. Add it to the engine and sim before the chest is large.
+- **Launch script: `packages/chain/scripts/launch-mainnet.ts` ✅ (Oct 16)**, settings in `packages/chain/src/launch.ts` (tested in `test/launch.test.ts`). Rehearsed end to end on devnet (launch with the dev buy at the 1% floor, buy and sell, rate refused on the curve, graduation, DAMM v2 migration, authorities to the partner, rate change after, curve fee claim); a mainnet `--dry-run` passes Meteora's live program. At launch: `--dry-run` first, then the same command with `--confirm-mainnet`. Guards: refuses to launch twice, refuses mainnet without `--confirm-mainnet`, mainnet graduation target 20–200 SOL.
 - Launch checklist:
-  - Token setup decided (`docs/PROJECT.md` §11): supply, starting liquidity and LP lock/burn, mint and freeze authorities revoked, no other extensions, anti-snipe plan.
+  - 🔑 Graduation target, picked 24–48 h before launch from the X campaign (40 / 50 / 85 SOL for quiet / decent / strong).
+  - 🔑 Who is the partner (`--partner`): it collects the tax, changes the rate after graduation and claims the curve fee, and the payout loop does all three on a timer. A Squads multisig is safest but needs a signature for every harvest and rate change; a dedicated hot payout key keeps the loop automatic. Decide before launch.
+  - 🔑 Token metadata JSON (name, symbol, image, website, X) hosted at a stable URL (`--uri`), and the logo uploaded.
+  - 🔑 Wallets funded: launcher ~0.08 SOL; dev wallet ~0.26 SOL at a 50 SOL target (the 1% bag ≈ 0.24 SOL + fees; the script prints the exact figure).
+  - 🔑 A paid RPC (Helius) via `--rpc` or `SOLANA_RPC`; the public one is rate-limited.
+  - Token setup (decided Oct 16): 21M supply, mint and freeze authority none, 5% tax on the curve, 25% of supply to the pool, curve fee 20% → 1% over 5 minutes, 0.25% pool fee after graduation, LP permanently locked to the partner, no other extensions.
   - Multisig configured and fee authorities moved.
   - Dev wallet locked or vested publicly.
   - Float funded (~$1K).
