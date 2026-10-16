@@ -61,6 +61,7 @@ export function publicRecord(l: Ledger, x: {
     market: x.market ?? null,
     funding: {
       partnerFeesClaimedSol: Number(BigInt(l.funding.partnerFeesLamports)) / 1e9,
+      poolFeesClaimedSol: Number(BigInt(l.funding.poolFeesLamports)) / 1e9,
       spentOnBuysSol: Number(BigInt(l.funding.spentLamports)) / 1e9,
       boughtForMinersTokens: tokens(l.funding.boughtTokens),
       saleProceedsWaitingUsd: l.funding.saleBudgetUsd,

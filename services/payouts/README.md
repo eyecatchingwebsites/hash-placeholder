@@ -4,7 +4,7 @@ Runs the money side of $HASH, round after round:
 
 1. **Collector** (every few minutes): pool stats → mining hours and mined USD per wallet, trued up to what the pool actually credited (`services/collector`).
 2. **Market**: which phase the token is in (Meteora DBC curve → graduating → DAMM v2 pool), its price (pool price × SOL/USD from Jupiter, CoinGecko as fallback).
-3. **Funding**: claims our curve trading fee (SOL, `claimPartnerTradingFee`) into the payout wallet. That SOL (the "float") pays for miners' $HASH on launch day.
+3. **Funding**: claims our curve trading fee (SOL, `claimPartnerTradingFee`) into the payout wallet, and after graduation the pool fee our locked DAMM v2 position earns (0.25% at launch settings, SOL). That SOL (the "float") pays for miners' $HASH.
 4. **Index** every mint transaction (balances, hold clocks, outside trading volume) and **harvest** the tax.
 5. **Rate** by the public 2–5% formula: fixed while on the curve; after graduation set by the payout wallet, or written as a proposal for the multisig once it holds the authority.
 6. **Split** the tax (dev / miner bonus / holders) and run the miner epoch: miners get what the float can buy now (the rest is held back as pending until the mined coin is sold).
@@ -38,6 +38,11 @@ Settings: `config/payouts.json` (devnet rehearsal without a market), `config/pay
 | `HASH_PUBLIC_RECORD` | (for `services/api`) path of `public.json` when `HASH_DATA_DIR` is moved |
 | `HASH_COLLECTOR_DATA`, `HASH_WORKER_REGISTRY` | collector state dir, worker → wallet map |
 | `HASH_PAYOUT_ADDRESS_PRL` | (for the API and collector) the platform's PRL address on the pool |
+
+## Launch settings that matter here (`packages/chain/src/launch.ts`)
+
+- **Launch with `--partner <payout wallet address>`** (the public key of `HASH_KEYPAIR`). The partner is the curve's fee claimer, the tax withdraw authority and, after graduation, the rate authority. If it's the multisig instead, the loop can't harvest the tax or claim fees: every round stops with a `wrong-authority` alert. Move only the rate authority to the multisig after graduation (`ctl handover-rate-authority`).
+- **The curve fee starts at 20% and falls to 1% over the first 5 minutes.** Miners' buys in those minutes cost more than `buy.maxCostBps` (4%), so they wait (owed, a `buy-cost` alert) and go through once the fee is down. The 20% fee itself flows to us and funds the float.
 
 ## Safety
 

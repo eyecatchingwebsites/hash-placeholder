@@ -235,6 +235,30 @@ async function roundTick() {
     }
   }
 
+  // After graduation our locked DAMM v2 position earns the pool fee (SOL, and maybe some $HASH).
+  if (ms?.phase === "damm") {
+    const pf = await market!.dammFees(ms, signer.publicKey);
+    if (pf.lamports >= BigInt(Math.round(cfg.funding.claimPartnerFeeMinSol * LAMPORTS_PER_SOL))) {
+      const what = `${Number(pf.lamports) / LAMPORTS_PER_SOL} SOL${pf.tokens ? ` and ${tokens(pf.tokens)} $HASH` : ""} of pool fee`;
+      if (DRY) notes.push(`would claim ${what}`);
+      else {
+        try {
+          for (const p of pf.positions) {
+            const sig = await send(await market!.claimDammFeeTx(ms, signer.publicKey, p), [signer]);
+            txs.push(sig);
+            l.funding.claims.push({ at: now, lamports: pf.lamports.toString(), tokens: pf.tokens.toString(), source: "pool", signature: sig });
+          }
+          l.funding.poolFeesLamports = addBig(l.funding.poolFeesLamports, pf.lamports);
+          l.funding.poolFeesTokens = addBig(l.funding.poolFeesTokens, pf.tokens);
+          lamports = BigInt(await conn.getBalance(signer.publicKey));
+          log(`claimed ${what} into the float`);
+        } catch (e) {
+          await alerts.raise("claim-failed", "warning", `claiming the DAMM v2 pool fee failed: ${short(e)}`);
+        }
+      }
+    }
+  }
+
   if (sim && !DRY) txs.push(...await simulateTrades(fee, priceUsd));
 
   // 1. Index every mint transaction since last time: balances, hold clocks, trading volume.
@@ -242,6 +266,13 @@ async function roundTick() {
   const volume = indexTransactions(l, found, { price: levelPrice, rules, platform, pools });
 
   // 2. Harvest the tax. Fees our own transactions paid go back to the treasury, not the pot.
+  // Only the tax withdraw authority can harvest: the launch's partner (fee claimer) must be this wallet.
+  const withdrawAuth = getTransferFeeConfig(await getMint(conn, mint, "confirmed", TOKEN_2022_PROGRAM_ID))?.withdrawWithheldAuthority ?? null;
+  if (!withdrawAuth?.equals(signer.publicKey)) {
+    if (!DRY) saveLedger(LEDGER, l);
+    await alerts.raise("wrong-authority", "critical", `the tax withdraw authority is ${withdrawAuth?.toBase58() ?? "none"}, not this payout wallet (${signer.publicKey.toBase58()}): the tax can't be harvested, so no round runs. Launch with the payout wallet as --partner, or run the loop with that key.`);
+    return;
+  }
   const candidates = l.tokenAccounts.map((a) => new PublicKey(a));
   let harvested: bigint;
   if (DRY) harvested = await withheldTotal(conn, mint, candidates);

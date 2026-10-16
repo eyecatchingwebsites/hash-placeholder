@@ -49,7 +49,7 @@ switch (cmd) {
     console.log(`payout wallet ${me.toBase58()}: ${(await c.getBalance(me)) / LAMPORTS_PER_SOL} SOL`);
     console.log(`round ${l.round}, last ${l.lastRoundAt ? new Date(l.lastRoundAt).toISOString() : "never"}; ${l.owed.length} owed ($${l.owed.reduce((a, o) => a + o.usd, 0).toFixed(4)}); held back $${l.pending.reduce((a, p) => a + p.estimatedUsd, 0).toFixed(4)}`);
     const f = l.funding;
-    console.log(`funding: curve fees claimed ${Number(BigInt(f.partnerFeesLamports)) / 1e9} SOL; buys ${f.buys.length}, ${Number(BigInt(f.spentLamports)) / 1e9} SOL → ${Number(BigInt(f.boughtTokens)) / 10 ** rt.cfg.decimals} $HASH; sale proceeds waiting $${f.saleBudgetUsd.toFixed(4)} (last ratio ${f.saleRatio})`);
+    console.log(`funding: curve fees claimed ${Number(BigInt(f.partnerFeesLamports)) / 1e9} SOL, pool fees ${Number(BigInt(f.poolFeesLamports)) / 1e9} SOL; buys ${f.buys.length}, ${Number(BigInt(f.spentLamports)) / 1e9} SOL → ${Number(BigInt(f.boughtTokens)) / 10 ** rt.cfg.decimals} $HASH; sale proceeds waiting $${f.saleBudgetUsd.toFixed(4)} (last ratio ${f.saleRatio})`);
     if (rt.cfg.market) {
       const m = new MeteoraMarket(c, { mint: new PublicKey(rt.cfg.market.mint), dbcConfig: new PublicKey(rt.cfg.market.dbcConfig) });
       const s = await m.state();

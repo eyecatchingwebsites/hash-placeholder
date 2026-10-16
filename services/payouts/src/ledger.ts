@@ -31,7 +31,10 @@ export interface Funding {
   sales: { at: number; coin: string; coins: number; usd: number; ratio: number; note?: string }[];
   /** Partner trading fees claimed from the curve (lamports). */
   partnerFeesLamports: string;
-  claims: { at: number; lamports: string; signature: string }[];
+  /** After graduation: the DAMM v2 pool fee our locked position earned, claimed (lamports, and any $HASH part). */
+  poolFeesLamports: string;
+  poolFeesTokens: string;
+  claims: { at: number; lamports: string; tokens?: string; source?: "curve" | "pool"; signature: string }[];
   /** Market buys: SOL spent, $HASH received. */
   spentLamports: string;
   boughtTokens: string;
@@ -119,7 +122,7 @@ export const storeWallet = (w: WalletState, firstAt: number): StoredWallet =>
 export const addBig = (a: string, b: bigint) => (BigInt(a) + b).toString();
 
 export const emptyFunding = (): Funding => ({
-  unsold: {}, saleBudgetUsd: 0, saleRatio: 1, sales: [], partnerFeesLamports: "0", claims: [], spentLamports: "0", boughtTokens: "0", buys: [],
+  unsold: {}, saleBudgetUsd: 0, saleRatio: 1, sales: [], partnerFeesLamports: "0", poolFeesLamports: "0", poolFeesTokens: "0", claims: [], spentLamports: "0", boughtTokens: "0", buys: [],
 });
 
 export function loadLedger(path: string): Ledger | null {

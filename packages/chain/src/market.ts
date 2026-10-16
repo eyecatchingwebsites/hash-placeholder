@@ -8,7 +8,7 @@ import {
   DAMM_V2_MIGRATION_FEE_ADDRESS, deriveDammV2PoolAddress, deriveDbcPoolAddress, deriveDbcPoolAuthority, DynamicBondingCurveClient,
   getCurrentPoint as dbcCurrentPoint, getSwapQuoteTransferFees, SwapMode as DbcSwapMode,
 } from "@meteora-ag/dynamic-bonding-curve-sdk";
-import { CpAmm, derivePoolAuthority as dammPoolAuthority, getCurrentPoint as dammCurrentPoint, getPriceFromSqrtPrice, SwapMode as DammSwapMode } from "@meteora-ag/cp-amm-sdk";
+import { CpAmm, derivePoolAuthority as dammPoolAuthority, getCurrentPoint as dammCurrentPoint, getPriceFromSqrtPrice, getUnClaimLpFee, SwapMode as DammSwapMode } from "@meteora-ag/cp-amm-sdk";
 import BN from "bn.js";
 
 /**
@@ -152,6 +152,37 @@ export class MeteoraMarket {
       tokenBProgram: ps.tokenBMint.equals(this.ref.mint) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
       referralTokenAccount: null, poolState: ps,
       swapMode: DammSwapMode.ExactIn, amountIn: bn(q.lamportsIn), minimumAmountOut: bn(q.minimumOut),
+    });
+  }
+
+  /**
+   * After graduation: the pool fee our locked DAMM v2 position(s) have earned and not claimed yet
+   * (the partner's position, 100% permanently locked at migration), in lamports and in $HASH.
+   */
+  async dammFees(s: MarketState, owner: PublicKey): Promise<{ lamports: bigint; tokens: bigint; positions: { position: PublicKey; positionNftAccount: PublicKey }[] }> {
+    if (s.phase !== "damm" || !s.dammPool) return { lamports: 0n, tokens: 0n, positions: [] };
+    const [ps, mine] = await Promise.all([this.damm.fetchPoolState(s.dammPool), this.damm.getUserPositionByPool(s.dammPool, owner)]);
+    const aIsHash = ps.tokenAMint.equals(this.ref.mint);
+    let lamports = 0n, tokens = 0n;
+    const positions: { position: PublicKey; positionNftAccount: PublicKey }[] = [];
+    for (const p of mine) {
+      const f = getUnClaimLpFee(ps, p.positionState);
+      const sol = big(aIsHash ? f.feeTokenB : f.feeTokenA), hash = big(aIsHash ? f.feeTokenA : f.feeTokenB);
+      if (sol > 0n || hash > 0n) positions.push({ position: p.position, positionNftAccount: p.positionNftAccount });
+      lamports += sol;
+      tokens += hash;
+    }
+    return { lamports, tokens, positions };
+  }
+
+  /** Claim the pool fee of one of our DAMM v2 positions to `owner` (SOL unwrapped). `owner` signs. */
+  async claimDammFeeTx(s: MarketState, owner: PublicKey, p: { position: PublicKey; positionNftAccount: PublicKey }): Promise<Transaction> {
+    const ps = await this.damm.fetchPoolState(s.dammPool!);
+    const program = (m: PublicKey) => (m.equals(this.ref.mint) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID);
+    return this.damm.claimPositionFee2({
+      owner, receiver: owner, feePayer: owner, pool: s.dammPool!, position: p.position, positionNftAccount: p.positionNftAccount,
+      tokenAMint: ps.tokenAMint, tokenBMint: ps.tokenBMint, tokenAVault: ps.tokenAVault, tokenBVault: ps.tokenBVault,
+      tokenAProgram: program(ps.tokenAMint), tokenBProgram: program(ps.tokenBMint),
     });
   }
 
