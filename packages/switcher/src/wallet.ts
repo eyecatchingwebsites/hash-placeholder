@@ -57,5 +57,8 @@ export function workerId(wallet: string, rigId: string): string {
 
 /** Pool login: the platform's payout address for the coin, then this GPU's worker name. */
 export function poolUser(payoutAddress: string, wallet: string, rigId: string, gpuIndex: number): string {
+  // The pool splits the login at the first "."; an address with one would pay the wrong account.
+  if (!/^[A-Za-z0-9_-]+$/.test(payoutAddress)) throw new Error("payout address can't be part of a pool login");
+  if (!Number.isInteger(gpuIndex) || gpuIndex < 0) throw new Error("bad GPU index");
   return `${payoutAddress}.${workerId(wallet, rigId)}-${gpuIndex}`;
 }

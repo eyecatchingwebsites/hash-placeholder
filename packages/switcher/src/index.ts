@@ -4,4 +4,5 @@ export * from "./score.js";
 export * from "./decide.js";
 export * from "./sign.js";
 export * from "./wallet.js";
+export * from "./payout.js";
 export * from "./assign.js";

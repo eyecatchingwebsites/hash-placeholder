@@ -1,11 +1,16 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { loadSigningKey, newSigningKey, rawPublicKey } from "@hashcoin/switcher";
+import { applyPayoutAddresses, loadSigningKey, newSigningKey, rawPublicKey } from "@hashcoin/switcher";
 import { loadHashrateNoQuotes } from "./quotes.js";
 import { createApi, type WorkerRecord } from "./server.js";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const cfg = JSON.parse(readFileSync(here("../config/coins.json"), "utf8"));
+// The platform's payout address per coin comes from the deploy environment (HASH_PAYOUT_ADDRESS_<COIN>);
+// on mainnet the test address in coins.json is refused.
+const payout = applyPayoutAddresses(cfg.coins, process.env, { production: process.env.HASH_NETWORK === "mainnet" });
+cfg.coins = payout.coins;
+for (const n of payout.notes) console.log(n);
 const minerManifest = JSON.parse(readFileSync(here("../config/miners.json"), "utf8"));
 const quotes = loadHashrateNoQuotes(here("../../../data/hashrate-no-gpus-2026-10-03.json"));
 

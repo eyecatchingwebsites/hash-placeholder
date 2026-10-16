@@ -1,6 +1,6 @@
 # Handoff: picking up in a new session
 
-Last updated: October 4, 2026, at the end of the cloud session that built the website (branch `claude/vibrant-cray-fpbieb`). Read this, then `docs/PROJECT.md` (the project memory) and `docs/TECHNICAL-PLAN.md` (what to build next).
+Last updated: October 16, 2026 (payout loop made mainnet-ready, branch `claude/vibrant-chaplygin-3e0d10`, based on `claude/vibrant-cray-fpbieb`). First written October 4 at the end of the cloud session that built the website. Read this, then `docs/PROJECT.md` (the project memory) and `docs/TECHNICAL-PLAN.md` (what to build next).
 
 ## 1. Get the code
 
@@ -21,6 +21,7 @@ git checkout claude/vibrant-cray-fpbieb
 - **Website (`apps/web`)**: the main focus so far. Static HTML/CSS/JS, no backend. Live preview: **https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc** (Version 27 as of the Oct 4 local session). What's on it now is summarized in `docs/PROJECT.md` §13, "Current website (Oct 4)".
 - **Payout engine, coin switcher, assignment API, desktop app core**: built and tested on the earlier branch (see `docs/PROJECT.md` §10). **Oct 4: the app mined for real on the user's RTX 4070 SUPER**: local API → signed assignment → the app downloaded and verified ForgeMiner 1.8.4 → mining PRL on Kryptex (~124 TH/s) under the platform address + short worker id → the collector (`services/collector`) mapped the Kryptex worker back to the user's Solana wallet and credited mining hours and PRL. Miner, pool and decisions: `docs/PROJECT.md` §5.
 - **Payout loop (Oct 5)**: `services/payouts` runs everything on a timer on devnet: collector every 5 min; every 30 min it indexes all mint transactions (balances, hold clocks, volume), harvests the tax, schedules the rate by the formula, splits it, pays miners/holders/dev, and writes `services/payouts/data/public.json` (served by the API at `/v1/stats` and `/v1/wallet/<address>`). Start: `npx tsx services/api/src/main.ts` and `npx tsx services/payouts/src/main.ts` (both run in their own PowerShell windows; logs in `services/api/data/api.log`, `services/payouts/data/loop.log`). Pause payouts: create `services/payouts/data/PAUSE`. A round over `maxPayoutUsdPerRound` pauses itself. Devnet stand-ins: assumed price, a simulated market wallet trading with 6 test traders (~$750/day), the mining part paid from treasury supply, held-back mining settled at its estimate after 6 h. The API's dev signing key is now kept in `services/api/data/dev-signing-key.pem`, so it no longer changes on restart.
+- **Payout loop, mainnet-ready (Oct 16)**: real market buys on the Meteora curve and, after graduation, the DAMM v2 pool; the curve trading fee (SOL) funds miners' buys on launch day, the rest is held back until mined PRL is sold (`ctl sold`); kill switch, alerts, dry run; secrets from the environment. Operator guide: `services/payouts/README.md`. Rehearsed on devnet on a fresh DBC token (data and throwaway keys in `services/payouts/data/devnet-meteora/`, gitignored).
 - **Next in the build plan**: the devnet test run (Token-2022 token, fee collection, batch payouts), feeding the collector into `runEpoch`, truing the collector up to Kryptex's actual balance, and a platform payout address (PRL currently pays the user's own address for testing). See `docs/TECHNICAL-PLAN.md`.
 
 ### Run the whole loop locally (Windows, PowerShell)
@@ -28,6 +29,15 @@ git checkout claude/vibrant-cray-fpbieb
 2. App, in a second window (rebuilds first; the key works with or without its trailing `=`):
    `cd apps\desktop; cargo build -p hashcoin-miner --features dev-key; $env:HASHCOIN_API = "http://127.0.0.1:8787"; $env:HASHCOIN_DEV_PUBKEY = "<key>"; & .\target\debug\hashcoin-miner.exe` → paste a Solana address → Start mining. Quit from the tray before rebuilding (a running app locks the exe).
 3. Collector: `npx tsx services/collector/src/main.ts --once` (run twice, minutes apart; the first run is a baseline).
+4. Payout loop on a real (devnet) Meteora market, in Git Bash: `source services/payouts/data/devnet-meteora/env.sh` (written during the Oct 16 rehearsal; or set the variables listed in `services/payouts/README.md`), then `npx tsx services/payouts/src/main.ts --dry-run`, `--once`, or no flag to keep running. `npx tsx services/payouts/src/ctl.ts status | kill "why" | resume`.
+
+### Mainnet payout loop: what the user provides
+- `HASH_RPC_URL`: a Helius (or similar) RPC URL with its API key. The public endpoint is refused on mainnet.
+- `HASH_KEYPAIR`: path to the payout wallet's keypair file, created on the backend PC and kept outside the repo. Use it as the DBC config's `feeClaimer` at launch (it then collects the tax and, after graduation, holds the rate authority until handed to the multisig). Fund it with SOL for fees and rent (`funding.reserveSol`).
+- `HASH_MULTISIG`: the Squads vault address; after graduation `npx tsx services/payouts/src/ctl.ts handover-rate-authority <vault> --yes`.
+- `HASH_DEV_WALLET`, `HASH_PAYOUT_ADDRESS_PRL` (platform PRL address on Kryptex, for the API and collector), `HASH_ALERT_WEBHOOK` (Discord or Slack).
+- Then: `HASH_MAINNET=yes HASH_NETWORK=mainnet`, `HASH_PAYOUTS_CONFIG` = a copy of `services/payouts/config/payouts.mainnet.example.json` with `market` filled in from the launch, a `--dry-run` first, then the loop.
+
 - Logs: each GPU's miner output and exit code go to `%LOCALAPPDATA%\com.hashcoin.miner\miners\<miner>\<version>\gpu-<n>.log`; the app prints its settings file and server address at startup.
 - Claude's permission system blocks Claude from running downloaded miners itself; the user starts them (Start in the app, or a command).
 - **Open decisions**: `docs/PROJECT.md` §11 (holder payout cadence, hold clocks, launchpad, legal review, etc.).

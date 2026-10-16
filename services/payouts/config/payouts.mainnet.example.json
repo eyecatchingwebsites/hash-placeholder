@@ -1,0 +1,20 @@
+{
+  "_note": "Mainnet settings for the payout loop. Copy to a file outside the repo or keep the numbers here and point HASH_PAYOUTS_CONFIG at it. Fill `market` at launch (mint and DBC config). Secrets and addresses come from the environment, never this file: HASH_MAINNET=yes, HASH_RPC_URL (Helius), HASH_KEYPAIR (payout wallet keypair file, outside the repo), HASH_DEV_WALLET, HASH_MULTISIG, HASH_ALERT_WEBHOOK, HASH_PAYOUT_ADDRESS_PRL (for the API and collector). Numbers marked TBD are first guesses to revisit with the user.",
+  "network": "mainnet",
+  "rpcPauseMs": 50,
+  "collectorMinutes": 5,
+  "roundMinutes": 10,
+  "holderEveryRounds": 6,
+  "decimals": 6,
+  "market": { "mint": "<$HASH mint, from the launch>", "dbcConfig": "<DBC config address, from the launch>" },
+  "solUsd": { "source": "live", "min": 20, "max": 2000 },
+  "buy": { "slippageBps": 200, "maxCostBps": 400, "maxUsdPerRound": 250 },
+  "funding": { "reserveSol": 0.1, "claimPartnerFeeMinSol": 0.02 },
+  "settlement": { "mode": "sales", "minAgeHours": 10 },
+  "rate": { "adjust": true, "lookbackDays": 2, "minIntervalHours": 24 },
+  "minHolderPayoutUsd": 0.05,
+  "maxPayoutUsdPerRound": 2500,
+  "minTreasurySol": 0.05,
+  "priorityFeeMicroLamports": 20000,
+  "alerts": { "emptyHarvestRounds": 6, "floatLowUsd": 25, "rpcErrorsPer10Min": 20, "repeatMinutes": 30 }
+}

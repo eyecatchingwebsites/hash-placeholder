@@ -1,5 +1,5 @@
 {
-  "_note": "Devnet rehearsal of the payout loop (services/payouts/src/main.ts). Price is assumed ($1M market cap at 21M supply); the simulated market stands in for real trading.",
+  "_note": "Devnet rehearsal of the payout loop without a market (the Oct 5 loop on the Oct 4 devnet mint): the price is assumed ($1M market cap at 21M supply), a simulated market wallet stands in for trading, and miners' mining is paid from treasury supply. The rehearsal on a real Meteora market uses the config that services/payouts/scripts/devnet-meteora.ts writes; mainnet starts from payouts.mainnet.example.json.",
   "network": "devnet",
   "rpc": "https://api.devnet.solana.com",
   "rpcPauseMs": 600,
@@ -8,10 +8,14 @@
   "holderEveryRounds": 1,
   "priceUsd": 0.047619,
   "decimals": 6,
+  "solUsd": { "source": "live", "min": 5, "max": 5000 },
+  "buy": { "slippageBps": 300, "maxCostBps": 500, "maxUsdPerRound": 100 },
+  "funding": { "reserveSol": 0.003, "claimPartnerFeeMinSol": 0.001 },
+  "settlement": { "mode": "estimate", "minAgeHours": 6 },
   "rate": { "adjust": true, "lookbackDays": 2, "minIntervalHours": 24 },
-  "settleAtEstimateAfterHours": 6,
   "minHolderPayoutUsd": 0.0001,
   "maxPayoutUsdPerRound": 100,
   "minTreasurySol": 0.003,
-  "simulate": { "enabled": true, "dailyVolumeUsd": 750, "traders": 6, "sellers": 2, "marketTokens": 1000000 }
+  "alerts": { "emptyHarvestRounds": 12, "floatLowUsd": 0, "rpcErrorsPer10Min": 30, "repeatMinutes": 60 },
+  "simulate": { "trades": { "enabled": true, "dailyVolumeUsd": 750, "traders": 6, "sellers": 2, "marketTokens": 1000000 } }
 }

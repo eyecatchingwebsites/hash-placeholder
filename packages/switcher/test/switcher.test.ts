@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  assignGpu, canonicalJson, decide, gpuKey, isSolanaAddress, loadSigningKey, newSigningKey, scoreCoins,
+  applyPayoutAddresses, assignGpu, canonicalJson, decide, gpuKey, isPayoutAddress, isSolanaAddress, loadSigningKey, newSigningKey, poolUser, scoreCoins,
   signPayload, vendorOf, verifyEnvelope, workerId, type CoinInfo, type GpuReport, type ScoreInputs, type SwitchPolicy,
 } from "../src/index.js";
 import { createPublicKey } from "node:crypto";
@@ -101,6 +101,25 @@ describe("assignment + signing", () => {
   it("never assigns a coin without a platform payout address", () => {
     const noPayout = coins.map((c) => ({ ...c, payoutAddress: undefined }));
     expect(scoreCoins(amd, noPayout, quotes, { ...S, platformSellUsdPerDay: {} })).toEqual([]);
+  });
+
+  it("payout addresses: env overrides, production refuses test addresses, logins can't be broken", () => {
+    const PRL = "prl1pgd7htaqjvw0x0vfwaqadprkht3l37wfw5chr82vpp5kmmpyuw4pq2zzx4h";
+    const cfg = [{ ...coins[0]!, id: "PRL", payoutAddress: PRL, payoutAddressIsTest: true }];
+    expect(isPayoutAddress("PRL", PRL)).toBe(true);
+    expect(isPayoutAddress("PRL", "prl1.evil")).toBe(false);
+    expect(isPayoutAddress("PRL", "bc1qxyz")).toBe(false);
+    // Devnet: the test address is used and labelled.
+    expect(applyPayoutAddresses(cfg, {}, { production: false }).coins[0]!.payoutAddress).toBe(PRL);
+    // Production: no test address, so PRL is never assigned until one is set.
+    const prod = applyPayoutAddresses(cfg, {}, { production: true });
+    expect(prod.coins[0]!.payoutAddress).toBeUndefined();
+    expect(scoreCoins(amd, prod.coins, quotes, { ...S, platformSellUsdPerDay: {} }).find((s) => s.coin === "PRL")).toBeUndefined();
+    const platform = "prl1qw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k";
+    expect(applyPayoutAddresses(cfg, { HASH_PAYOUT_ADDRESS_PRL: platform }, { production: true }).coins[0]!.payoutAddress).toBe(platform);
+    expect(() => applyPayoutAddresses(cfg, { HASH_PAYOUT_ADDRESS_PRL: "prl1oops.x" }, { production: true })).toThrow("not a valid PRL address");
+    expect(() => poolUser("addr.other", WALLET, "pc1", 0)).toThrow();
+    expect(poolUser(platform, WALLET, "pc1", 2)).toBe(`${platform}.${workerId(WALLET, "pc1")}-2`);
   });
 
   it("signs and verifies; tampering fails", () => {
