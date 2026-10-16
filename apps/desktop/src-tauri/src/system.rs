@@ -3,7 +3,7 @@
 //! the app starts no helper programs (no PowerShell, no nvidia-smi), so the verified miner is the
 //! only program it ever runs. Elsewhere these report nothing.
 
-use hashcoin_core::{Gpu, Vendor};
+use hashcoin_core::Gpu;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -52,6 +52,7 @@ pub fn display_adapters() -> Vec<String> { Vec::new() }
 #[cfg(windows)]
 mod nvml {
     use super::*;
+    use hashcoin_core::Vendor;
     use std::ffi::c_void;
     use std::sync::OnceLock;
     use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryExW, LOAD_LIBRARY_SEARCH_SYSTEM32};
