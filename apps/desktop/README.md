@@ -37,10 +37,13 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   `Trojan:Script/Conteban.A!ml` (ThreatID 2147735508, severity 5, a machine-learning detection by real-time
   protection). It hit the app itself (`%LOCALAPPDATA%\Hashcoin Miner\hashcoin-miner.exe`, its Start menu shortcut and
   uninstall entry), not ForgeMiner: the app was stopped before ForgeMiner 1.8.8 was even saved to disk.
-- **What we do about it:** submit every installer to Microsoft's false-positive portal
-  (https://www.microsoft.com/wdsi/filesubmission) and VirusTotal; **code-sign with Azure Artifact Signing before
-  launch** (an unsigned app that downloads and starts another program is exactly what this kind of ML model scores
-  high); never ask users to add exclusions or change Defender, and never pack or obfuscate.
+- **The app ships unsigned at launch** (user, Oct 16: individual signing shows the signer's legal name as the
+  publisher, rejected for privacy; launch is next week). Azure Artifact Signing stays wired in the release workflow
+  but off, for **later, with an organization (a company) as the publisher**. Not part of launch.
+- **What we do about it instead:** submit every installer to Microsoft's false-positive portal
+  (https://www.microsoft.com/wdsi/filesubmission) and VirusTotal; publish each installer's SHA-256 on the website;
+  keep the code public on GitHub; explain it in the app when Defender blocks Hashcoin (below). Never ask users to add
+  exclusions or change Defender, and never pack or obfuscate.
 - **Changed after it (Oct 17) so the app looks less like a dropper, verification unchanged:**
   - No helper programs: GPU names, memory and temperatures come from NVIDIA's own library (`nvml.dll`, loaded from
     System32 only) and from DirectX, read in-process. The app used to start a hidden PowerShell
@@ -54,7 +57,7 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
 - **Retest of that build (52145e3, Oct 16): no change.** Defender quarantined the app again
   (`Trojan:Script/Conteban.A!ml`) and this time also ForgeMiner's `forge.exe` right after it started
   (`Trojan:Script/Wacatac.H!ml`, `...\miners\forgeminer\1.8.8\ForgeMiner-1.8.8-windows\forge.exe`). Both are ML
-  guesses. Signing and Microsoft's review are the real fixes; until then the app explains what happened.
+  guesses. Microsoft's review of submitted files can clear them; the app explains what happened in the meantime.
 - **When Defender blocks Hashcoin, the app says so** (approved by the user, Oct 17). It notices, without any helper
   programs (`core/src/blocked.rs`, tested):
   - the miner file vanished or can't be read after download and verification (quarantined or locked);
@@ -64,8 +67,10 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
     before each start and cleared once the miner has run 30 s (or on Stop). Found at the next launch = killed mid-start.
   Then mining stops, the window opens (also from the tray), and a short message says Defender flagged Hashcoin or the
   miner, that mining software is often flagged because it uses the GPU the way some malware does and Defender's AI
-  guesses, that Hashcoin only runs files matching their published SHA-256 (links: the release page's checksums, and
-  the website's safety page once `HASHCOIN_SAFETY_URL` is set at build time), and that allowing it is the user's
+  guesses, that Hashcoin isn't code-signed so Windows has less to go on, that the installer's SHA-256 is published on
+  the website and the code is public on GitHub, and that miner files only run if they match their published SHA-256
+  (links: "Code on GitHub", and "Installer SHA-256" on the website once `HASHCOIN_SAFETY_URL` is set at build time;
+  it never promises signing or claims Microsoft verified anything), and that allowing it is the user's
   choice, with the steps: Windows Security → Virus & threat protection → Protection history → the Hashcoin item →
   Actions → Allow on device (both items if there are two), then reopen Hashcoin. "Not now" closes it and leaves mining
   off; after a block the app never starts mining by itself (login start and update resume are skipped).
@@ -114,9 +119,12 @@ To test an update: build again with `-Version 0.1.1`, serve `target\release\bund
 - A tag `desktop-vX.Y.Z` (matching `tauri.conf.json`) is a real release: it stops unless the production assignment
   key is in `TRUSTED_KEYS`, the update key's public half is in `tauri.conf.json`, the `TAURI_SIGNING_PRIVATE_KEY`
   secret exists and `HASHCOIN_API_BASE` is an https URL. It uploads `HashcoinMiner-X.Y.Z-setup.exe`, its `.sig`,
-  `latest.json` and `SHA256SUMS.txt`, and opens a **draft** GitHub release. The SHA-256 is in the run summary for the
-  website's download page.
-- **Code signing** is off until the repository variable `WINDOWS_SIGNING` is `azure`. Then it installs
+  `latest.json` and `SHA256SUMS.txt`, and opens a **draft** GitHub release (publish it by hand after a look). The
+  release notes carry the SHA-256 and say the installer is unsigned (SmartScreen's "Run anyway", Defender may flag it).
+  The SHA-256 is also in the run summary, for the website's download page. Releases are **unsigned** (the run says so
+  as a notice, not a warning).
+- **Code signing (later, not for launch):** off while the repository variable `WINDOWS_SIGNING` is unset. With
+  `azure`, for an organization publisher, it installs
   `artifact-signing-cli` (Azure Artifact Signing, formerly Trusted Signing) and signs the app and installer during the
   build (before the update signature is made), using variables `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`,
   `AZURE_SIGNING_PROFILE` and secrets `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`; it fails if the
@@ -139,8 +147,9 @@ To test an update: build again with `-Version 0.1.1`, serve `target\release\bund
 - [ ] Update key: `npx @tauri-apps/cli@2 signer generate -w hashcoin-updater.key`; public half in `tauri.conf.json`,
       private half and password as GitHub secrets, backed up offline (losing it means installed apps can't update).
 - [ ] `HASHCOIN_API_BASE` variable; the production API serving `/v1/app/update/...`.
-- [ ] **Launch-critical:** Azure Artifact Signing account approved, then the signing variables/secrets and
-      `WINDOWS_SIGNING=azure` (Defender quarantined the unsigned build on Oct 16, see "Antivirus").
+- [ ] `HASHCOIN_SAFETY_URL` variable: the website page with each installer's SHA-256 and "Why does Windows warn me?".
+- [ ] Later, not for launch: code signing with an organization as the publisher (Azure Artifact Signing is wired;
+      set its variables/secrets and `WINDOWS_SIGNING=azure`). Leave `WINDOWS_SIGNING` unset until then.
 - [ ] PRL platform payout address in `services/api/config/coins.json` (now the user's own test address).
 - [ ] One live run of ForgeMiner 1.8.8 (Defender, shares), the safety pauses and the power cap on the user's PC.
 - [ ] Submit each release to Microsoft's false-positive portal and VirusTotal vendors.

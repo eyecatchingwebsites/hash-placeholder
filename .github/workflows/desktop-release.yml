@@ -12,7 +12,8 @@ name: Desktop release (Windows)
 #   secret   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password, if it has one
 #   variable HASHCOIN_API_BASE                   production API, e.g. https://api.example.com
 #   variable HASHCOIN_SAFETY_URL                 the website's antivirus/safety page (linked when Defender blocks the app)
-#   variable WINDOWS_SIGNING                     "azure" turns code signing on; anything else = unsigned
+#   variable WINDOWS_SIGNING                     leave unset: releases are unsigned (user, Oct 16: no personal-name
+#                                                publisher). "azure" turns on signing later, for an organization.
 #   variable AZURE_SIGNING_ENDPOINT / AZURE_SIGNING_ACCOUNT / AZURE_SIGNING_PROFILE
 #   secret   AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET   (app registration with the
 #            "Artifact Signing Certificate Profile Signer" role)
@@ -74,7 +75,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/desktop-v* && "$GITHUB_REF_NAME" != "desktop-v$version" ]]; then
             echo "::error::Tag $GITHUB_REF_NAME doesn't match tauri.conf.json version $version."; fail=1; fi
           if [ "$SIGNING" != "azure" ]; then
-            echo "::warning::Code signing is off (variable WINDOWS_SIGNING is not 'azure'): the installer is unsigned and SmartScreen will warn."; fi
+            echo "::notice::Unsigned release (no code signing at launch, see docs/PROJECT.md). Windows SmartScreen and Defender may warn; the in-app message and the site explain."; fi
           exit $fail
 
       - name: Update key and server (release)
@@ -138,11 +139,20 @@ jobs:
           {
             echo "## Hashcoin Miner $version"
             [ "$TEST_BUILD" = "true" ] && echo "**Test build: unsigned, throwaway update key. Do not distribute.**"
-            [ "$SIGNING" = "azure" ] && echo "Code signed (Azure Artifact Signing)." || echo "Not code signed."
+            [ "$SIGNING" = "azure" ] && echo "Code signed (Azure Artifact Signing)." || echo "Unsigned (no code signing at launch)."
             echo; echo "SHA-256 (for the website's download page):"; echo '```'; cat SHA256SUMS.txt; echo '```'
             echo "Update feed: put \`latest.json\` where the API serves it (services/api: HASH_APP_UPDATE or config/app-update.json) after publishing the release."
           } >> "$GITHUB_STEP_SUMMARY"
           cat SHA256SUMS.txt
+          # Release notes (kept out of the uploaded files): the SHA-256 and what an unsigned installer means.
+          {
+            echo "Windows installer for Hashcoin Miner $version."
+            echo
+            echo "SHA-256:"; echo '```'; cat SHA256SUMS.txt; echo '```'
+            if [ "$SIGNING" != "azure" ]; then
+              echo "This installer isn't code-signed, so Windows SmartScreen may say \"Windows protected your PC\" (More info, then Run anyway) and Microsoft Defender may flag it. Check the SHA-256 above against the one on the website before running it."
+            fi
+          } > "$RUNNER_TEMP/release-notes.md"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -154,4 +164,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         working-directory: apps/desktop/target/release/bundle/nsis/release
-        run: gh release create "$GITHUB_REF_NAME" --draft --title "Hashcoin Miner ${GITHUB_REF_NAME#desktop-v}" --notes-file SHA256SUMS.txt *
+        run: gh release create "$GITHUB_REF_NAME" --draft --title "Hashcoin Miner ${GITHUB_REF_NAME#desktop-v}" --notes-file "$RUNNER_TEMP/release-notes.md" *

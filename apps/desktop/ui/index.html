@@ -228,9 +228,9 @@
       <div class="panel blocked" id="blocked" role="alert" hidden>
         <h2 class="d" id="blocked-title">Windows Defender stopped mining</h2>
         <p class="lead" id="blocked-lead"></p>
-        <p>Mining software often gets flagged because it uses your graphics card the way some malware does. Defender's AI guesses; it doesn't know.</p>
-        <p>Hashcoin only runs miner files that match their published SHA-256 checksum, and it never changes your security settings.</p>
-        <div class="links"><button class="link" id="l-sums">Published checksums</button><button class="link" id="l-safety" hidden>Is Hashcoin safe?</button></div>
+        <p>Mining software often gets flagged because it uses your graphics card the way some malware does. Defender's AI guesses; it doesn't know. Hashcoin isn't code-signed, so Windows has less to go on.</p>
+        <p>The installer's SHA-256 is published on the website, and the code is public on GitHub. Miner files only run if they match their published SHA-256. Hashcoin never changes your security settings.</p>
+        <div class="links"><button class="link" id="l-safety" hidden>Installer SHA-256</button><button class="link" id="l-source">Code on GitHub</button></div>
         <p>Allowing it is your choice. To allow it:</p>
         <ol>
           <li>Open <b>Windows Security</b>.</li>
@@ -542,7 +542,7 @@
   }
   $("blocked-close").onclick = () => run("dismiss_blocked");
   const link = (which) => invoke("open_link", { which }).catch((e) => { $("error").hidden = false; $("error").textContent = String(e); });
-  $("l-sums").onclick = () => link("checksums");
+  $("l-source").onclick = () => link("source");
   $("l-safety").onclick = () => link("safety");
 
   $("update-go").onclick = () => {

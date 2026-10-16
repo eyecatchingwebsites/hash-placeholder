@@ -37,15 +37,14 @@ const DEFAULT_API: &str = match option_env!("HASHCOIN_API_BASE") {
     _ => "https://api.hashcoin.invalid",
 };
 
-/// Where the published checksums are (the release page lists each installer's SHA-256; the miners'
-/// pinned SHA-256 are in the signed miner list). Shown when Defender blocks Hashcoin.
-const CHECKSUMS_URL: &str = match option_env!("HASHCOIN_CHECKSUMS_URL") {
+/// The public source code (linked when Defender blocks Hashcoin).
+const SOURCE_URL: &str = match option_env!("HASHCOIN_SOURCE_URL") {
     Some(u) if !u.is_empty() => u,
-    _ => "https://github.com/eyecatchingwebsites/hash-placeholder/releases",
+    _ => "https://github.com/eyecatchingwebsites/hash-placeholder",
 };
 
-/// The website's page on why antivirus flags miners and how to check Hashcoin. Placeholder until the
-/// site has it (the window hides a `.invalid` link); the release workflow sets it.
+/// The website's page with each installer's SHA-256 and why Windows warns about miners. Placeholder
+/// until the site has it (the window hides a `.invalid` link); the release workflow sets it.
 const SAFETY_URL: &str = match option_env!("HASHCOIN_SAFETY_URL") {
     Some(u) if !u.is_empty() => u,
     _ => "https://hashcoin.invalid/safety",
@@ -132,13 +131,13 @@ fn status(rt: State<Shared>) -> Status { rt.lock().unwrap().status() }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct AppInfo { version: String, test_build: bool, updates: bool, checksums_url: String, safety_url: String }
+struct AppInfo { version: String, test_build: bool, updates: bool, source_url: String, safety_url: String }
 
 #[tauri::command]
 fn app_info(app: AppHandle) -> AppInfo {
     AppInfo {
         version: app.package_info().version.to_string(), test_build: TEST_TRUSTED_KEY.is_some(), updates: updates_configured(&app),
-        checksums_url: CHECKSUMS_URL.into(), safety_url: SAFETY_URL.into(),
+        source_url: SOURCE_URL.into(), safety_url: SAFETY_URL.into(),
     }
 }
 
@@ -153,7 +152,7 @@ fn dismiss_blocked(rt: State<Shared>) -> Status {
 /// Open one of our two pages in the default browser (only these two, never a URL from the window).
 #[tauri::command]
 fn open_link(which: String) -> Result<(), String> {
-    let url = match which.as_str() { "checksums" => CHECKSUMS_URL, "safety" => SAFETY_URL, _ => return Err("unknown link".into()) };
+    let url = match which.as_str() { "source" => SOURCE_URL, "safety" => SAFETY_URL, _ => return Err("unknown link".into()) };
     if url.contains(".invalid") { return Err("That page isn't up yet.".into()); }
     #[cfg(windows)]
     {
