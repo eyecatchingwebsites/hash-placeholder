@@ -32,7 +32,10 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   monitor; resumes 20 s after the game leaves fullscreen.
 - Pauses stop the miner process but keep the assignment, so mining picks up by itself. Card rows show why.
 
-## Antivirus (Microsoft Defender)
+## Antivirus
+Any antivirus can flag a miner: Microsoft Defender (what we've seen so far), and commonly Norton, McAfee, Avast/AVG,
+Bitdefender, Kaspersky, ESET and Malwarebytes, as PUA/PUP or RiskTool.CoinMiner and the like. With a third-party
+antivirus installed, Defender steps back to passive. Everything below works whichever antivirus does the blocking.
 - **Oct 16, 6:19 PM: Defender quarantined the unsigned test build** (commit 182e964) when the user clicked Start:
   `Trojan:Script/Conteban.A!ml` (ThreatID 2147735508, severity 5, a machine-learning detection by real-time
   protection). It hit the app itself (`%LOCALAPPDATA%\Hashcoin Miner\hashcoin-miner.exe`, its Start menu shortcut and
@@ -42,8 +45,8 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   but off, for **later, with an organization (a company) as the publisher**. Not part of launch.
 - **What we do about it instead:** submit every installer to Microsoft's false-positive portal
   (https://www.microsoft.com/wdsi/filesubmission) and VirusTotal; publish each installer's SHA-256 on the website;
-  keep the code public on GitHub; explain it in the app when Defender blocks Hashcoin (below). Never ask users to add
-  exclusions or change Defender, and never pack or obfuscate.
+  keep the code public on GitHub; explain it in the app when an antivirus blocks Hashcoin (below). Never ask users to
+  add exclusions or change their antivirus, and never pack or obfuscate.
 - **Changed after it (Oct 17) so the app looks less like a dropper, verification unchanged:**
   - No helper programs: GPU names, memory and temperatures come from NVIDIA's own library (`nvml.dll`, loaded from
     System32 only) and from DirectX, read in-process. The app used to start a hidden PowerShell
@@ -58,30 +61,40 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   (`Trojan:Script/Conteban.A!ml`) and this time also ForgeMiner's `forge.exe` right after it started
   (`Trojan:Script/Wacatac.H!ml`, `...\miners\forgeminer\1.8.8\ForgeMiner-1.8.8-windows\forge.exe`). Both are ML
   guesses. Microsoft's review of submitted files can clear them; the app explains what happened in the meantime.
-- **When Defender blocks Hashcoin, the app says so** (approved by the user, Oct 17). It notices, without any helper
-  programs (`core/src/blocked.rs`, tested):
+- **When an antivirus blocks Hashcoin, the app says so** (approved by the user, Oct 17; any antivirus since Oct 17).
+  It notices, without any helper programs (`core/src/blocked.rs`, tested), whichever product did it:
   - the miner file vanished or can't be read after download and verification (quarantined or locked);
   - the miner died within 20 s with an access-denied / virus exit code, or without printing anything;
   - Windows refused to start the miner (access denied, "contains a virus", blocked by policy);
   - the app itself was killed while starting a miner: a `miner-starting` marker in the app's data folder is set just
     before each start and cleared once the miner has run 30 s (or on Stop). Found at the next launch = killed mid-start.
-  Then mining stops, the window opens (also from the tray), and a short message says Defender flagged Hashcoin or the
-  miner, that mining software is often flagged because it uses the GPU the way some malware does and Defender's AI
-  guesses, that Hashcoin isn't code-signed so Windows has less to go on, that the installer's SHA-256 is published on
-  the website and the code is public on GitHub, and that miner files only run if they match their published SHA-256
-  (links: "Code on GitHub", and "Installer SHA-256" on the website once `HASHCOIN_SAFETY_URL` is set at build time;
-  it never promises signing or claims Microsoft verified anything), and that allowing it is the user's
-  choice, with the steps: Windows Security → Virus & threat protection → Protection history → the Hashcoin item →
-  Actions → Allow on device (both items if there are two), then reopen Hashcoin. "Not now" closes it and leaves mining
-  off; after a block the app never starts mining by itself (login start and update resume are skipped).
-- **To review the message without Defender** (test and debug builds only; release builds ignore it, tested): start
-  the app with `--show-defender-help` (the "Defender stopped mining" version) or `--show-defender-help=app` (the
-  "closed while starting" version). Works on a running app too (it opens the window and shows the message).
-- **The app never changes Defender itself**, never offers to, adds no exclusions and never asks for admin. Verification
-  is unchanged.
+- **It names the antivirus.** At that moment the app reads Windows Security Center's antivirus list
+  (WMI `root\SecurityCenter2`, `AntiVirusProduct`: `displayName` and `productState`) in-process with the `wmi` crate,
+  on a short-lived thread with a 5 s limit; no PowerShell, no helpers, read-only. `core/src/antivirus.rs` (tested)
+  picks the active one: an enabled third-party product first (Defender is then passive), else enabled Defender;
+  `productState` bits 12-15 = 1 means on. If nothing can be read, the message says "your antivirus".
+- **The message:** mining stops and the window opens (also from the tray) with "<Product> stopped mining" (or
+  "Hashcoin closed while starting"): antivirus programs often flag mining software because it uses the GPU the way some
+  malware does, and they guess rather than know; Hashcoin isn't code-signed, so they have less to go on; the installer's
+  SHA-256 is published on the website and the code is public on GitHub; miner files only run if they match their
+  published SHA-256; Hashcoin never changes antivirus or security settings. Links: "Code on GitHub", "Installer SHA-256"
+  (`HASHCOIN_SAFETY_URL`) and "Steps for <product>" (`HASHCOIN_AV_HELP_URL`), the website links hidden until set at
+  build time. It never promises signing or claims anyone verified the app. Allowing it is the user's choice:
+  - Microsoft Defender: Windows Security → Virus & threat protection → Protection history → the Hashcoin item →
+    Actions → Allow on device (both items if there are two), then reopen Hashcoin.
+  - Any other antivirus: open <product>, find Hashcoin in its quarantine or history, restore it, then allow it or add it
+    as an exception (both items if there are two), then reopen Hashcoin.
+  "Not now" closes it and leaves mining off; after a block the app never starts mining by itself (login start and
+  update resume are skipped).
+- **To review the message without an antivirus** (test and debug builds only; release builds ignore it, tested):
+  start the app with `--show-defender-help` (as this PC's antivirus), `--show-defender-help=app` (the "closed while
+  starting" version) or `--show-defender-help=<name>`, e.g. `=Avast`, as if that product did it. Works on a running
+  app too (it opens the window and shows the message).
+- **The app never changes any antivirus**, never offers to, adds no exclusions and never asks for admin.
+  Verification is unchanged.
 
 ## Settings
-Gear button in the header: opens a full-window panel (Back button or Esc to close). Pop-ups such as the Defender
+Gear button in the header: opens a full-window panel (Back button or Esc to close). Pop-ups such as the antivirus
 message open large over a dimmed backdrop; both fade in and out (instant with reduced motion), keep keyboard focus
 inside while open and return it on close. Saved to `%APPDATA%\com.hashcoin.miner\settings.json`; every field has a default, so a
 partial file still loads (a file without `rigId` used to fall back to all defaults, the Oct 4 "placeholder server" bug).

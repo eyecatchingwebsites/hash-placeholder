@@ -332,23 +332,30 @@
 <div class="overlay" id="blocked" hidden>
   <div class="dialog" id="blocked-dialog" role="alertdialog" aria-modal="true" aria-labelledby="blocked-title" aria-describedby="blocked-lead" tabindex="-1">
     <div class="dialog-head">
-      <h2 class="d" id="blocked-title">Windows Defender stopped mining</h2>
+      <h2 class="d" id="blocked-title">Your antivirus stopped mining</h2>
       <p class="lead" id="blocked-lead"></p>
     </div>
     <div class="dialog-cols">
       <div class="dialog-col">
-        <p>Mining software often gets flagged because it uses your graphics card the way some malware does. Defender's AI guesses; it doesn't know. Hashcoin isn't code-signed, so Windows has less to go on.</p>
-        <p>The installer's SHA-256 is published on the website, and the code is public on GitHub. Miner files only run if they match their published SHA-256. Hashcoin never changes your security settings.</p>
+        <p>Mining software often gets flagged because it uses your graphics card the way some malware does. Antivirus programs guess here; they don't know. Hashcoin isn't code-signed, so they have less to go on.</p>
+        <p>The installer's SHA-256 is published on the website, and the code is public on GitHub. Miner files only run if they match their published SHA-256. Hashcoin never changes your antivirus or security settings.</p>
         <div class="links"><button class="link" id="l-safety" hidden>Installer SHA-256</button><button class="link" id="l-source">Code on GitHub</button></div>
       </div>
       <div class="dialog-col steps-box">
         <p>Allowing it is your choice. To allow it:</p>
-        <ol>
+        <ol id="steps-defender">
           <li>Open <b>Windows Security</b>.</li>
           <li>Go to <b>Virus &amp; threat protection</b> → <b>Protection history</b>.</li>
           <li>Select the Hashcoin item, then <b>Actions</b> → <b>Allow on device</b>. If there are two (the app and the miner), allow both.</li>
           <li>Reopen Hashcoin.</li>
         </ol>
+        <ol id="steps-other" hidden>
+          <li>Open <b class="av-name">your antivirus</b>.</li>
+          <li>Find Hashcoin in its <b>quarantine</b> or <b>history</b>.</li>
+          <li>Restore it, then allow it or add it as an <b>exception</b>. If there are two (the app and the miner), do both.</li>
+          <li>Reopen Hashcoin.</li>
+        </ol>
+        <div class="links"><button class="link" id="l-avhelp" hidden>Steps for <span class="av-name">your antivirus</span></button></div>
       </div>
     </div>
     <div class="dialog-foot">
@@ -541,10 +548,18 @@
     if (b) openLayer($("blocked"), $("blocked-dialog"), () => run("dismiss_blocked"));
     else closeLayer($("blocked"));
     if (b) {
-      $("blocked-title").textContent = b.what === "app" ? "Hashcoin closed while starting" : "Windows Defender stopped mining";
+      // Named after the active antivirus (Windows Security Center); "your antivirus" if unknown.
+      const av = (b.antivirus || "").trim() || "your antivirus";
+      const Av = av[0].toUpperCase() + av.slice(1);
+      const defender = /defender/i.test(av) && /windows|microsoft/i.test(av);
+      $("blocked-title").textContent = b.what === "app" ? "Hashcoin closed while starting" : `${Av} stopped mining`;
       $("blocked-lead").textContent = b.what === "app"
-        ? "That usually means Windows Defender flagged Hashcoin or its miner. Mining is off."
-        : "Defender flagged Hashcoin or its miner, so mining is off.";
+        ? `That usually means ${av} flagged Hashcoin or its miner. Mining is off.`
+        : `${Av} flagged Hashcoin or its miner, so mining is off.`;
+      $("steps-defender").hidden = !defender;
+      $("steps-other").hidden = defender;
+      document.querySelectorAll(".av-name").forEach((el) => (el.textContent = av));
+      $("l-avhelp").hidden = !info?.avHelpUrl || info.avHelpUrl.includes(".invalid"); // the site's page isn't up yet
       $("blocked-seen").textContent = `What the app saw: ${b.detail}.`;
     }
     $("gpus").innerHTML = s.gpus.length ? s.gpus.map((g) => {
@@ -635,6 +650,7 @@
   const link = (which) => invoke("open_link", { which }).catch((e) => { $("error").hidden = false; $("error").textContent = String(e); });
   $("l-source").onclick = () => link("source");
   $("l-safety").onclick = () => link("safety");
+  $("l-avhelp").onclick = () => link("avhelp");
 
   $("update-go").onclick = () => {
     $("update-go").disabled = true; $("update-go").textContent = "Installing…";

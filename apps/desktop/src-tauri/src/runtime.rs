@@ -105,7 +105,7 @@ pub struct Status {
     pub blocked: Option<Blocked>,
 }
 
-/// Antivirus (in practice Microsoft Defender) looks to have stopped mining.
+/// An antivirus (Microsoft Defender, Avast, Norton...) looks to have stopped mining.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Blocked {
@@ -113,6 +113,8 @@ pub struct Blocked {
     pub what: String,
     /// What the app saw, in plain words.
     pub detail: String,
+    /// The active antivirus by name (Windows Security Center), or None: "your antivirus".
+    pub antivirus: Option<String>,
 }
 
 /// Why a miner couldn't be started.
@@ -217,17 +219,19 @@ impl Runtime {
     /// the app looks like that).
     pub fn check_start_marker(&mut self) {
         if self.marker.left_over() {
-            self.blocked = Some(Blocked { what: "app".into(), detail: "Hashcoin was closed while it started the miner".into() });
+            self.blocked = Some(Blocked { what: "app".into(), detail: "Hashcoin was closed while it started the miner".into(), antivirus: system::active_antivirus() });
         }
     }
 
     pub fn is_blocked(&self) -> bool { self.blocked.is_some() }
 
-    /// Test builds only (see `defender_preview` in main.rs): show the Defender message as if `what`
-    /// ("miner" or "app") had been blocked, to review it. Mining stops, as it would for real.
-    pub fn preview_blocked(&mut self, what: &str) {
+    /// Test builds only (see `antivirus_preview` in main.rs): show the "stopped mining" message as if
+    /// `what` ("miner" or "app") had been blocked, by `antivirus` (None = whatever this PC runs), to
+    /// review it. Mining stops, as it would for real.
+    pub fn preview_blocked(&mut self, what: &str, antivirus: Option<String>) {
         self.stop();
-        self.blocked = Some(Blocked { what: what.into(), detail: "nothing, this is a preview in a test build".into() });
+        let antivirus = antivirus.or_else(system::active_antivirus);
+        self.blocked = Some(Blocked { what: what.into(), detail: "nothing, this is a preview in a test build".into(), antivirus });
     }
 
     /// "Not now": hide the explanation. Mining stays off.
@@ -236,7 +240,7 @@ impl Runtime {
     /// Antivirus looks to have stopped the miner: stop everything and explain.
     fn block(&mut self, detail: String) {
         self.stop();
-        self.blocked = Some(Blocked { what: "miner".into(), detail });
+        self.blocked = Some(Blocked { what: "miner".into(), detail, antivirus: system::active_antivirus() });
     }
 
     pub fn stop(&mut self) {

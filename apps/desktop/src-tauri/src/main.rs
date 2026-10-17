@@ -50,23 +50,36 @@ const SAFETY_URL: &str = match option_env!("HASHCOIN_SAFETY_URL") {
     _ => "https://hashcoin.invalid/safety",
 };
 
+/// The website's page with steps per antivirus (Defender, Norton, McAfee, Avast/AVG, Bitdefender,
+/// Kaspersky, ESET, Malwarebytes). Placeholder until the site has it (the window hides a `.invalid`
+/// link); the release workflow sets it.
+const AV_HELP_URL: &str = match option_env!("HASHCOIN_AV_HELP_URL") {
+    Some(u) if !u.is_empty() => u,
+    _ => "https://hashcoin.invalid/antivirus",
+};
+
 /// Passed by the Windows login entry, so the app knows it was started by "Start mining when Windows starts".
 const AUTOSTART_ARG: &str = "--autostart";
 
-/// Test and debug builds only: open the Defender message without Defender, to review it.
-/// `--show-defender-help` shows the "Defender stopped mining" version, `--show-defender-help=app` the
-/// "closed while starting" one. Release builds (no test key) ignore it.
+/// Test and debug builds only: open the "stopped mining" message without an antivirus doing it, to
+/// review it. `--show-defender-help` shows it for this PC's antivirus, `--show-defender-help=app` the
+/// "closed while starting" version, `--show-defender-help=Avast` (any name) as if that product did it.
+/// Release builds (no test key) ignore it.
 const DEFENDER_PREVIEW_ARG: &str = "--show-defender-help";
 const PREVIEW_ALLOWED: bool = cfg!(debug_assertions) || TEST_TRUSTED_KEY.is_some();
 
-/// Which Defender message a preview argument asks for, if this build allows previews at all.
-fn defender_preview(args: &[String], allowed: bool) -> Option<&'static str> {
+/// Which message a preview argument asks for ("miner" or "app", and an antivirus name if given), if
+/// this build allows previews at all.
+fn antivirus_preview(args: &[String], allowed: bool) -> Option<(&'static str, Option<String>)> {
     if !allowed { return None; }
-    args.iter().find_map(|a| match a.as_str() {
-        DEFENDER_PREVIEW_ARG => Some("miner"),
-        a if a == format!("{DEFENDER_PREVIEW_ARG}=app") => Some("app"),
-        a if a == format!("{DEFENDER_PREVIEW_ARG}=miner") => Some("miner"),
-        _ => None,
+    args.iter().find_map(|a| {
+        if a == DEFENDER_PREVIEW_ARG { return Some(("miner", None)); }
+        let value = a.strip_prefix(DEFENDER_PREVIEW_ARG)?.strip_prefix('=')?.trim();
+        Some(match value {
+            "app" => ("app", None),
+            "miner" | "" => ("miner", None),
+            name => ("miner", Some(name.chars().take(60).collect())),
+        })
     })
 }
 
@@ -148,17 +161,17 @@ fn status(rt: State<Shared>) -> Status { rt.lock().unwrap().status() }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct AppInfo { version: String, test_build: bool, updates: bool, source_url: String, safety_url: String }
+struct AppInfo { version: String, test_build: bool, updates: bool, source_url: String, safety_url: String, av_help_url: String }
 
 #[tauri::command]
 fn app_info(app: AppHandle) -> AppInfo {
     AppInfo {
         version: app.package_info().version.to_string(), test_build: TEST_TRUSTED_KEY.is_some(), updates: updates_configured(&app),
-        source_url: SOURCE_URL.into(), safety_url: SAFETY_URL.into(),
+        source_url: SOURCE_URL.into(), safety_url: SAFETY_URL.into(), av_help_url: AV_HELP_URL.into(),
     }
 }
 
-/// "Not now" on the Defender message: hide it, mining stays off.
+/// "Not now" on the antivirus message: hide it, mining stays off.
 #[tauri::command]
 fn dismiss_blocked(rt: State<Shared>) -> Status {
     let mut r = rt.lock().unwrap();
@@ -169,7 +182,7 @@ fn dismiss_blocked(rt: State<Shared>) -> Status {
 /// Open one of our two pages in the default browser (only these two, never a URL from the window).
 #[tauri::command]
 fn open_link(which: String) -> Result<(), String> {
-    let url = match which.as_str() { "source" => SOURCE_URL, "safety" => SAFETY_URL, _ => return Err("unknown link".into()) };
+    let url = match which.as_str() { "source" => SOURCE_URL, "avhelp" => AV_HELP_URL, "safety" => SAFETY_URL, _ => return Err("unknown link".into()) };
     if url.contains(".invalid") { return Err("That page isn't up yet.".into()); }
     #[cfg(windows)]
     {
@@ -300,8 +313,8 @@ fn main() {
         // the running app, so two copies never mine on the same cards.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             // Already running: a preview launch shows the message in the running app.
-            if let Some(what) = defender_preview(&args, PREVIEW_ALLOWED) {
-                if let Some(rt) = app.try_state::<Shared>() { rt.lock().unwrap().preview_blocked(what); }
+            if let Some((what, av)) = antivirus_preview(&args, PREVIEW_ALLOWED) {
+                if let Some(rt) = app.try_state::<Shared>() { rt.lock().unwrap().preview_blocked(what, av); }
             }
             show_window(app)
         }))
@@ -319,7 +332,7 @@ fn main() {
             // Closed while starting a miner last time? Then explain before anything else.
             rt.check_start_marker();
             let args: Vec<String> = std::env::args().collect();
-            if let Some(what) = defender_preview(&args, PREVIEW_ALLOWED) { rt.preview_blocked(what); }
+            if let Some((what, av)) = antivirus_preview(&args, PREVIEW_ALLOWED) { rt.preview_blocked(what, av); }
 
             // Mining starts only on the user's say-so: the Start button, "Start mining when Windows
             // starts" (which launches us with AUTOSTART_ARG), or mining being on before an update.
@@ -398,10 +411,14 @@ mod tests {
     fn release_builds_ignore_the_defender_preview() {
         let args = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
         let preview = args(&["hashcoin-miner.exe", "--show-defender-help"]);
-        assert_eq!(defender_preview(&preview, false), None, "a release build shows nothing");
-        assert_eq!(defender_preview(&preview, true), Some("miner"));
-        assert_eq!(defender_preview(&args(&["x", "--show-defender-help=app"]), true), Some("app"));
-        assert_eq!(defender_preview(&args(&["x", "--autostart"]), true), None);
+        assert_eq!(antivirus_preview(&preview, false), None, "a release build shows nothing");
+        assert_eq!(antivirus_preview(&args(&["x", "--show-defender-help=Avast"]), false), None);
+        assert_eq!(antivirus_preview(&preview, true), Some(("miner", None)));
+        assert_eq!(antivirus_preview(&args(&["x", "--show-defender-help=app"]), true), Some(("app", None)));
+        assert_eq!(antivirus_preview(&args(&["x", "--show-defender-help=Avast"]), true), Some(("miner", Some("Avast".into()))));
+        assert_eq!(antivirus_preview(&args(&["x", "--show-defender-help=Norton 360"]), true), Some(("miner", Some("Norton 360".into()))));
+        assert_eq!(antivirus_preview(&args(&["x", "--show-defender-helpx"]), true), None);
+        assert_eq!(antivirus_preview(&args(&["x", "--autostart"]), true), None);
         // What a release build is: no test key compiled in, not a debug build.
         assert_eq!(PREVIEW_ALLOWED, cfg!(debug_assertions) || option_env!("HASHCOIN_TEST_TRUSTED_KEY").is_some_and(|k| !k.is_empty()));
     }

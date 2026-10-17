@@ -142,6 +142,29 @@ mod nvml {
     }
 }
 
+/// The antivirus that's active, by name, from Windows Security Center (read-only). None when it
+/// can't be read in a few seconds; the window then says "your antivirus".
+pub fn active_antivirus() -> Option<String> {
+    #[cfg(windows)]
+    {
+        // WMI on its own short-lived thread, so a slow Security Center never holds up the app.
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || { let _ = tx.send(antivirus_products()); });
+        rx.recv_timeout(Duration::from_secs(5)).ok().and_then(|p| hashcoin_core::antivirus::active(&p))
+    }
+    #[cfg(not(windows))]
+    None
+}
+
+#[cfg(windows)]
+fn antivirus_products() -> Vec<hashcoin_core::antivirus::Product> {
+    #[derive(serde::Deserialize)]
+    #[serde(rename = "AntiVirusProduct", rename_all = "camelCase")]
+    struct Row { display_name: String, product_state: u32 }
+    let Ok(con) = wmi::WMIConnection::with_namespace_path(r"root\SecurityCenter2") else { return Vec::new() };
+    con.query::<Row>().map(|rows| rows.into_iter().map(|r| hashcoin_core::antivirus::Product { name: r.display_name, state: r.product_state }).collect()).unwrap_or_default()
+}
+
 /// Time since the last keyboard or mouse input in this user's session.
 #[cfg(windows)]
 pub fn idle_time() -> Option<Duration> {
@@ -203,6 +226,11 @@ mod tests {
             assert!(!g.name.is_empty());
             assert!(temps.get(&g.index).is_some_and(|&t| t > 0 && t < 120), "{g:?} {temps:?}");
         }
+        // Security Center answers with this PC's antivirus (or nothing); either way, quickly.
+        let t = std::time::Instant::now();
+        let av = super::active_antivirus();
+        assert!(t.elapsed() < std::time::Duration::from_secs(6));
+        eprintln!("active antivirus: {av:?}");
         let adapters = super::display_adapters();
         for g in &nvidia {
             assert!(adapters.iter().any(|a| a == &g.name), "DirectX and NVML name {} the same: {adapters:?}", g.name);

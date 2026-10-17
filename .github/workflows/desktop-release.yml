@@ -11,7 +11,8 @@ name: Desktop release (Windows)
 #                                                goes in tauri.conf.json plugins.updater.pubkey
 #   secret   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password, if it has one
 #   variable HASHCOIN_API_BASE                   production API, e.g. https://api.example.com
-#   variable HASHCOIN_SAFETY_URL                 the website's antivirus/safety page (linked when Defender blocks the app)
+#   variable HASHCOIN_SAFETY_URL                 the website page with each installer's SHA-256 (linked when an antivirus blocks the app)
+#   variable HASHCOIN_AV_HELP_URL                the website page with steps per antivirus ("Steps for <product>")
 #   variable WINDOWS_SIGNING                     leave unset: releases are unsigned (user, Oct 16: no personal-name
 #                                                publisher). "azure" turns on signing later, for an organization.
 #   variable AZURE_SIGNING_ENDPOINT / AZURE_SIGNING_ACCOUNT / AZURE_SIGNING_PROFILE
@@ -85,12 +86,14 @@ jobs:
           KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           API: ${{ vars.HASHCOIN_API_BASE }}
           SAFETY_URL: ${{ vars.HASHCOIN_SAFETY_URL }}
+          AV_HELP_URL: ${{ vars.HASHCOIN_AV_HELP_URL }}
         run: |
           echo "TAURI_SIGNING_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
           echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
           echo "HASHCOIN_API_BASE=$API" >> "$GITHUB_ENV"
-          # Linked from the in-app Defender message; until set, the app shows only the checksums link.
+          # Linked from the in-app antivirus message; until set, the app hides those links.
           [ -n "$SAFETY_URL" ] && echo "HASHCOIN_SAFETY_URL=$SAFETY_URL" >> "$GITHUB_ENV" || true
+          [ -n "$AV_HELP_URL" ] && echo "HASHCOIN_AV_HELP_URL=$AV_HELP_URL" >> "$GITHUB_ENV" || true
 
       - name: Throwaway update key (test build)
         if: env.TEST_BUILD == 'true'
