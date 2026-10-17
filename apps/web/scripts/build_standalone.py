@@ -13,7 +13,7 @@ from pathlib import Path
 
 WEB = Path(__file__).resolve().parent.parent
 OUT = WEB / "standalone"
-PAGES = ["index.html", "calculator.html", "faq.html"]
+PAGES = ["index.html", "calculator.html", "faq.html", "antivirus.html"]
 
 
 def data_uri(path: Path) -> str:

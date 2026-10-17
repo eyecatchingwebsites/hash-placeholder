@@ -8,11 +8,11 @@ effects are switched off (they can stay invisible inside the preview frame).
 Usage (from the repo root, after build_standalone.py):
     python3 apps/web/scripts/artifact_page.py [out_dir]
 
-Writes out_dir/main.html (the page) and copies calculator.html and faq.html beside it.
+Writes out_dir/main.html (the page) and copies calculator.html, faq.html and antivirus.html beside it.
 out_dir defaults to apps/web/.artifact/ (git-ignored). Then publish with the Artifact tool:
     url       = https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc
     file_path = <out_dir>/main.html
-    files     = {"calculator.html": "<out_dir>/calculator.html", "faq.html": "<out_dir>/faq.html"}
+    files     = {"calculator.html": "<out_dir>/calculator.html", "faq.html": "<out_dir>/faq.html", "antivirus.html": "<out_dir>/antivirus.html"}
 """
 import re
 import shutil
@@ -35,9 +35,9 @@ def main() -> None:
     h = re.sub(r"<title>.*?</title>", "<title>Hashcoin Website</title>", h, count=1, flags=re.S)
     h = h.replace("</style>", ".reveal { opacity: 1 !important; transform: none !important; }\n</style>", 1)
     (out / "main.html").write_text(h, encoding="utf-8", newline="\n")
-    for name in ("calculator.html", "faq.html"):
+    for name in ("calculator.html", "faq.html", "antivirus.html"):
         shutil.copyfile(SRC / name, out / name)
-    print(f"wrote {out / 'main.html'} ({len(h) // 1024} KB), calculator.html, faq.html")
+    print(f"wrote {out / 'main.html'} ({len(h) // 1024} KB), calculator.html, faq.html, antivirus.html")
 
 
 if __name__ == "__main__":

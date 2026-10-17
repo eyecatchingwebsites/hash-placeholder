@@ -178,4 +178,13 @@
       sel.append(og);
     });
   };
+
+  // A link to a question opens it (e.g. antivirus.html#avast, which the app links to).
+  function openLinked() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const el = id && document.getElementById(id);
+    if (el && el.tagName === "DETAILS") { el.open = true; el.scrollIntoView({ block: "start" }); }
+  }
+  openLinked();
+  addEventListener("hashchange", openLinked);
 })();

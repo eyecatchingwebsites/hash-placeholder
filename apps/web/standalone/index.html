@@ -275,7 +275,7 @@ code, .eq { font: 600 0.86rem/1.6 var(--font-mono); color: var(--text); }
 
 /* ---------- FAQ ---------- */
 .faq { display: grid; border-top: 1px solid var(--line); }
-.faq details { border-bottom: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
 .faq summary { list-style: none; display: flex; justify-content: space-between; gap: 16px; align-items: center; cursor: pointer; padding: 18px 0; font: 600 1.02rem/1.4 var(--font-body); }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after { content: "+"; font: 400 1.4rem/1 var(--font-mono); color: var(--muted); flex: none; }
@@ -356,6 +356,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .prose { display: grid; gap: 14px; color: var(--muted); max-width: 760px; }
 .prose b { color: var(--text); font-weight: 600; }
 .prose ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+/* Numbered how-to steps (antivirus help) */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: st; }
+.steps li { position: relative; padding-left: 34px; min-height: 24px; }
+.steps li::before { counter-increment: st; content: counter(st); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--gold-line); color: color-mix(in srgb, var(--gold) var(--gold-text-mix), #000); display: grid; place-items: center; font: 600 0.75rem/1 var(--font-body); }
+.steps b, .prose li b { color: var(--text); font-weight: 600; }
+.prose code { overflow-wrap: anywhere; }
 .prose table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .prose th, .prose td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
 .prose th { font: 600 0.8rem/1.4 var(--font-mono); color: var(--dim); }
@@ -739,6 +745,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .pc-grid .pc-side { gap: 14px; }
 @media (max-width: 960px) { .pc-app { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 .pc-side .numbered, .pc-side .ticks { margin-top: 0; }
+.dl-note { margin: 10px 0 0; font-size: .85rem; color: var(--muted); }
+.dl-note a { color: inherit; }
 .dev-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dev-cards li { display: flex; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--panel); font-size: .92rem; }
 .dev-cards b { font-weight: 600; }
@@ -1503,9 +1511,10 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
               <li>NVIDIA, AMD, Intel</li>
               <li><span><span data-gpu-count>133</span> GPUs, laptops included</span></li>
               <li>Open source</li>
-              <li>Signed installer</li>
+              <li>SHA-256 published</li>
             </ul>
             <div><a class="btn btn-gold" href="#" data-soon="The Windows app isn't released yet. Join the waitlist to hear when it is.">Download for Windows <span class="tag">Coming soon</span></a></div>
+            <p class="dl-note">Windows or your antivirus may warn you the first time. <a href="antivirus.html">Why, and how to check it's ours</a>.</p>
           </div>
         </div>
         <div class="pc-grid">
@@ -1634,7 +1643,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
         <p>Your GPU mines, buys $HASH and pays you. A 2–5% tax pays miners and holders.</p>
       </div>
       <div><h4>Product</h4><ul><li><a href="#earn">Earnings</a></li><li><a href="calculator.html">Calculator</a></li><li><a href="#levels">Levels</a></li><li><a href="#pc">Mining</a></li></ul></div>
-      <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="#token">Tokenomics</a></li><li><a href="#launch">Launch</a></li></ul></div>
+      <div><h4>Info</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="antivirus.html">Antivirus help</a></li><li><a href="#token">Tokenomics</a></li><li><a href="#launch">Launch</a></li></ul></div>
       <div><h4>Community</h4><ul>
         <li><a href="#" data-social="x" data-soon="Our X account goes live closer to launch.">X (soon)</a></li>
         <li><a href="#" data-social="discord" data-soon="The Discord opens closer to launch.">Discord (soon)</a></li>
@@ -2101,6 +2110,15 @@ window.HashModel = (function () {
       sel.append(og);
     });
   };
+
+  // A link to a question opens it (e.g. antivirus.html#avast, which the app links to).
+  function openLinked() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const el = id && document.getElementById(id);
+    if (el && el.tagName === "DETAILS") { el.open = true; el.scrollIntoView({ block: "start" }); }
+  }
+  openLinked();
+  addEventListener("hashchange", openLinked);
 })();
 
 </script>

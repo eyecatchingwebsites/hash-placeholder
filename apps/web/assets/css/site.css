@@ -257,7 +257,7 @@ code, .eq { font: 600 0.86rem/1.6 var(--font-mono); color: var(--text); }
 
 /* ---------- FAQ ---------- */
 .faq { display: grid; border-top: 1px solid var(--line); }
-.faq details { border-bottom: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
 .faq summary { list-style: none; display: flex; justify-content: space-between; gap: 16px; align-items: center; cursor: pointer; padding: 18px 0; font: 600 1.02rem/1.4 var(--font-body); }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after { content: "+"; font: 400 1.4rem/1 var(--font-mono); color: var(--muted); flex: none; }
@@ -338,6 +338,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .prose { display: grid; gap: 14px; color: var(--muted); max-width: 760px; }
 .prose b { color: var(--text); font-weight: 600; }
 .prose ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+/* Numbered how-to steps (antivirus help) */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: st; }
+.steps li { position: relative; padding-left: 34px; min-height: 24px; }
+.steps li::before { counter-increment: st; content: counter(st); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--gold-line); color: color-mix(in srgb, var(--gold) var(--gold-text-mix), #000); display: grid; place-items: center; font: 600 0.75rem/1 var(--font-body); }
+.steps b, .prose li b { color: var(--text); font-weight: 600; }
+.prose code { overflow-wrap: anywhere; }
 .prose table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .prose th, .prose td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
 .prose th { font: 600 0.8rem/1.4 var(--font-mono); color: var(--dim); }
@@ -721,6 +727,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(
 .pc-grid .pc-side { gap: 14px; }
 @media (max-width: 960px) { .pc-app { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 .pc-side .numbered, .pc-side .ticks { margin-top: 0; }
+.dl-note { margin: 10px 0 0; font-size: .85rem; color: var(--muted); }
+.dl-note a { color: inherit; }
 .dev-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dev-cards li { display: flex; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--panel); font-size: .92rem; }
 .dev-cards b { font-weight: 600; }
