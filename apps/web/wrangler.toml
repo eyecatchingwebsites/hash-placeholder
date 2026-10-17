@@ -1,0 +1,5 @@
+# Cloudflare Pages project for the website (docs/HOSTING.md). In the Cloudflare dashboard:
+# root directory apps/web, build command `node scripts/build_pages.mjs`, output directory dist.
+name = "hashcoin"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"

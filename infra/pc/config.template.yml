@@ -1,0 +1,18 @@
+# Cloudflare Tunnel for the Hashcoin API (docs/HOSTING.md).
+# setup-tunnel.ps1 fills in the {{...}} values and writes the real file to
+# C:\ProgramData\Hashcoin\cloudflared\config.yml, which the Cloudflared Windows service reads.
+# The tunnel is an outbound connection from this PC to Cloudflare: no router port is opened.
+tunnel: {{TUNNEL_ID}}
+credentials-file: {{CREDENTIALS_FILE}}
+logfile: {{LOG_FILE}}
+loglevel: info
+
+ingress:
+  # Only the API's /v1/ routes go through, to the API on this PC's loopback address.
+  - hostname: api.hashcoin.app
+    path: ^/v1/
+    service: http://127.0.0.1:{{API_PORT}}
+    originRequest:
+      connectTimeout: 10s
+  # Anything else (other paths, other hostnames) gets a plain 404 from Cloudflare.
+  - service: http_status:404

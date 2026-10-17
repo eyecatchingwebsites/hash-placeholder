@@ -8,7 +8,15 @@
 <meta name="theme-color" content="#0B0C0D">
 <meta property="og:title" content="Hashcoin ($HASH)">
 <meta property="og:description" content="Most coins need buyers. $HASH makes its own. Hold it, mine it, or both.">
-<meta property="og:image" content="brand/logo/hashcoin-1024.png">
+<link rel="canonical" href="https://hashcoin.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hashcoin">
+<meta property="og:url" content="https://hashcoin.app/">
+<meta property="og:image" content="https://hashcoin.app/brand/logo/hashcoin-1024.png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="The Hashcoin logo: a white hash sign on a gold coin">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="brand/logo/favicon.ico" sizes="any">
 <link rel="icon" href="brand/logo/hashcoin-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,7 +94,7 @@
           <li><b>Or both.</b> A bigger bag unlocks the bigger miner bonuses.</li>
         </ul>
         <div class="hero-ctas">
-          <a class="btn btn-gold" href="#launch">Join the waitlist <span class="tag">Coming soon</span></a>
+          <a class="btn btn-gold" href="#launch">Join the waitlist <span class="tag" data-waitlist-soon>Coming soon</span></a>
           <a class="btn btn-ghost" href="#earn">What would I make?</a>
         </div>
       </div>
@@ -473,7 +481,8 @@
               <li>Open source</li>
               <li>SHA-256 published</li>
             </ul>
-            <div><a class="btn btn-gold" href="#" data-soon="The Windows app isn't released yet. Join the waitlist to hear when it is.">Download for Windows <span class="tag">Coming soon</span></a></div>
+            <div><a class="btn btn-gold" href="#" data-download data-soon="The Windows app isn't released yet. Join the waitlist to hear when it is.">Download for Windows <span class="tag" data-download-soon>Coming soon</span></a></div>
+            <p class="dl-note" data-download-info hidden>Version <span data-download-version></span>. SHA-256: <code class="sha" data-download-sha></code></p>
             <p class="dl-note">Windows or your antivirus may warn you the first time. <a href="antivirus.html">Why, and how to check it's ours</a>.</p>
           </div>
         </div>
@@ -529,7 +538,7 @@
             <div><dt>Burn</dt><dd>None</dd></div>
             <div><dt>Dev bag</dt><dd><b>1%</b>, bought in public. Locked 90 days. No payouts.</dd></div>
             <div><dt>Wallets</dt><dd>Every dev wallet listed here at launch.</dd></div>
-            <div><dt>Contract</dt><dd><b>Posted here first.</b> Any CA before that is fake.</dd></div>
+            <div><dt>Contract</dt><dd><b>Posted here first.</b> Any CA before that is fake.<code class="sha ca-full" data-ca-full hidden></code></dd></div>
           </dl>
         </div>
       </div>
@@ -539,12 +548,12 @@
         <div class="launch">
           <div>
             <div class="xhead"><h2>Be mining at launch.</h2><p class="lede">Fewest miners on day one means the biggest share per GPU.</p></div>
-            <form class="wl-form" onsubmit="return false;" aria-describedby="wl-note">
+            <form class="wl-form" data-waitlist onsubmit="return false;" aria-describedby="wl-note">
               <label class="sr-only" for="wl-gpu">Your GPU</label>
               <select class="select" id="wl-gpu" disabled><option>Your GPU</option></select>
               <label class="sr-only" for="wl-contact">X handle or email</label>
               <input class="input" id="wl-contact" type="text" placeholder="X handle or email" disabled>
-              <button class="btn btn-gold" type="button" aria-disabled="true" data-soon="The waitlist opens soon. Nothing is collected yet.">Join the waitlist <span class="tag">Coming soon</span></button>
+              <button class="btn btn-gold" type="submit" aria-disabled="true" data-soon="The waitlist opens soon. Nothing is collected yet.">Join the waitlist <span class="tag" data-waitlist-soon>Coming soon</span></button>
             </form>
             <p class="note" id="wl-note" style="margin-top: 10px;">Not open yet. This form doesn't collect anything.</p>
             <p class="seed"><b>We never ask for your seed phrase and never DM first.</b></p>
