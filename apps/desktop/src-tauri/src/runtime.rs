@@ -223,6 +223,13 @@ impl Runtime {
 
     pub fn is_blocked(&self) -> bool { self.blocked.is_some() }
 
+    /// Test builds only (see `defender_preview` in main.rs): show the Defender message as if `what`
+    /// ("miner" or "app") had been blocked, to review it. Mining stops, as it would for real.
+    pub fn preview_blocked(&mut self, what: &str) {
+        self.stop();
+        self.blocked = Some(Blocked { what: what.into(), detail: "nothing, this is a preview in a test build".into() });
+    }
+
     /// "Not now": hide the explanation. Mining stays off.
     pub fn dismiss_blocked(&mut self) { self.blocked = None; }
 

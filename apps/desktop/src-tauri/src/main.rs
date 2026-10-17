@@ -53,6 +53,23 @@ const SAFETY_URL: &str = match option_env!("HASHCOIN_SAFETY_URL") {
 /// Passed by the Windows login entry, so the app knows it was started by "Start mining when Windows starts".
 const AUTOSTART_ARG: &str = "--autostart";
 
+/// Test and debug builds only: open the Defender message without Defender, to review it.
+/// `--show-defender-help` shows the "Defender stopped mining" version, `--show-defender-help=app` the
+/// "closed while starting" one. Release builds (no test key) ignore it.
+const DEFENDER_PREVIEW_ARG: &str = "--show-defender-help";
+const PREVIEW_ALLOWED: bool = cfg!(debug_assertions) || TEST_TRUSTED_KEY.is_some();
+
+/// Which Defender message a preview argument asks for, if this build allows previews at all.
+fn defender_preview(args: &[String], allowed: bool) -> Option<&'static str> {
+    if !allowed { return None; }
+    args.iter().find_map(|a| match a.as_str() {
+        DEFENDER_PREVIEW_ARG => Some("miner"),
+        a if a == format!("{DEFENDER_PREVIEW_ARG}=app") => Some("app"),
+        a if a == format!("{DEFENDER_PREVIEW_ARG}=miner") => Some("miner"),
+        _ => None,
+    })
+}
+
 type Shared = Arc<Mutex<Runtime>>;
 
 /// An update found by `check_update`, waiting for the user to click Install.
@@ -281,7 +298,13 @@ fn main() {
     tauri::Builder::default()
         // A second launch (e.g. the Start menu while the login entry already started it) just opens
         // the running app, so two copies never mine on the same cards.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_window(app)))
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // Already running: a preview launch shows the message in the running app.
+            if let Some(what) = defender_preview(&args, PREVIEW_ALLOWED) {
+                if let Some(rt) = app.try_state::<Shared>() { rt.lock().unwrap().preview_blocked(what); }
+            }
+            show_window(app)
+        }))
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec![AUTOSTART_ARG])))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(PendingUpdate::default())
@@ -295,6 +318,8 @@ fn main() {
             rt.set_gpus(detect_gpus());
             // Closed while starting a miner last time? Then explain before anything else.
             rt.check_start_marker();
+            let args: Vec<String> = std::env::args().collect();
+            if let Some(what) = defender_preview(&args, PREVIEW_ALLOWED) { rt.preview_blocked(what); }
 
             // Mining starts only on the user's say-so: the Start button, "Start mining when Windows
             // starts" (which launches us with AUTOSTART_ARG), or mining being on before an update.
@@ -363,4 +388,21 @@ fn main() {
         .invoke_handler(tauri::generate_handler![status, app_info, dismiss_blocked, open_link, save_wallet, save_settings, detect, start, stop, server_get, check_update, install_update])
         .run(tauri::generate_context!())
         .expect("error while running Hashcoin Miner");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn release_builds_ignore_the_defender_preview() {
+        let args = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let preview = args(&["hashcoin-miner.exe", "--show-defender-help"]);
+        assert_eq!(defender_preview(&preview, false), None, "a release build shows nothing");
+        assert_eq!(defender_preview(&preview, true), Some("miner"));
+        assert_eq!(defender_preview(&args(&["x", "--show-defender-help=app"]), true), Some("app"));
+        assert_eq!(defender_preview(&args(&["x", "--autostart"]), true), None);
+        // What a release build is: no test key compiled in, not a debug build.
+        assert_eq!(PREVIEW_ALLOWED, cfg!(debug_assertions) || option_env!("HASHCOIN_TEST_TRUSTED_KEY").is_some_and(|k| !k.is_empty()));
+    }
 }

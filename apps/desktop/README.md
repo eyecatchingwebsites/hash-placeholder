@@ -74,6 +74,9 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   choice, with the steps: Windows Security → Virus & threat protection → Protection history → the Hashcoin item →
   Actions → Allow on device (both items if there are two), then reopen Hashcoin. "Not now" closes it and leaves mining
   off; after a block the app never starts mining by itself (login start and update resume are skipped).
+- **To review the message without Defender** (test and debug builds only; release builds ignore it, tested): start
+  the app with `--show-defender-help` (the "Defender stopped mining" version) or `--show-defender-help=app` (the
+  "closed while starting" version). Works on a running app too (it opens the window and shows the message).
 - **The app never changes Defender itself**, never offers to, adds no exclusions and never asks for admin. Verification
   is unchanged.
 
