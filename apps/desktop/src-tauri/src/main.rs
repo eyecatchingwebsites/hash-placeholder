@@ -43,16 +43,17 @@ const SOURCE_URL: &str = match option_env!("HASHCOIN_SOURCE_URL") {
     _ => "https://github.com/eyecatchingwebsites/hash-placeholder",
 };
 
-/// The website's page with each installer's SHA-256 and why Windows warns about miners. Placeholder
-/// until the site has it (the window hides a `.invalid` link); the release workflow sets it.
+/// The website's section on checking Hashcoin: each installer's SHA-256 and how to compare it, the
+/// public code, miners checked against the signed list (`<site>/antivirus.html#check`). Placeholder
+/// until the site is hosted (the window hides a `.invalid` link); the release workflow sets it.
 const SAFETY_URL: &str = match option_env!("HASHCOIN_SAFETY_URL") {
     Some(u) if !u.is_empty() => u,
     _ => "https://hashcoin.invalid/safety",
 };
 
-/// The website's page with steps per antivirus (Defender, Norton, McAfee, Avast/AVG, Bitdefender,
-/// Kaspersky, ESET, Malwarebytes). Placeholder until the site has it (the window hides a `.invalid`
-/// link); the release workflow sets it.
+/// The website's page with steps per antivirus (`<site>/antivirus.html`). The app adds the section
+/// for the blocking product (`antivirus::help_anchor`, e.g. `#avast`). Placeholder until the site is
+/// hosted (the window hides a `.invalid` link); the release workflow sets it.
 const AV_HELP_URL: &str = match option_env!("HASHCOIN_AV_HELP_URL") {
     Some(u) if !u.is_empty() => u,
     _ => "https://hashcoin.invalid/antivirus",
@@ -179,10 +180,25 @@ fn dismiss_blocked(rt: State<Shared>) -> Status {
     r.status()
 }
 
-/// Open one of our two pages in the default browser (only these two, never a URL from the window).
+/// The antivirus help page, opened at the section for `antivirus` (from the current block).
+fn av_help_link(base: &str, antivirus: Option<&str>) -> String {
+    let base = base.split('#').next().unwrap_or(base);
+    format!("{base}#{}", hashcoin_core::antivirus::help_anchor(antivirus))
+}
+
+/// Open one of our pages in the default browser (only these, never a URL from the window).
 #[tauri::command]
-fn open_link(which: String) -> Result<(), String> {
-    let url = match which.as_str() { "source" => SOURCE_URL, "avhelp" => AV_HELP_URL, "safety" => SAFETY_URL, _ => return Err("unknown link".into()) };
+fn open_link(rt: State<Shared>, which: String) -> Result<(), String> {
+    let url = match which.as_str() {
+        "source" => SOURCE_URL.to_string(),
+        "safety" => SAFETY_URL.to_string(),
+        "avhelp" => {
+            let av = rt.lock().unwrap().status().blocked.and_then(|b| b.antivirus);
+            av_help_link(AV_HELP_URL, av.as_deref())
+        }
+        _ => return Err("unknown link".into()),
+    };
+    let url = url.as_str();
     if url.contains(".invalid") { return Err("That page isn't up yet.".into()); }
     #[cfg(windows)]
     {
@@ -419,6 +435,10 @@ mod tests {
         assert_eq!(antivirus_preview(&args(&["x", "--show-defender-help=Norton 360"]), true), Some(("miner", Some("Norton 360".into()))));
         assert_eq!(antivirus_preview(&args(&["x", "--show-defender-helpx"]), true), None);
         assert_eq!(antivirus_preview(&args(&["x", "--autostart"]), true), None);
+        // The help link opens the blocking product's section of the page.
+        assert_eq!(av_help_link("https://hashcoin.app/antivirus.html", Some("AVG Antivirus")), "https://hashcoin.app/antivirus.html#avast");
+        assert_eq!(av_help_link("https://hashcoin.app/antivirus.html#allow", Some("Windows Defender")), "https://hashcoin.app/antivirus.html#defender");
+        assert_eq!(av_help_link("https://hashcoin.app/antivirus.html", None), "https://hashcoin.app/antivirus.html#allow");
         // What a release build is: no test key compiled in, not a debug build.
         assert_eq!(PREVIEW_ALLOWED, cfg!(debug_assertions) || option_env!("HASHCOIN_TEST_TRUSTED_KEY").is_some_and(|k| !k.is_empty()));
     }

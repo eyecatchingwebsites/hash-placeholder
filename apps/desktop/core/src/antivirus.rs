@@ -33,6 +33,25 @@ pub fn active(products: &[Product]) -> Option<String> {
     third_party.first().or(defender.first()).map(|p| p.name.trim().to_string())
 }
 
+/// The section of the website's antivirus help page (`antivirus.html`) for this product, by its
+/// Security Center name: `defender`, `norton`, `mcafee`, `avast` (Avast and AVG), `bitdefender`,
+/// `kaspersky`, `eset`, `malwarebytes`; `allow` (the general steps) for anything else or unknown.
+pub fn help_anchor(name: Option<&str>) -> &'static str {
+    let Some(name) = name else { return "allow" };
+    if is_defender(name) { return "defender"; }
+    let n = name.to_ascii_lowercase();
+    let words: Vec<&str> = n.split(|c: char| !c.is_ascii_alphanumeric()).filter(|w| !w.is_empty()).collect();
+    let has = |w: &str| words.contains(&w);
+    if n.contains("norton") || has("symantec") { "norton" }
+    else if n.contains("mcafee") { "mcafee" }
+    else if n.contains("avast") || has("avg") { "avast" }
+    else if n.contains("bitdefender") { "bitdefender" }
+    else if n.contains("kaspersky") { "kaspersky" }
+    else if has("eset") || n.contains("nod32") { "eset" }
+    else if n.contains("malwarebytes") { "malwarebytes" }
+    else { "allow" }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -65,5 +84,34 @@ mod tests {
         assert_eq!(active(&[p("Windows Defender", 0x060100)]), None);
         assert_eq!(active(&[]), None);
         assert!(is_defender("Microsoft Defender Antivirus") && is_defender("Windows Defender") && !is_defender("Avast Antivirus"));
+    }
+
+    #[test]
+    fn maps_products_to_help_page_sections() {
+        let cases = [
+            ("Windows Defender", "defender"),
+            ("Microsoft Defender Antivirus", "defender"),
+            ("Norton 360", "norton"),
+            ("Norton Security", "norton"),
+            ("McAfee VirusScan", "mcafee"),
+            ("McAfee Total Protection", "mcafee"),
+            ("Avast Antivirus", "avast"),
+            ("Avast Free Antivirus", "avast"),
+            ("AVG Antivirus", "avast"),
+            ("AVG AntiVirus FREE", "avast"),
+            ("Bitdefender Antivirus", "bitdefender"),
+            ("Kaspersky", "kaspersky"),
+            ("Kaspersky Internet Security", "kaspersky"),
+            ("ESET Security", "eset"),
+            ("ESET NOD32 Antivirus", "eset"),
+            ("Malwarebytes", "malwarebytes"),
+            ("Webroot SecureAnywhere", "allow"),
+            ("Pavgo Shield", "allow"), // "avg" inside another word isn't AVG
+            ("Preset Guard", "allow"), // nor "eset" inside "preset"
+        ];
+        for (name, anchor) in cases {
+            assert_eq!(help_anchor(Some(name)), anchor, "{name}");
+        }
+        assert_eq!(help_anchor(None), "allow");
     }
 }

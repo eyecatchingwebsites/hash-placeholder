@@ -11,8 +11,8 @@ name: Desktop release (Windows)
 #                                                goes in tauri.conf.json plugins.updater.pubkey
 #   secret   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password, if it has one
 #   variable HASHCOIN_API_BASE                   production API, e.g. https://api.example.com
-#   variable HASHCOIN_SAFETY_URL                 the website page with each installer's SHA-256 (linked when an antivirus blocks the app)
-#   variable HASHCOIN_AV_HELP_URL                the website page with steps per antivirus ("Steps for <product>")
+#   variable HASHCOIN_SAFETY_URL                 <site>/antivirus.html#check (installer SHA-256; linked when an antivirus blocks the app)
+#   variable HASHCOIN_AV_HELP_URL                <site>/antivirus.html (steps per antivirus; the app adds #avast, #norton... itself)
 #   variable WINDOWS_SIGNING                     leave unset: releases are unsigned (user, Oct 16: no personal-name
 #                                                publisher). "azure" turns on signing later, for an organization.
 #   variable AZURE_SIGNING_ENDPOINT / AZURE_SIGNING_ACCOUNT / AZURE_SIGNING_PROFILE

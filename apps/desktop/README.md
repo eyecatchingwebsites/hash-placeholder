@@ -79,7 +79,11 @@ antivirus installed, Defender steps back to passive. Everything below works whic
   SHA-256 is published on the website and the code is public on GitHub; miner files only run if they match their
   published SHA-256; Hashcoin never changes antivirus or security settings. Links: "Code on GitHub", "Installer SHA-256"
   (`HASHCOIN_SAFETY_URL`) and "Steps for <product>" (`HASHCOIN_AV_HELP_URL`), the website links hidden until set at
-  build time. It never promises signing or claims anyone verified the app. Allowing it is the user's choice:
+  build time. Once the site is hosted (domain candidate hashcoin.app): `HASHCOIN_SAFETY_URL=<site>/antivirus.html#check`
+  and `HASHCOIN_AV_HELP_URL=<site>/antivirus.html`; the app adds the blocking product's section
+  (`core/src/antivirus.rs` `help_anchor`, tested: #defender, #norton, #mcafee, #avast for Avast and AVG,
+  #bitdefender, #kaspersky, #eset, #malwarebytes, #allow when unknown). It never promises signing or claims anyone
+  verified the app. Allowing it is the user's choice:
   - Microsoft Defender: Windows Security → Virus & threat protection → Protection history → the Hashcoin item →
     Actions → Allow on device (both items if there are two), then reopen Hashcoin.
   - Any other antivirus: open <product>, find Hashcoin in its quarantine or history, restore it, then allow it or add it
