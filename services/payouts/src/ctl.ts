@@ -7,15 +7,21 @@
 //        mining at the price it actually sold for
 //   npx tsx services/payouts/src/ctl.ts handover-rate-authority <multisig> --yes
 //        move the tax-rate authority from the payout wallet to the multisig (after graduation)
-import { existsSync, readFileSync } from "node:fs";
+//   npx tsx services/payouts/src/ctl.ts test-alert [text]   send a test alert (checks HASH_ALERT_WEBHOOK)
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, Transaction } from "@solana/web3.js";
 import { AuthorityType, createSetAuthorityInstruction, getMint, getTransferFeeConfig, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { guardSends, MeteoraMarket, monitoredConnection } from "@hashcoin/chain";
+import { Alerts } from "./alerts.js";
 import { dataPath, loadRuntime, readKeypair, REPO_ROOT } from "./config.js";
 import { engageKill, killReason, pauseFile, releaseKill } from "./control.js";
 import { loadLedger, saveLedger } from "./ledger.js";
 import { solUsd } from "./price.js";
 
+// Under pressure the message matters, not the stack trace.
+process.on("uncaughtException", (e) => { console.error(`
+${(e as Error).message}
+`); process.exit(1); });
 const rt = loadRuntime();
 const [cmd, ...args] = process.argv.slice(2);
 const LEDGER = dataPath(rt, "ledger.json");
@@ -97,7 +103,15 @@ switch (cmd) {
     console.log(`tax-rate authority → ${to.toBase58()}: ${sig}. The loop now writes rate changes as proposals for it (set HASH_MULTISIG=${to.toBase58()}).`);
     break;
   }
+  case "test-alert": {
+    // Check HASH_ALERT_WEBHOOK before launch: the message should show up in Discord or Slack.
+    mkdirSync(rt.dataDir, { recursive: true });
+    if (!rt.webhook) console.log("HASH_ALERT_WEBHOOK isn't set: the alert only goes to the console and alerts.log");
+    await new Alerts({ webhook: rt.webhook, logFile: dataPath(rt, "alerts.log"), repeatMs: 0, label: `$HASH payouts (${rt.cfg.network})` })
+      .raise("test", "info", args.join(" ").trim() || "test alert: if you can read this, alerts reach you");
+    break;
+  }
   default:
-    console.log("commands: kill [why] | resume | status | sold <COIN> <coins> (--usd n | --sol n) [note] | handover-rate-authority <multisig> --yes");
+    console.log("commands: kill [why] | resume | status | sold <COIN> <coins> (--usd n | --sol n) [note] | handover-rate-authority <multisig> --yes | test-alert [text]");
     process.exitCode = cmd ? 1 : 0;
 }

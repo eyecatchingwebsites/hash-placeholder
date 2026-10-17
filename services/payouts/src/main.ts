@@ -17,13 +17,14 @@ import { ComputeBudgetProgram, type Connection, Keypair, LAMPORTS_PER_SOL, Publi
 import { getMint, getTransferFeeConfig, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { DEFAULT_RULES, type PriceContext } from "@hashcoin/engine";
 import {
-  grossUp, guardSends, harvestFees, lamportsForUsd, MeteoraMarket, mintTransactionsSince, monitoredConnection, sendBatch, setTaxRate,
-  tokenBalance, transferFeeNow, usdToBaseUnits, withheldTotal, type MarketState, type Transfer,
+  grossUp, guardSends, harvestFees, lamportsForUsd, MeteoraMarket, mintTransactionsSince, monitoredConnection, sendBatch, SendBlockedError, setTaxRate,
+  tokenBalance, tokenDeltaOf, transferFeeNow, usdToBaseUnits, withheldTotal, type MarketState, type Transfer,
 } from "@hashcoin/chain";
 import { runCollector, trueUpsOf, walletsOf } from "@hashcoin/collector";
 import { Alerts, RpcWatch } from "./alerts.js";
 import { dataPath, loadRuntime, readKeypair, REPO_ROOT } from "./config.js";
 import { killReason, pauseFile } from "./control.js";
+import { resolveInFlight } from "./inflight.js";
 import { indexTransactions } from "./indexer.js";
 import { addBig, day, emptyLedger, type Ledger, loadLedger, recordPrice, saveLedger } from "./ledger.js";
 import { rateProposal } from "./proposal.js";
@@ -141,6 +142,23 @@ async function collectTick() {
   if (summary) log(`collector: ${summary}`);
 }
 
+/**
+ * What a confirmed buy put in the payout wallet, from the transaction itself. If it can't be read, the
+ * swap's guaranteed minimum (the program refuses to fill below it): miners get at least that, and any
+ * extra stays in the treasury. Never a balance difference: one failed read made that negative (Oct 17).
+ */
+async function boughtBy(signature: string, minimumOut: bigint): Promise<bigint> {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const d = await tokenDeltaOf(conn, signature, signer.publicKey, mint);
+      if (d !== null && d > 0n) return d;
+    } catch { /* RPC trouble: try again */ }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  log(`couldn't read what buy ${signature} returned; counting the guaranteed minimum ${tokens(minimumOut)} $HASH`);
+  return minimumOut;
+}
+
 /** The no-market rehearsal's trading: the market wallet sells to traders, some sell back. */
 async function simulateTrades(fee: { bps: number; max: bigint }, priceUsd: number): Promise<string[]> {
   const s = cfg.simulate!.trades!;
@@ -194,6 +212,15 @@ async function roundTick() {
   const now = Date.now();
   const notes: string[] = [];
   const txs: string[] = [];
+  // Payouts sent last time but never confirmed (crash, stop, timeout): landed ones count as paid.
+  if (l.owed.some((o) => o.inFlight)) {
+    const r = await resolveInFlight(l, {
+      statuses: async (sigs) => (await conn.getSignatureStatuses(sigs, { searchTransactionHistory: true })).value,
+      blockHeight: () => conn.getBlockHeight("confirmed"),
+    }, { now, decimals: cfg.decimals });
+    if (!DRY) saveLedger(LEDGER, l);
+    log(`unconfirmed payouts from last time: ${r.landed} had landed (recorded as paid${r.signatures.length ? `: ${r.signatures.map(explorer).join(", ")}` : ""}), ${r.retry} didn't and are paid this round`);
+  }
   let lamports = BigInt(await conn.getBalance(signer.publicKey));
   if (Number(lamports) / LAMPORTS_PER_SOL < cfg.minTreasurySol) {
     await alerts.raise("float-low", "critical", `payout wallet ${signer.publicKey.toBase58()} has ${Number(lamports) / LAMPORTS_PER_SOL} SOL, below ${cfg.minTreasurySol}: rounds wait until it's funded`);
@@ -372,10 +399,8 @@ async function roundTick() {
             await alerts.raise("buy-cost", "warning", `buy refused: pool fee + price impact ${q.costBps / 100}% is over the ${cfg.buy.maxCostBps / 100}% limit ($${plan.buyUsd.toFixed(2)}); mining stays owed`);
           } else if (DRY) bought = q.expectedOut;
           else {
-            const before = await tokenBalance(conn, signer.publicKey, mint);
             const sig = await send(await market.buyTx(q, signer.publicKey), [signer]);
-            const after = await tokenBalance(conn, signer.publicKey, mint);
-            bought = after - before;
+            bought = await boughtBy(sig, q.minimumOut);
             buyInfo.signature = sig;
             txs.push(sig);
             l.funding.spentLamports = addBig(l.funding.spentLamports, lamportsIn);
@@ -397,8 +422,10 @@ async function roundTick() {
   const amounts = parts.map((x) => x.total);
   const need = amounts.reduce<bigint>((a, x) => a + (x ? grossUp(x, fee.bps, fee.max) : 0n), 0n);
   // A dry run didn't harvest or buy, so count what a real round would have had by now.
-  const have = (await tokenBalance(conn, signer.publicKey, mint)) + (DRY ? harvested + (market ? bought ?? 0n : 0n) : 0n);
-  if (need > have) await alerts.raise("tokens-low", "critical", `payouts need ${tokens(need)} $HASH but the payout wallet holds ${tokens(have)}`);
+  // Only an alert: an RPC hiccup here must not fail a round whose buy has already landed.
+  const held = await tokenBalance(conn, signer.publicKey, mint).catch(() => null);
+  const have = held === null ? null : held + (DRY ? harvested + (market ? bought ?? 0n : 0n) : 0n);
+  if (have !== null && need > have) await alerts.raise("tokens-low", "critical", `payouts need ${tokens(need)} $HASH but the payout wallet holds ${tokens(have)}`);
   const roundNo = l.round + 1;
   const sent: (bigint | undefined)[] = amounts.map((a) => (a === 0n ? 0n : undefined));
   const transfers: { t: Transfer; k: number }[] = amounts.flatMap((a, k) => (a && a > 0n ? [{ t: { to: new PublicKey(plan.payouts[k]!.address), amount: a }, k }] : []));
@@ -413,7 +440,11 @@ async function roundTick() {
     for (let i = 0; i < transfers.length; i += 5) {
       const group = transfers.slice(i, i + 5);
       try {
-        const r = await sendBatch(conn, signer, signer, mint, cfg.decimals, fee, group.map((g) => g.t), { netOfFee: true, perTx: 5, priorityMicroLamports: cfg.priorityFeeMicroLamports });
+        const r = await sendBatch(conn, signer, signer, mint, cfg.decimals, fee, group.map((g) => g.t), {
+          netOfFee: true, perTx: 5, priorityMicroLamports: cfg.priorityFeeMicroLamports,
+          // Recorded before sending: if we never hear back, the next round checks whether it landed.
+          onSigned: (tx) => { for (const g of group) staged[g.k]!.inFlight = tx; saveLedger(LEDGER, l); },
+        });
         txs.push(...r.map((x) => x.signature));
         for (const [j, t] of r.flatMap((x) => x.transfers).entries()) {
           const k = group[j]!.k;
@@ -423,7 +454,10 @@ async function roundTick() {
         saveLedger(LEDGER, l);
       } catch (e) {
         failedTx += 1;
-        log(`payout transaction failed (owed next round): ${short(e)}`);
+        // Blocked by the kill switch: never sent. Anything else may have been sent: it keeps its
+        // record and is checked on chain next round.
+        if (e instanceof SendBlockedError) for (const g of group) delete staged[g.k]!.inFlight;
+        log(`payout transaction failed (owed next round${group.some((g) => staged[g.k]!.inFlight) ? "; checked on chain first" : ""}): ${short(e)}`);
       }
     }
     if (failedTx) await alerts.raise("payout-failed", "warning", `${failedTx} payout transaction(s) failed; owed next round`);

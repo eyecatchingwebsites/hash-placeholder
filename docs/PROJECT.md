@@ -1,6 +1,6 @@
 # $HASH / Hashcoin: Project File (v3)
 
-Last updated: October 16, 2026. Stage: design, simulation, and early build. Numbers are scenario assumptions, not forecasts. Not financial or legal advice.
+Last updated: October 17, 2026. Stage: design, simulation, and early build. Numbers are scenario assumptions, not forecasts. Not financial or legal advice.
 
 - Original v1 notes (from the earlier chat): `docs/PROJECT-v1-original.md`
 - Architecture: `docs/ARCHITECTURE.md`
@@ -13,6 +13,7 @@ Last updated: October 16, 2026. Stage: design, simulation, and early build. Numb
 - Logo: `apps/web/brand/logo/` · logo explorations: https://claude.ai/artifact/JTubhyKEYFEAsCWrdL9jF9 · color picker: https://claude.ai/artifact/H4h9afZLydLLgRYaXWqFnd
 - **Website (static front end): `apps/web`** (`index.html`, `calculator.html`, `faq.html`; how to run: `apps/web/README.md`). **Live preview link (always the latest version): https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc**. Republish it after every website change (from `apps/web/standalone/`). The old draft artifact (https://claude.ai/artifact/6rNGUh1g9ajuANnbFjGzrJ) is outdated.
 - Creator earnings over time: `calculator/creator.html` (published: https://claude.ai/artifact/GeRFqwnVPJuVLFzcsP6J1Y)
+- **Launch day: `docs/LAUNCH-RUNBOOK.md`** (step-by-step from T-48h; written from the Oct 17 devnet dress rehearsal, `docs/LAUNCH-REHEARSAL.md`).
 - **Resuming in a new or local session: `docs/HANDOFF.md`.** Work so far happened in Claude Code cloud sessions. Branches: `claude/lucid-fermat-16svvo`, then `claude/vibrant-cray-fpbieb` (website build; all work pushed, not yet merged into `main`).
 
 ---
@@ -305,6 +306,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 | CI (`.github/workflows/ci.yml`) and Windows installer build (`desktop-release.yml`) | Test installer on every desktop push; a `desktop-vX.Y.Z` tag is a release (refuses without the production keys), signs with Azure Artifact Signing once `WINDOWS_SIGNING=azure`, prints the installer SHA-256 and opens a draft GitHub release |
 | Architecture doc, simulation, calculator, creator page | Done |
 | Payout loop (`services/payouts`): collector → index → harvest → rate → split → market buy → pay → public record | **Mainnet-ready code, rehearsed on devnet Oct 16** on a real Meteora market (token `6W9qT3kYwdCbnRRbAPKDZxrm1TTDE6mnCw5QWXphSVsg`): 12 rounds, real buys on the curve then on DAMM v2 after graduation (cost 1.2–1.7% = 1% pool fee + impact), curve fee claimed into the float, sale-funded settlement, kill switch mid-round, every alert type delivered to a webhook. 24 tests. The Oct 5 no-market rehearsal keeps running with `config/payouts.json` |
+| Launch dress rehearsal (Oct 17, devnet) | **Passed end to end** (`docs/LAUNCH-REHEARSAL.md`): the real launch script (separate launcher, dev and partner = payout wallets), the payout loop in its mainnet setup (dry run, then live; curve fee into the float; buys on the curve, through graduation and on DAMM v2; formula rate change; `ctl handover-rate-authority` to a stand-in key, proposal executed), the local API and the collector on the user's **live** Kryptex worker (credited and paid in devnet $HASH every round), alerts to a webhook, kill switch between and mid-round, 4 crash restarts. Found and fixed: a double payout after a crash, an RPC error that erased a miner's payout, paid miners missing from the app's wallet page, a launch re-run that could make a second token. 29 payout tests. Runbook: `docs/LAUNCH-RUNBOOK.md` |
 | Collector true-up (`services/collector`) | **Built Oct 16**: estimates trued up to the pool's running total (balance + payouts) over 24 h; read live from Kryptex (18.62 PRL credited to the test address so far); no ratio yet (no GPU mining during the test) |
 | Devnet test run: Token-2022 5% token, fee collection, batch payouts (`packages/chain`) | **First round done Oct 4** (see below): token `9dqUCFnTrTdsA3XNANTrdSSCnDTmx2NAfkFbGzMbXwvR` on devnet; real mining data from the collector; payouts landed. No pool/market yet (devnet assumes $0.001) |
 | Website (`apps/web`) | Static front end (home, calculator, FAQ/docs), reworked through Oct 4 from user feedback; current state in §13 "Current website (Oct 4)". Preview Version 27. Backend features (live stats, payout feed, wallet addresses) are labeled placeholders; the waitlist, download (link + SHA-256) and contract address are wired to `apps/web/assets/js/config.js` and switch on from there (Oct 17). Deploy: Cloudflare Pages, `docs/HOSTING.md`. Browser check: `apps/web/scripts/check_site.mjs` |
@@ -331,6 +333,7 @@ L3 is locked for the first 14 days. A 3060 laptop does not pay for itself in 2 w
 - **Mainnet payout loop, for the user to provide or decide (Oct 16):**
   - A Helius (or similar) RPC URL with an API key (`HASH_RPC_URL`).
   - The payout wallet: a new keypair generated on the backend machine, stored outside the repo (`HASH_KEYPAIR`). It must be the DBC config's `feeClaimer` (partner) at launch, i.e. `launch-mainnet.ts --partner <payout wallet>`, which makes it the tax withdraw authority and, after graduation, the tax-rate authority. With the multisig as partner the loop can't harvest or claim fees (it stops with a `wrong-authority` alert). It holds only the float.
+  - **Oct 17:** the runbook (`docs/LAUNCH-RUNBOOK.md`) follows the plan above: partner = the payout wallet (hot key, keeps harvesting automatically), rate authority to the multisig after graduation. Still open: the graduation target (T-48h to T-24h), the Squads vault, Helius key, Discord webhook, the platform PRL address.
   - The Squads multisig vault address (`HASH_MULTISIG`). After graduation run `ctl handover-rate-authority <vault> --yes` so rate changes need the multisig (the loop then writes proposals). Open: keep the withdraw authority on the payout wallet (needed to harvest automatically) or move it too (harvests would then need the multisig each time).
   - The dev wallet address (`HASH_DEV_WALLET`), the platform PRL payout address on Kryptex (`HASH_PAYOUT_ADDRESS_PRL`), and a Discord/Slack webhook (`HASH_ALERT_WEBHOOK`).
   - Numbers in `config/payouts.mainnet.example.json` (round length, holder cadence, buy caps and limits, float reserve, alert thresholds) are first guesses.

@@ -132,12 +132,13 @@ export function planRound(x: RoundInput): RoundPlan {
  * buying has no `total` and stays owed, its tax-funded part fixed in `fromTax`.
  */
 export function payoutParts(payouts: PlannedPayout[], bought: bigint | null, toTokens: (usd: number) => bigint): { total?: bigint; fromTax: bigint }[] {
-  const shares = allocate(bought ?? 0n, payouts.map((p) => (p.tokens ? 0 : p.buyUsd ?? 0)));
+  const shares = allocate(bought && bought > 0n ? bought : 0n, payouts.map((p) => (p.tokens ? 0 : p.buyUsd ?? 0)));
   return payouts.map((p, i) => {
     if (p.tokens) return { total: BigInt(p.tokens), fromTax: 0n };
     const buyPart = p.buyUsd ?? 0;
     const fromTax = p.taxTokens ? BigInt(p.taxTokens) : toTokens(Math.max(0, p.usd - buyPart));
-    if (buyPart > 0 && bought === null) return { fromTax };
+    // Nothing (or a nonsense amount) bought: a payout that needed buying waits, it is never sent as 0.
+    if (buyPart > 0 && (bought === null || bought <= 0n)) return { fromTax };
     return { total: fromTax + shares[i]!, fromTax };
   });
 }

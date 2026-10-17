@@ -143,14 +143,30 @@ async function main() {
   console.log(`  launcher ${launcher.publicKey.toBase58()} (${await sol(launcher.publicKey)} SOL)`);
   console.log(`  dev      ${dev.publicKey.toBase58()} (${await sol(dev.publicKey)} SOL)`);
   console.log(`  partner  ${partner.toBase58()} (fee claimer, tax withdraw authority, rate authority after graduation)`);
+  // A pool already on our saved config means an earlier run's pool transaction landed although the
+  // script never heard back (a timeout, a crash, the PC going off): adopt it, never launch a second token.
+  if (state.config) {
+    const existing = await client.state.getPoolsByConfig(new PublicKey(state.config));
+    if (existing.length) {
+      const p = existing[0]!, mint = p.account.poolState.baseMint;
+      console.log(`2. a pool already exists on config ${state.config} (an earlier run's transaction landed): pool ${p.publicKey.toBase58()}, mint ${mint.toBase58()}`);
+      if (dryRun) return;
+      Object.assign(state, { mint: mint.toBase58(), pool: p.publicKey.toBase58(), poolTx: "adopted: found on chain after an unconfirmed run" });
+      save();
+      return checksAndRehearsal(mint, p.publicKey);
+    }
+  }
   const devNeeds = s.devBuy.sol * 1.03 + 0.01;
   const short: string[] = [];
   if ((await sol(dev.publicKey)) < devNeeds) short.push(`the dev wallet needs about ${devNeeds.toFixed(3)} SOL for the bag, fees and its token account`);
-  if ((await sol(launcher.publicKey)) < 0.08) short.push("the launcher needs about 0.08 SOL for rent and fees");
+  // Rent and fees came to 0.015 SOL on devnet (config 0.006, pool 0.009); mainnet keeps a margin for
+  // priority fees and retries. With the config already created, only the pool is left to pay for.
+  const launcherNeeds = (mainnet ? 0.08 : 0.02) * (state.config ? 0.5 : 1);
+  if ((await sol(launcher.publicKey)) < launcherNeeds) short.push(`the launcher needs about ${launcherNeeds} SOL for rent and fees`);
   if (short.length && !dryRun) fail(short.join("\n"));
   for (const m of short) console.log(`  NOTE: ${m}`);
   payer = launcher.publicKey;
-  if (dryRun && (await sol(launcher.publicKey)) < 0.08) {
+  if (dryRun && (await sol(launcher.publicKey)) < launcherNeeds) {
     payer = await standInPayer();
     console.log(`  dry run: simulating with stand-in payer ${payer.toBase58()} (nothing is signed or sent)`);
   }
@@ -191,7 +207,10 @@ async function main() {
   const mint = mintKp.publicKey, pool = deriveDbcPoolAddress(NATIVE_MINT, mint, config);
   Object.assign(state, { mint: mint.toBase58(), pool: pool.toBase58(), poolTx: explorer(sig) });
   save();
+  return checksAndRehearsal(mint, pool);
+}
 
+async function checksAndRehearsal(mint: PublicKey, pool: PublicKey) {
   // ---------- 3. Checks ----------
   const info = await getMint(conn, mint, "confirmed", TOKEN_2022_PROGRAM_ID);
   const fee = getTransferFeeConfig(info)!;

@@ -11,7 +11,7 @@ import {
   getTransferFeeAmount, getTransferFeeConfig, harvestWithheldTokensToMint, setTransferFee, TOKEN_2022_PROGRAM_ID,
   unpackAccount, withdrawWithheldTokensFromMint,
 } from "@solana/spl-token";
-import { chunk, grossUp, transferFee } from "./fees.js";
+import { base58, chunk, grossUp, transferFee } from "./fees.js";
 
 const P = TOKEN_2022_PROGRAM_ID;
 
@@ -53,14 +53,20 @@ export async function createHashMint(conn: Connection, payer: Keypair, cfg: Hash
 
 export interface Transfer { to: PublicKey; amount: bigint }
 
+/** A signed transaction about to be sent: enough to look it up later and know when it can no longer land. */
+export interface SignedTx { signature: TransactionSignature; lastValidBlockHeight: number }
+
 /**
  * Send transfers from `from`'s token account, several per transaction, creating recipients'
  * token accounts as needed. With `netOfFee`, each amount is grossed up so the recipient receives
- * exactly that amount after the 5% (the extra comes back via the harvest).
+ * exactly that amount after the 5% (the extra comes back via the harvest). `onSigned` runs before
+ * each transaction is sent, so a caller can record it: if the process stops or the confirmation
+ * times out, the transaction may still land, and the record says which one to check.
  */
 export async function sendBatch(
   conn: Connection, payer: Keypair, from: Keypair, mint: PublicKey, decimals: number,
-  fee: { bps: number; max: bigint }, transfers: Transfer[], opts: { netOfFee: boolean; perTx?: number; priorityMicroLamports?: number } = { netOfFee: true },
+  fee: { bps: number; max: bigint }, transfers: Transfer[],
+  opts: { netOfFee: boolean; perTx?: number; priorityMicroLamports?: number; onSigned?: (tx: SignedTx, transfers: Transfer[]) => void | Promise<void> } = { netOfFee: true },
 ): Promise<{ signature: TransactionSignature; transfers: (Transfer & { sent: bigint })[] }[]> {
   const source = ata(from.publicKey, mint);
   const out: { signature: TransactionSignature; transfers: (Transfer & { sent: bigint })[] }[] = [];
@@ -74,7 +80,17 @@ export async function sendBatch(
       tx.add(createTransferCheckedWithFeeInstruction(source, mint, dest, from.publicKey, t.sent, decimals, transferFee(t.sent, fee.bps, fee.max), [], P));
     }
     const signers = payer.publicKey.equals(from.publicKey) ? [payer] : [payer, from];
-    out.push({ signature: await sendAndConfirmTransaction(conn, tx, signers), transfers: sent });
+    if (!opts.onSigned) { out.push({ signature: await sendAndConfirmTransaction(conn, tx, signers), transfers: sent }); continue; }
+    const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
+    tx.feePayer = payer.publicKey;
+    tx.recentBlockhash = blockhash;
+    tx.sign(...signers);
+    const signature = base58(tx.signature!);
+    await opts.onSigned({ signature, lastValidBlockHeight }, group);
+    await conn.sendRawTransaction(tx.serialize());
+    const res = await conn.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
+    if (res.value.err) throw new Error(`transaction ${signature} failed: ${JSON.stringify(res.value.err)}`);
+    out.push({ signature, transfers: sent });
   }
   return out;
 }
@@ -212,10 +228,24 @@ export async function mintTransactionsSince(
   return out;
 }
 
+/**
+ * The owner's $HASH (base units); 0 when it has no token account yet. An RPC failure throws: read as
+ * 0 it once turned a market buy into "bought -47,757 $HASH" and a miner's payout into nothing (Oct 17).
+ */
 export async function tokenBalance(conn: Connection, owner: PublicKey, mint: PublicKey): Promise<bigint> {
-  try {
-    return BigInt((await conn.getTokenAccountBalance(ata(owner, mint))).value.amount);
-  } catch {
-    return 0n; // no token account yet
-  }
+  const address = ata(owner, mint);
+  const info = await conn.getAccountInfo(address, "confirmed");
+  return info ? unpackAccount(address, info, P).amount : 0n;
+}
+
+/**
+ * How much of `mint` the owner gained in one confirmed transaction, from the transaction's own record
+ * (pre/post token balances), or null if the transaction can't be read (yet).
+ */
+export async function tokenDeltaOf(conn: Connection, signature: TransactionSignature, owner: PublicKey, mint: PublicKey): Promise<bigint | null> {
+  const tx = await conn.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+  if (!tx?.meta) return null;
+  const amount = (list: TokenBalance[] | null | undefined) =>
+    (list ?? []).filter((b) => b.mint === mint.toBase58() && b.owner === owner.toBase58()).reduce((a, b) => a + BigInt(b.uiTokenAmount.amount), 0n);
+  return amount(tx.meta.postTokenBalances) - amount(tx.meta.preTokenBalances);
 }

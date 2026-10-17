@@ -42,13 +42,20 @@ export function publicRecord(l: Ledger, x: {
     }
     return { volumeUsd: volume * x.price.priceUsd, minedUsd: mined, taxUsd: tax * x.price.priceUsd, paidUsd: paid * x.price.priceUsd };
   };
-  const wallets = Object.fromEntries(Object.entries(l.wallets).filter(([a]) => !x.excluded.has(a)).map(([a, s]) => {
+  // Every wallet the loop knows: traders and holders (indexed), and miners, who may have mining
+  // credited, held back or paid before the indexer has seen a transfer of theirs.
+  const known = new Set([
+    ...Object.keys(l.wallets), ...Object.keys(l.paid), ...Object.keys(l.hoursInWindow), ...Object.keys(l.minedSinceRound),
+    ...l.pending.map((p) => p.address), ...l.owed.map((o) => o.address),
+  ]);
+  const wallets = Object.fromEntries([...known].filter((a) => !x.excluded.has(a)).map((a) => {
+    const s = l.wallets[a];
     const w = walletState(a, s);
     const holderLevel = computeHolderLevel(w, levelPrice, x.now, x.rules);
     const hours = l.hoursInWindow[a] ?? 0;
     const paid = l.paid[a] ?? { miner: "0", holder: "0" };
     return [a, {
-      balanceTokens: tokens(s.balance), balanceUsd: positionUsd(w.balance, x.price),
+      balanceTokens: tokens(s?.balance ?? "0"), balanceUsd: positionUsd(w.balance, x.price),
       holderLevel, minerLevel: hours > 0 ? computeMinerLevel(hours, holderLevel, x.rules) : null,
       holdClockHours: holdClockMs(w, x.now, levelPrice, x.rules) / 3_600_000, hoursMinedInWindow: hours,
       paidTokens: { miner: tokens(paid.miner), holder: tokens(paid.holder) },
