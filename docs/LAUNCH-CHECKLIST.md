@@ -12,7 +12,7 @@ Last updated Oct 17 (domain bought: hashcoin.app).
 
 ### Decide
 - [x] **Domain: hashcoin.app** (bought Oct 17).
-- [ ] **X handle.** It goes into the token metadata and the site.
+- [x] **X handle: @HashcoinSOL** (Oct 17). It's in the token metadata and on the site.
 - [ ] **How the dev bag is locked in public**, e.g. a token lock on Streamflow or Jupiter Lock.
 - [ ] **Graduation target**, around Oct 22, from how the X posts do: 40 SOL if it's quiet, 50 SOL in the base case, 85 SOL if it's strong.
 
@@ -49,14 +49,14 @@ Last updated Oct 17 (domain bought: hashcoin.app).
 ## Claude
 
 ### When you say go
-- [ ] Merge `claude/launch-hosting` and `claude/launch-rehearsal` into `claude/vibrant-cray-fpbieb` (both guides depend on it), and run every test.
+- [x] Merge `claude/launch-hosting` and `claude/launch-rehearsal` into `claude/vibrant-cray-fpbieb` (Oct 17), with every test run.
 - [x] Domain: hashcoin.app is already what the hosting work uses; nothing to switch.
 - [ ] Follow-ups the sessions turned up: start the payout loop when Windows starts, and make market buys and harvests crash-safe (a crash in the second after a buy could buy twice; nobody is paid twice).
 
 ### Once the domain is live
 - [ ] With you at the keyboard: generate the production keys (the server signing key and the app update key), stored outside the repo, with backups.
 - [ ] Build the first real Windows release (unsigned) pointed at the live API, and put its SHA-256 on the site.
-- [ ] Add the X link to the token metadata.
+- [x] Add the X link to the token metadata and the site (@HashcoinSOL, Oct 17).
 - [ ] Mainnet dry runs with your real wallets and Helius: the launch script with `--dry-run`, then the payout loop with `--dry-run`.
 
 ### Launch day and after

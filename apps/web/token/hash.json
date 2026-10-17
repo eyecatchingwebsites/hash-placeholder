@@ -5,13 +5,18 @@
   "image": "https://hashcoin.app/token/hash.png",
   "external_url": "https://hashcoin.app",
   "website": "https://hashcoin.app",
+  "twitter": "https://x.com/HashcoinSOL",
   "extensions": {
-    "website": "https://hashcoin.app"
+    "website": "https://hashcoin.app",
+    "twitter": "https://x.com/HashcoinSOL"
   },
   "properties": {
     "category": "image",
     "files": [
-      { "uri": "https://hashcoin.app/token/hash.png", "type": "image/png" }
+      {
+        "uri": "https://hashcoin.app/token/hash.png",
+        "type": "image/png"
+      }
     ]
   }
 }

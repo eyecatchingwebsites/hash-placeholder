@@ -18,7 +18,7 @@ window.HASHCOIN = Object.assign({
   //   version: "0.1.0", sha256: "<64 hex characters from the release's SHA256SUMS.txt>" }
   download: null,
   // Social links. null shows "coming soon".
-  x: null,
+  x: "https://x.com/HashcoinSOL",
   discord: null,
   github: null,
 }, window.HASHCOIN || {});
