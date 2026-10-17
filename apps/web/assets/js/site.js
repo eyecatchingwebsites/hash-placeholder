@@ -88,6 +88,24 @@
     });
   });
 
+  $$("[data-ca-full]").forEach((el) => {
+    if (CFG.ca) { el.textContent = CFG.ca; el.hidden = false; }
+  });
+
+  // ---------- Download ----------
+  // Only an https link with a 64-character SHA-256 counts: the checksum must always sit beside the link.
+  const dl = CFG.download;
+  if (dl && /^https:\/\//.test(dl.url || "") && /^[0-9a-fA-F]{64}$/.test(dl.sha256 || "")) {
+    $$("[data-download]").forEach((a) => {
+      a.href = dl.url;
+      a.removeAttribute("data-soon");
+    });
+    $$("[data-download-soon], [data-download-none]").forEach((el) => el.remove());
+    $$("[data-download-version]").forEach((el) => (el.textContent = dl.version || ""));
+    $$("[data-download-sha]").forEach((el) => (el.textContent = dl.sha256.toLowerCase()));
+    $$("[data-download-info]").forEach((el) => (el.hidden = false));
+  }
+
   // ---------- Placeholders ----------
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-soon]");
@@ -178,6 +196,58 @@
       sel.append(og);
     });
   };
+
+  // ---------- Waitlist ----------
+  // Posts an X handle or email (and the GPU picked) to <api>/v1/waitlist. Off until config.js opens it.
+  const wl = $("[data-waitlist]");
+  if (CFG.waitlist && CFG.api) {
+    $$("[data-waitlist-soon]").forEach((el) => el.remove());
+  }
+  if (wl && CFG.waitlist && CFG.api) {
+    const gpu = $("#wl-gpu", wl), contact = $("#wl-contact", wl), btn = $("button", wl), note = $("#wl-note");
+    if (gpu && window.hcFillGpuSelect) {
+      gpu.firstElementChild.value = "";
+      window.hcFillGpuSelect(gpu, null);
+    }
+    [gpu, contact].forEach((el) => el && (el.disabled = false));
+    btn.removeAttribute("aria-disabled");
+    btn.removeAttribute("data-soon");
+    if (note) note.textContent = "We keep only this and your GPU, to tell you when mining opens.";
+    let busy = false;
+    wl.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      const value = contact.value.trim();
+      if (!value) { contact.focus(); toast("Enter your X handle or email."); return; }
+      busy = true;
+      btn.setAttribute("aria-busy", "true");
+      try {
+        const r = await fetch(CFG.api.replace(/\/$/, "") + "/v1/waitlist", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ contact: value, gpu: (gpu && gpu.value) || null }),
+        });
+        const body = await r.json().catch(() => ({}));
+        if (r.ok) {
+          const msg = body.already ? "You're already on the list." : "You're on the list.";
+          if (note) note.textContent = msg;
+          toast(msg);
+          contact.value = "";
+        } else if (r.status === 429) {
+          toast("Too many tries. Try again in a few minutes.");
+        } else if (r.status === 400 && body.error) {
+          toast(body.error.charAt(0).toUpperCase() + body.error.slice(1) + ".");
+        } else {
+          toast("The waitlist server isn't answering. Try again later.");
+        }
+      } catch (err) {
+        toast("The waitlist server isn't answering. Try again later.");
+      } finally {
+        busy = false;
+        btn.removeAttribute("aria-busy");
+      }
+    });
+  }
 
   // A link to a question opens it (e.g. antivirus.html#avast, which the app links to).
   function openLinked() {

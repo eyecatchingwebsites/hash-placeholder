@@ -1,0 +1,17 @@
+{
+  "name": "Hashcoin",
+  "symbol": "HASH",
+  "description": "Hashcoin ($HASH) is a Solana token with an optional Windows app that mines with spare GPU power. What the GPUs mine is used to buy $HASH for those miners, and a 2-5% tax on trades is split between miners and holders by a public formula. A new token: its price can fall, and payouts can drop to near zero.",
+  "image": "https://hashcoin.app/token/hash.png",
+  "external_url": "https://hashcoin.app",
+  "website": "https://hashcoin.app",
+  "extensions": {
+    "website": "https://hashcoin.app"
+  },
+  "properties": {
+    "category": "image",
+    "files": [
+      { "uri": "https://hashcoin.app/token/hash.png", "type": "image/png" }
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 # Hashcoin website (`apps/web`)
 
-A static, front-end-only marketing site. Plain HTML, CSS and JavaScript with no build step, no backend, no sign-ups and no wallet connection. Anything that needs a backend (waitlist, download, buy, live stats, payout feed) is a labeled placeholder ("Coming soon" or "Preview").
+A static marketing site. Plain HTML, CSS and JavaScript with no framework and no wallet connection. The waitlist posts to the API (`services/api`) once `config.js` opens it; the download link, its SHA-256 and the contract address come from `config.js`. Live stats and the payout feed are still labeled placeholders.
+
+**Hosting:** Cloudflare Pages at https://hashcoin.app (root directory `apps/web`, build command `node scripts/build_pages.mjs`, output `dist`). `build_pages.mjs` copies only the public files into `dist/` and fails the build on a broken link, a wrong-domain og/canonical URL or bad token metadata. Setup and the launch checklist: `docs/HOSTING.md`.
 
 ## Run it
 
@@ -38,7 +40,10 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 |---|---|
 | `assets/css/site.css` | All styles. Design tokens are at the top (`--bg #0B0C0D`, `--gold #EBB447`, 8px radius), then the light theme. Gold used as text goes through `--gold-text-mix` so it darkens in light mode |
 | `assets/img/app-dark.jpg`, `app-light.jpg` | Screenshots of the miner app (`apps/desktop/ui`) with a sample wallet, shown on the Mining tab; the one matching the site theme shows. Retake them when the app changes |
-| `assets/js/config.js` | **Launch settings:** `launchAt`, `ca` (contract address), `x`, `discord`, `github`. All `null` until launch |
+| `assets/js/config.js` | **Launch settings:** `site`, `api`, `launchAt`, `ca` (contract address), `waitlist` (opens the form), `download` (`url`, `version`, `sha256`), `x`, `discord`, `github`. Placeholders until set |
+| `token/hash.json`, `token/hash.png` | Token metadata (`--uri` for the launch script) and its 512×512 logo |
+| `_headers`, `robots.txt`, `sitemap.xml`, `404.html`, `wrangler.toml` | Cloudflare Pages: security headers, crawlers, unknown URLs, project settings |
+| `scripts/build_pages.mjs`, `scripts/set_domain.mjs` | Build + check `dist/` for Cloudflare (`--serve` to preview it); move to another domain |
 | `assets/js/site.js` | Shared behavior: header, light/dark button (dark by default; a choice is stored as `hc-theme` and applied before paint by a one-line script in each page's head), mobile menu, placeholder toasts, countdown, contract-address button, scroll reveal |
 | `standalone/` | Generated single-file copies of the pages (see above) |
 | `assets/js/model.js` | The pre-launch estimate for the decided design: a 2–5% tax (the lowest rate where miners reach 5× their mining and holders still get at least 1% of volume); dev 5–10% of the tax, miners 45–75%, holders the rest (at least 20%). Miner weight = √(GPU $/day) × M-level; holder weight = bag × H-level. Default $750 volume per GPU a day |
@@ -54,9 +59,10 @@ Fonts (Manrope for headlines, labels and numbers, Inter for body text, IBM Plex 
 
 1. Set `launchAt` in `assets/js/config.js` when the date is decided. The countdown starts on its own.
 2. Set `ca` only when the token is live. The header "CA" button then copies it. Never before launch.
-3. Set the `x`, `discord` and `github` links.
-4. Replace the placeholders with live data: the waitlist form, the payout feed, the wallet addresses in "Dev wallet transparency", and the download button. Each needs the backend (`docs/TECHNICAL-PLAN.md`, phases 3 and 4).
-5. The "Your PC" tab says mining only uses spare GPU power and your PC works like normal. That's the user's experience mining PRL; change the copy if another coin or miner the app uses behaves differently.
+3. Set the `x`, `discord` and `github` links. The X link also goes in `token/hash.json` (`twitter`, top level and in `extensions`); the build checks they match.
+4. `waitlist: true` once the API answers at `https://api.hashcoin.app/v1/health`; `download` when the release is published (the SHA-256 shows beside the button and on `antivirus.html#check`).
+5. Still placeholders: the payout feed and the wallet addresses in "Dev wallet transparency" (`docs/TECHNICAL-PLAN.md`, phases 3 and 4).
+6. The "Your PC" tab says mining only uses spare GPU power and your PC works like normal. That's the user's experience mining PRL; change the copy if another coin or miner the app uses behaves differently.
 
 ## Copy rules
 

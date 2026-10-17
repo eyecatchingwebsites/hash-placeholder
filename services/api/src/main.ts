@@ -2,7 +2,9 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { applyPayoutAddresses, loadSigningKey, newSigningKey, rawPublicKey } from "@hashcoin/switcher";
 import { loadHashrateNoQuotes } from "./quotes.js";
+import { isLoopbackHost } from "./guard.js";
 import { createApi, type WorkerRecord } from "./server.js";
+import { fileWaitlist } from "./waitlist.js";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const cfg = JSON.parse(readFileSync(here("../config/coins.json"), "utf8"));
@@ -14,9 +16,17 @@ for (const n of payout.notes) console.log(n);
 const minerManifest = JSON.parse(readFileSync(here("../config/miners.json"), "utf8"));
 const quotes = loadHashrateNoQuotes(here("../../../data/hashrate-no-gpus-2026-10-03.json"));
 
-// The signing key comes from the deploy environment. Never commit it. Without one, a throwaway dev
-// key is kept in data/ (gitignored) so restarts don't change the key the dev app trusts.
+const mainnet = process.env.HASH_NETWORK === "mainnet";
+
+// The signing key comes from the deploy environment (the PEM itself, or a file outside the repo).
+// Never commit it. Without one, a throwaway dev key is kept in data/ (gitignored) so restarts don't
+// change the key the dev app trusts. On mainnet the dev key is refused.
 let pem = process.env.HASH_SIGNING_KEY_PEM;
+if (!pem && process.env.HASH_SIGNING_KEY_FILE) pem = readFileSync(process.env.HASH_SIGNING_KEY_FILE, "utf8");
+if (!pem && mainnet) {
+  console.error("HASH_NETWORK=mainnet needs the production signing key: set HASH_SIGNING_KEY_FILE (or HASH_SIGNING_KEY_PEM).");
+  process.exit(1);
+}
 if (!pem) {
   const devKeyPath = here("../data/dev-signing-key.pem");
   try { pem = readFileSync(devKeyPath, "utf8"); } catch {
@@ -67,6 +77,13 @@ async function prices() {
   return body;
 }
 
+// Website waitlist: personal data (X handles, emails), kept in data/ (gitignored). Never commit or publish it.
+const waitlist = fileWaitlist(process.env.HASH_WAITLIST ?? here("../data/waitlist.jsonl"));
+// The website origins allowed to post to the waitlist from a browser.
+const siteOrigins = (process.env.HASH_SITE_ORIGINS ?? "https://hashcoin.app,https://www.hashcoin.app")
+  .split(",").map((s) => s.trim()).filter(Boolean)
+  .concat(mainnet ? [] : ["http://localhost:8123", "http://127.0.0.1:8123"]);
+
 const { server } = createApi({
   coins: cfg.coins, quotes, policy: cfg.policy, score: cfg.score, ttlMs: cfg.ttlMs,
   platformSell: () => ({}), // TODO: feed from the treasury's actual daily sell volume per coin
@@ -79,6 +96,12 @@ const { server } = createApi({
   appUpdate: () => {
     try { return JSON.parse(readFileSync(appUpdatePath, "utf8")); } catch { return null; }
   },
+  waitlist,
+  siteOrigins,
 });
+// Localhost only by default: the public reaches it through the Cloudflare Tunnel (infra/tunnel),
+// never through an open port on this PC or the router.
 const port = Number(process.env.PORT ?? 8787);
-server.listen(port, () => console.log(`hashcoin api on :${port}`));
+const host = process.env.HOST ?? "127.0.0.1";
+if (!isLoopbackHost(host)) console.warn(`HOST=${host}: the API is reachable from other machines, not just through the tunnel.`);
+server.listen(port, host, () => console.log(`hashcoin api on http://${host.includes(":") ? `[${host}]` : host}:${port}`));

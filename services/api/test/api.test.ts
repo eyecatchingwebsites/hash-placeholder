@@ -83,3 +83,66 @@ describe("api", () => {
     expect(await res.json()).toEqual(appFeed);
   });
 });
+
+describe("api limits and waitlist", () => {
+  let t = 1_800_000_000_000;
+  const entries: { contact: string; gpu: string | null }[] = [];
+  const small = createApi({
+    coins: cfg.coins, quotes, policy: cfg.policy, score: cfg.score, ttlMs: cfg.ttlMs, platformSell: () => ({}),
+    minerManifest: { version: 1, miners: [] }, signingKey: key, kid: "t1", now: () => t,
+    siteOrigins: ["https://hashcoin.app"],
+    waitlist: {
+      add: (e) => entries.some((x) => x.contact === e.contact) ? "exists" : (entries.push(e), "added"),
+      count: () => entries.length,
+    },
+    limits: {
+      perIp: { limit: 1000, windowMs: 60_000 },
+      assignPerIp: { limit: 1000, windowMs: 60_000 },
+      assignPerWallet: { limit: 2, windowMs: 60_000 },
+      waitlistPerIp: { limit: 3, windowMs: 600_000 },
+    },
+  });
+  let b = "";
+  beforeAll(async () => { await new Promise<void>((r) => small.server.listen(0, "127.0.0.1", r)); b = `http://127.0.0.1:${(small.server.address() as AddressInfo).port}`; });
+  afterAll(() => small.server.close());
+  const join = (body: unknown, ip = "203.0.113.7", origin = "https://hashcoin.app") => fetch(`${b}/v1/waitlist`, {
+    method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json", origin, "cf-connecting-ip": ip },
+  });
+
+  it("adds a waitlist entry from the site's origin, once per contact", async () => {
+    const pre = await fetch(`${b}/v1/waitlist`, { method: "OPTIONS", headers: { origin: "https://hashcoin.app" } });
+    expect(pre.status).toBe(204);
+    expect(pre.headers.get("access-control-allow-origin")).toBe("https://hashcoin.app");
+    const r = await join({ contact: "@Some_Trader", gpu: "NVIDIA GeForce RTX 4070" });
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: true, already: false, count: 1 });
+    expect(entries[0]).toEqual({ contact: "@some_trader", gpu: "NVIDIA GeForce RTX 4070" });
+    expect(await (await join({ contact: "some_trader" })).json()).toMatchObject({ already: true, count: 1 });
+    expect((await join({ contact: "not an email or handle" })).status).toBe(400);
+    expect((await join({ contact: "a@b.co" }, "203.0.113.7", "https://evil.example")).status).toBe(403);
+    expect(await (await fetch(`${b}/v1/waitlist`)).json()).toEqual({ count: 1 });
+  });
+
+  it("rate-limits waitlist posts per visitor IP (CF-Connecting-IP behind the tunnel)", async () => {
+    // 203.0.113.7 already used 3 (the 403 is refused before the limit is counted).
+    const r = await join({ contact: "x@example.com" });
+    expect(r.status).toBe(429);
+    expect(Number(r.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect((await join({ contact: "x@example.com" }, "198.51.100.2")).status).toBe(200);
+    t += 600_000;
+    expect((await join({ contact: "y@example.com" })).status).toBe(200);
+  });
+
+  it("rate-limits check-ins per wallet", async () => {
+    const body = JSON.stringify({ wallet: WALLET, rigId: "pc", gpus: [{ name: "NVIDIA GeForce RTX 4070" }] });
+    const go = () => fetch(`${b}/v1/assignments`, { method: "POST", body });
+    expect((await go()).status).toBe(200);
+    expect((await go()).status).toBe(200);
+    expect((await go()).status).toBe(429);
+  });
+
+  it("refuses oversized bodies", async () => {
+    const r = await fetch(`${b}/v1/assignments`, { method: "POST", body: "x".repeat(70 * 1024) });
+    expect(r.status).toBe(413);
+  });
+});

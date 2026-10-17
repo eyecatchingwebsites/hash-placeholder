@@ -11,3 +11,4 @@ services/payouts/data/
 apps/promo/out/
 # Licensed music: kept local (the repo is public; redistributing the track is not allowed)
 apps/promo/audio/
+apps/web/dist/

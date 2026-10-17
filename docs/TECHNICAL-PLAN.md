@@ -15,7 +15,8 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 | Collector (Kryptex per-worker stats → mining hours and mined value per wallet) | ✅ 11 tests, runs live against Kryptex inside the payout loop; trued up to the pool's balance + payouts (Oct 16) | `services/collector` |
 | Payout loop (collector → transfer indexer/hold clocks → harvest → rate by formula → split → market buy → pay → public record) | ✅ 24 tests. Mainnet-ready (Oct 16): real buys on the Meteora curve / DAMM v2, curve fee funds the float, sale-funded settlement, kill switch, alerts, dry run, env config. Rehearsed on devnet through graduation. Needs the user's RPC key, keypair, multisig (`services/payouts/README.md`) | `services/payouts` |
 | Desktop app (Rust core + Tauri shell) | 🟡 release-ready except keys (Oct 16): real miner and pool, safety pauses, full-window settings, auto-start, updater, antivirus block message naming the active product; core tests and end-to-end pass; the unsigned test installer mined live on the user's PC with ForgeMiner 1.8.8 (after the user allowed it in Defender). Ships unsigned at launch (PROJECT.md §2). Needs the 🔑 items in Phase 5 | `apps/desktop` |
-| Website (home, calculator, FAQ/docs; backend parts are placeholders) | 🟡 static front end | `apps/web` |
+| Website (home, calculator, FAQ/docs, antivirus help) | 🟡 static front end, ready to deploy on Cloudflare Pages (Oct 17): config-driven waitlist, download + SHA-256, contract address; og/canonical/robots/sitemap/404, security headers, token metadata. 🔑 the user connects the repo (`docs/HOSTING.md`) | `apps/web` |
+| Hosting (Oct 17) | 🟡 ready on our side: Cloudflare Pages config + build check, Cloudflare Tunnel for the API on the user's PC (Windows service, setup and health-check scripts, API autostart). 🔑 the user buys hashcoin.app and follows the ~1 hour checklist in `docs/HOSTING.md` | `apps/web`, `infra/pc` |
 | CI + Windows release workflow | 🟡 release workflow: a test build on every desktop push, a tag = release with key checks, switchable Azure code signing, SHA-256 in the run summary, draft GitHub release | `.github/workflows` |
 | Simulation, calculators | ✅ (defaults still on the old 5% split) | `sim/`, `calculator/` |
 
@@ -42,10 +43,10 @@ These block real mining. Each one is research plus a decision from the user.
    - Fallback if no pool fits: run our own pool for that coin (more work, see Phase 6).
 3. **Launchpad: Meteora Dynamic Bonding Curve 0.2.2 (decided Oct 12; live on mainnet Oct 16).** Token-2022 with the 2–5% tax via `create_config2`; the rate is fixed on the curve and the fee authority is ours from graduation (DAMM v2). Rehearsed end to end on devnet with Meteora's released SDK 2.0.0 (Oct 16, `packages/chain/scripts/meteora-devnet.ts`), same results as the Oct 12 pre-release run. Raydium LaunchLab is the tested fallback (fixed rate). Still open 🔑: the mainnet graduation target (SOL) and the pool fee.
 4. **Accounts** 🔑:
-   - .com domain.
-   - Hosting:
-     - Web: Vercel.
-     - Backend: a small VPS (e.g. Hetzner or DigitalOcean) or Railway/Fly.
+   - Domain: **hashcoin.app** (Oct 17; the user is buying it). Treated as a config value (`apps/web/scripts/set_domain.mjs`).
+   - Hosting (decided Oct 5 / prepared Oct 17, `docs/HOSTING.md`):
+     - Web: **Cloudflare Pages** (free), was Vercel.
+     - Backend: **the user's PC** for launch, public at `https://api.hashcoin.app` through a **Cloudflare Tunnel** (free; no open ports). A small VPS later if the coin takes off: only the tunnel's machine changes.
    - Postgres (e.g. Neon or Supabase).
    - Solana RPC (Helius, QuickNode or Triton, with webhooks or enhanced transactions for transfer indexing).
    - Code-signing (Azure Trusted Signing is cheapest; otherwise an OV certificate).
@@ -106,7 +107,7 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 - ✅ Alerts to a webhook: float low, round failed, no tax for N rounds, RPC errors, payout and buy failures, collector failing (Oct 16).
 - ✅ Dry run: `--dry-run` computes a round from live data and sends nothing (Oct 16).
 - Watch for block withholding: expected vs actual blocks per pool, and flag wallets with many shares but no blocks.
-- Rate limiting on the API (per IP and per wallet).
+- ✅ Rate limiting on the API (per IP and per wallet), body/header size limits and timeouts, localhost-only listening behind the tunnel (Oct 17, `services/api/src/guard.ts`; route list in `docs/HOSTING.md`).
 
 ## Phase 4: Website (`apps/web`)
 The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `docs/HANDOFF.md`). Its current state is in `docs/PROJECT.md` §13. Next:
@@ -117,7 +118,7 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
    - `/wallet/[address]`: wallet linking (connect each wallet and sign a plain, free message that says it moves nothing; `linkWallet` / `unlinkWallet`), miner and holder level, progress ("$12 to H1", "18h to H2", "40 more hours mined to M3"), paid / pending, payout history
    - `/download`: signed installer, SHA-256, VirusTotal link, antivirus FAQ
    - `/calculator`: the full calculator (`calculator/index.html`), fed live inputs at launch
-3. **Waitlist backend:** a `waitlist` table, a POST endpoint, and a live counter. Store an X handle or email, the GPU model, and an optional public wallet. Rate-limit and validate.
+3. ✅ **Waitlist backend (Oct 17):** `POST /v1/waitlist` (X handle or email + GPU, validated, one per contact, 5 per 10 min per IP) and `GET /v1/waitlist` (count), stored in `services/api/data/waitlist.jsonl` on the backend PC (a table once there's Postgres). The form opens with `waitlist: true` in `config.js`. ⬜ Live counter on the site.
 4. **Status strip and hero numbers** read from the dashboard API. Until launch they show "—", never invented numbers.
 5. **Rules (from CLAUDE.md):** no return promises, and the contract address published only on the site.
 6. **Site claim to keep true:** the site says mining only uses spare GPU power and your PC works like normal (only the hashrate drops when a game or render runs). That's the user's own experience mining PRL, not a feature we build. Re-check it on other coins/miners the app switches to; if one behaves differently, change the copy.
@@ -140,7 +141,8 @@ Status Oct 16 (branch `claude/vigorous-ptolemy-5f1a4b`; details in `apps/desktop
    - ⬜ Later, not for launch: code signing with an organization (a company) as the publisher. Azure Artifact Signing (formerly Trusted Signing) is already wired in the workflow, off while the variable `WINDOWS_SIGNING` is unset.
    - ✅ `desktop-release.yml`: test builds on desktop pushes; a tag makes an unsigned draft release with the installer, `.sig`, `latest.json`, the SHA-256 and release notes that explain the SmartScreen/Defender warnings.
    - 🟡 Submit to Microsoft's false-positive portal and VirusTotal vendors (the user is submitting the Oct 16 test installer).
-   - ⬜ Publish the SHA-256 on the website (from the release run's summary or `SHA256SUMS.txt`).
+   - 🟡 Publish the SHA-256 on the website: set `download` (`url`, `version`, `sha256`) in `apps/web/assets/js/config.js`; it shows beside the download button and on `antivirus.html#check` (Oct 17).
+   - 🔑 Repository variables (Oct 17 values): `HASHCOIN_API_BASE=https://api.hashcoin.app`, `HASHCOIN_SAFETY_URL=https://hashcoin.app/antivirus.html#check`, `HASHCOIN_AV_HELP_URL=https://hashcoin.app/antivirus.html` (`docs/HOSTING.md` step 4).
 7. ⬜ **Proof video:** unedited install → first payout, with the Solscan link on screen.
 
 ## Phase 6: Hardening and launch
@@ -152,7 +154,7 @@ Status Oct 16 (branch `claude/vigorous-ptolemy-5f1a4b`; details in `apps/desktop
 - Launch checklist:
   - 🔑 Graduation target, picked 24–48 h before launch from the X campaign (40 / 50 / 85 SOL for quiet / decent / strong).
   - 🔑 Who is the partner (`--partner`): it collects the tax, changes the rate after graduation and claims the curve fee, and the payout loop does all three on a timer. A Squads multisig is safest but needs a signature for every harvest and rate change; a dedicated hot payout key keeps the loop automatic. Decide before launch.
-  - 🔑 Token metadata JSON (name, symbol, image, website, X) hosted at a stable URL (`--uri`), and the logo uploaded.
+  - 🟡 Token metadata JSON: `apps/web/token/hash.json` + 512×512 `hash.png`, served at `https://hashcoin.app/token/hash.json` (`--uri`) once the site is deployed. 🔑 Add the X link (top level and `extensions`) when the account exists; the site build checks it matches `config.js`.
   - 🔑 Wallets funded: launcher ~0.08 SOL; dev wallet ~0.26 SOL at a 50 SOL target (the 1% bag ≈ 0.24 SOL + fees; the script prints the exact figure).
   - 🔑 A paid RPC (Helius) via `--rpc` or `SOLANA_RPC`; the public one is rate-limited.
   - Token setup (decided Oct 16): 21M supply, mint and freeze authority none, 5% tax on the curve, 25% of supply to the pool, curve fee 20% → 1% over 5 minutes, 0.25% pool fee after graduation, LP permanently locked to the partner, no other extensions.

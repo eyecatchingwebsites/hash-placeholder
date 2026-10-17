@@ -4,6 +4,8 @@ import {
   assignGpu, isRigId, isSolanaAddress, rawPublicKey, signPayload, vendorOf,
   type CoinInfo, type GpuReport, type GpuSwitchState, type RevenueQuote, type ScoreInputs, type SignedEnvelope, type SwitchPolicy,
 } from "@hashcoin/switcher";
+import { clientIp, DEFAULT_LIMITS, RateLimiter, type RateLimits } from "./guard.js";
+import { normalizeContact, normalizeGpu, type Waitlist } from "./waitlist.js";
 
 export interface ApiDeps {
   coins: CoinInfo[];
@@ -26,6 +28,12 @@ export interface ApiDeps {
   /** The desktop app's update feed (Tauri's static update manifest, written by the release
    *  workflow as latest.json), or null when there's no release to offer. */
   appUpdate?: () => unknown | null;
+  /** Website waitlist (POST /v1/waitlist). Without one, the endpoint answers 503. */
+  waitlist?: Waitlist;
+  /** Origins allowed to POST to the waitlist from a browser (the website). */
+  siteOrigins?: string[];
+  /** Per-IP and per-wallet request limits (DEFAULT_LIMITS if not set). */
+  limits?: RateLimits;
 }
 
 /** One pool worker (one GPU) and the wallet it pays. */
@@ -41,11 +49,14 @@ export interface WorkerRecord {
 }
 
 const MAX_BODY = 64 * 1024;
+/** Switch state for a GPU not heard from in this long is dropped (it starts fresh if it returns). */
+const STATE_IDLE_MS = 24 * 3_600_000;
 const MAX_GPUS = 16;
 
-class HttpError extends Error { constructor(public status: number, msg: string) { super(msg); } }
+class HttpError extends Error { constructor(public status: number, msg: string, public retryAfter?: number) { super(msg); } }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
+  if (Number(req.headers["content-length"] ?? 0) > MAX_BODY) throw new HttpError(413, "body too large");
   let size = 0;
   const chunks: Buffer[] = [];
   for await (const c of req) {
@@ -77,8 +88,15 @@ function parseGpus(raw: unknown): GpuReport[] {
 
 export function createApi(deps: ApiDeps): { server: Server; state: Map<string, GpuSwitchState> } {
   const state = new Map<string, GpuSwitchState>();
+  const lastSeen = new Map<string, number>();
   const now = deps.now ?? Date.now;
   const manifestEnv = signPayload(deps.minerManifest, deps.signingKey, deps.kid);
+  const lim = deps.limits ?? DEFAULT_LIMITS;
+  const mk = (l: { limit: number; windowMs: number }) => new RateLimiter(l.limit, l.windowMs, now);
+  const perIp = mk(lim.perIp), assignPerIp = mk(lim.assignPerIp), assignPerWallet = mk(lim.assignPerWallet), waitlistPerIp = mk(lim.waitlistPerIp);
+  const origins = new Set(deps.siteOrigins ?? []);
+  let pruneAt = 0;
+  const limited = (wait: number) => { if (wait) throw new HttpError(429, `too many requests; try again in ${wait} s`, wait); };
 
   async function handle(req: IncomingMessage, res: ServerResponse) {
     const url = new URL(req.url ?? "/", "http://x");
@@ -87,7 +105,35 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
       res.end(JSON.stringify(body));
     };
 
+    const ip = clientIp(req);
+    limited(perIp.take(ip));
+
     if (req.method === "GET" && url.pathname === "/v1/health") return send(200, { ok: true });
+
+    // Website waitlist. Browsers may only post from the site's own origins.
+    if (url.pathname === "/v1/waitlist") {
+      const origin = req.headers.origin;
+      if (typeof origin === "string" && origins.has(origin)) {
+        res.setHeader("access-control-allow-origin", origin);
+        res.setHeader("vary", "origin");
+      }
+      if (req.method === "OPTIONS") {
+        res.writeHead(204, { "access-control-allow-methods": "GET, POST", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" });
+        return res.end();
+      }
+      if (!deps.waitlist) return send(503, { error: "the waitlist isn't open" });
+      if (req.method === "GET") return send(200, { count: deps.waitlist.count() });
+      if (req.method === "POST") {
+        if (typeof origin === "string" && !origins.has(origin)) throw new HttpError(403, "origin not allowed");
+        limited(waitlistPerIp.take(ip));
+        const body = (await readJson(req)) as Record<string, unknown>;
+        const contact = normalizeContact(body?.contact);
+        if (!contact) throw new HttpError(400, "enter an X handle or an email address");
+        const r = deps.waitlist.add({ contact, gpu: normalizeGpu(body.gpu) });
+        if (r === "full") throw new HttpError(503, "the waitlist is full");
+        return send(200, { ok: true, already: r === "exists", count: deps.waitlist.count() });
+      }
+    }
     if (req.method === "GET" && url.pathname === "/v1/prices") {
       res.setHeader("access-control-allow-origin", "*");
       return deps.prices ? send(200, await deps.prices()) : send(503, { error: "no price feed" });
@@ -115,14 +161,20 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
     if (req.method === "GET" && url.pathname === "/v1/miners") return send(200, manifestEnv);
 
     if (req.method === "POST" && url.pathname === "/v1/assignments") {
+      limited(assignPerIp.take(ip));
       const body = (await readJson(req)) as Record<string, unknown>;
-      const wallet = String(body.wallet ?? "");
-      const rigId = String(body.rigId ?? "");
+      const wallet = String(body?.wallet ?? "");
+      const rigId = String(body?.rigId ?? "");
       if (!isSolanaAddress(wallet)) throw new HttpError(400, "wallet must be a Solana address");
+      limited(assignPerWallet.take(wallet));
       if (!isRigId(rigId)) throw new HttpError(400, "rigId must be 1-24 letters, digits, - or _");
       const gpus = parseGpus(body.gpus);
       const region = typeof body.region === "string" ? body.region : undefined;
       const t = now();
+      if (t >= pruneAt) {
+        pruneAt = t + 600_000;
+        for (const [k, seen] of lastSeen) if (t - seen > STATE_IDLE_MS) { lastSeen.delete(k); state.delete(k); }
+      }
       const ctx = {
         coins: deps.coins, quotes: deps.quotes, policy: deps.policy, ttlMs: deps.ttlMs, region,
         score: { ...deps.score, platformSellUsdPerDay: deps.platformSell() },
@@ -132,6 +184,7 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
         const key = `${wallet}:${rigId}:${g.index}`;
         const r = assignGpu({ wallet, rigId }, g, state.get(key) ?? null, t, ctx);
         state.set(key, r.state);
+        lastSeen.set(key, t);
         if (r.assignment) {
           const worker = r.assignment.pool.user.slice(r.assignment.pool.user.lastIndexOf(".") + 1);
           deps.onAssign?.({ worker, coin: r.assignment.coin, wallet, rigId, gpuIndex: g.index, gpu: g.name, at: t });
@@ -143,13 +196,23 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
     send(404, { error: "not found" });
   }
 
-  const server = createServer((req, res) => {
+  const server = createServer({ maxHeaderSize: 16 * 1024 }, (req, res) => {
     handle(req, res).catch((e: unknown) => {
       const status = e instanceof HttpError ? e.status : 500;
       if (status === 500) console.error(e);
-      res.writeHead(status, { "content-type": "application/json" });
+      const headers: Record<string, string> = { "content-type": "application/json", "cache-control": "no-store" };
+      if (e instanceof HttpError && e.retryAfter) headers["retry-after"] = String(e.retryAfter);
+      // Close the connection after an oversized body instead of reading the rest of it.
+      if (status === 413) headers.connection = "close";
+      if (res.headersSent) return res.end();
+      res.writeHead(status, headers);
       res.end(JSON.stringify({ error: status === 500 ? "internal error" : (e as Error).message }));
     });
   });
+  // Slow or stuck clients can't hold connections open.
+  server.headersTimeout = 10_000;
+  server.requestTimeout = 20_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxRequestsPerSocket = 1000;
   return { server, state };
 }
