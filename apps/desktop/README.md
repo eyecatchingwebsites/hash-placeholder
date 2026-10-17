@@ -81,7 +81,9 @@ scripts/     build-local-test.ps1 (test installer), update-feed.mjs, signing-con
   is unchanged.
 
 ## Settings
-Gear button in the header. Saved to `%APPDATA%\com.hashcoin.miner\settings.json`; every field has a default, so a
+Gear button in the header: opens a full-window panel (Back button or Esc to close). Pop-ups such as the Defender
+message open large over a dimmed backdrop; both fade in and out (instant with reduced motion), keep keyboard focus
+inside while open and return it on close. Saved to `%APPDATA%\com.hashcoin.miner\settings.json`; every field has a default, so a
 partial file still loads (a file without `rigId` used to fall back to all defaults, the Oct 4 "placeholder server" bug).
 The server is the one built into the app (`HASHCOIN_API_BASE` at build time). The app never saves it; only an
 `apiOverride` typed into the file by hand replaces it, and never a `*.invalid` placeholder. Builds before Oct 17 saved
