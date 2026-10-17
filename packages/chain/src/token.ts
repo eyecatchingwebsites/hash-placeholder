@@ -1,7 +1,7 @@
 // On-chain actions for $HASH: a Token-2022 mint with the transfer-fee extension, fee harvesting,
 // and batched payouts. Devnet first (packages/chain/scripts/devnet-run.ts).
 import {
-  type AccountInfo, type Connection, Keypair, type ParsedTransactionWithMeta, PublicKey, sendAndConfirmTransaction,
+  type AccountInfo, ComputeBudgetProgram, type Connection, Keypair, type ParsedTransactionWithMeta, PublicKey, sendAndConfirmTransaction,
   SystemProgram, type TokenBalance, Transaction, type TransactionSignature,
 } from "@solana/web3.js";
 import {
@@ -60,12 +60,13 @@ export interface Transfer { to: PublicKey; amount: bigint }
  */
 export async function sendBatch(
   conn: Connection, payer: Keypair, from: Keypair, mint: PublicKey, decimals: number,
-  fee: { bps: number; max: bigint }, transfers: Transfer[], opts: { netOfFee: boolean; perTx?: number } = { netOfFee: true },
+  fee: { bps: number; max: bigint }, transfers: Transfer[], opts: { netOfFee: boolean; perTx?: number; priorityMicroLamports?: number } = { netOfFee: true },
 ): Promise<{ signature: TransactionSignature; transfers: (Transfer & { sent: bigint })[] }[]> {
   const source = ata(from.publicKey, mint);
   const out: { signature: TransactionSignature; transfers: (Transfer & { sent: bigint })[] }[] = [];
   for (const group of chunk(transfers.filter((t) => t.amount > 0n), opts.perTx ?? 5)) {
     const tx = new Transaction();
+    if (opts.priorityMicroLamports) tx.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: opts.priorityMicroLamports }));
     const sent = group.map((t) => ({ ...t, sent: opts.netOfFee ? grossUp(t.amount, fee.bps, fee.max) : t.amount }));
     for (const t of sent) {
       const dest = ata(t.to, mint);
@@ -101,6 +102,15 @@ export async function accountsWithWithheldFees(conn: Connection, mint: PublicKey
     const withheld = getTransferFeeAmount(parsed)?.withheldAmount ?? 0n;
     return withheld > 0n ? [{ address: pubkey, withheld }] : [];
   });
+}
+
+/**
+ * Tax waiting to be harvested, without sending anything (dry runs): withheld in token accounts plus
+ * already moved into the mint.
+ */
+export async function withheldTotal(conn: Connection, mint: PublicKey, candidates?: PublicKey[]): Promise<bigint> {
+  const [accounts, info] = await Promise.all([accountsWithWithheldFees(conn, mint, candidates), getMint(conn, mint, "confirmed", P)]);
+  return accounts.reduce((a, x) => a + x.withheld, getTransferFeeConfig(info)?.withheldAmount ?? 0n);
 }
 
 /**

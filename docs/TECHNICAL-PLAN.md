@@ -12,8 +12,8 @@ Legend: ✅ done · 🟡 started · ⬜ not started · 🔑 needs the user (acco
 | Payout engine (tax split, holder + miner levels, weights, caps, epoch, holder payout, settlement, token split) | ✅ 33 tests | `packages/engine` |
 | Coin switcher (per-card scoring, hysteresis, signed assignments) | ✅ 11 tests | `packages/switcher` |
 | Assignment API (`/v1/assignments`, `/v1/miners`, `/v1/keys`) | ✅ 4 tests, placeholder pools and miners | `services/api` |
-| Collector (Kryptex per-worker stats → mining hours and mined value per wallet) | 🟡 8 tests, runs live against Kryptex inside the payout loop; not yet trued up to pool payouts | `services/collector` |
-| Payout loop (collector → transfer indexer/hold clocks → harvest → rate by formula → split → pay → public record) | 🟡 10 tests, running on devnet since Oct 5 with a simulated market; mainnet needs market buys and real settlement | `services/payouts` |
+| Collector (Kryptex per-worker stats → mining hours and mined value per wallet) | ✅ 11 tests, runs live against Kryptex inside the payout loop; trued up to the pool's balance + payouts (Oct 16) | `services/collector` |
+| Payout loop (collector → transfer indexer/hold clocks → harvest → rate by formula → split → market buy → pay → public record) | ✅ 24 tests. Mainnet-ready (Oct 16): real buys on the Meteora curve / DAMM v2, curve fee funds the float, sale-funded settlement, kill switch, alerts, dry run, env config. Rehearsed on devnet through graduation. Needs the user's RPC key, keypair, multisig (`services/payouts/README.md`) | `services/payouts` |
 | Desktop app (Rust core + Tauri shell) | 🟡 core 12 tests, end-to-end test passes on Windows (Oct 4), window launches; needs a real miner and pool | `apps/desktop` |
 | Website (home, calculator, FAQ/docs; backend parts are placeholders) | 🟡 static front end | `apps/web` |
 | CI + Windows release workflow | 🟡 written, never run on GitHub | `.github/workflows` |
@@ -35,7 +35,7 @@ These block real mining. Each one is research plus a decision from the user.
    - Must-haves:
      - **Per-worker stats API** (accepted shares or hashrate per worker name), because payouts are credited from this.
      - Worker names in the form `wallet.rig-gpu`.
-     - Payout to one platform address. **The login must be our coin address plus the worker name** (`PLATFORM_COIN_ADDRESS.solWallet.rig-gpu`), or a pool account. `packages/switcher/src/assign.ts` currently logs in with the Solana wallet alone, which on a normal pool would send the coin nowhere. Check each pool's worker-name length limit (Solana addresses are 32–44 characters) and fix `assign.ts` once a pool is chosen.
+     - Payout to one platform address. **The login must be our coin address plus the worker name** (`PLATFORM_COIN_ADDRESS.solWallet.rig-gpu`), or a pool account. `packages/switcher/src/assign.ts` currently logs in with the Solana wallet alone, which on a normal pool would send the coin nowhere. Check each pool's worker-name length limit (Solana addresses are 32–44 characters) and fix `assign.ts` once a pool is chosen. **Done:** login = `<platform address>.<worker id>-<gpu>` (Oct 4); the platform address comes from `HASH_PAYOUT_ADDRESS_<COIN>` and the test address is refused on mainnet (Oct 16).
      - PPS/PPLNS terms and the pool fee.
      - Regions.
    - Output: fill in `services/api/config/coins.json`.
@@ -55,7 +55,7 @@ These block real mining. Each one is research plus a decision from the user.
 ## Phase 2: Devnet token and money flow
 Goal: prove fee → chest → payouts on devnet with fake miners.
 
-**Status (Oct 4): first round done** with `packages/chain` (`npx tsx packages/chain/scripts/devnet-run.ts`): mint, test trades, harvest, engine split with real collector data, payouts, public round report. Still to do: a real pool and market buys (devnet has none; the mining part is paid from treasury supply), the transfer indexer (hold clocks from real transfers), and running rounds on a schedule.
+**Status (Oct 16): done for the mainnet launch.** `services/payouts` buys miners' $HASH on the real market (DBC curve, then DAMM v2; `packages/chain/src/market.ts`), funded by our curve trading fee, and was rehearsed on devnet on a fresh DBC token through graduation. `buyHash` is a Meteora swap rather than Jupiter (no route exists before graduation). **Status (Oct 4): first round done** with `packages/chain` (`npx tsx packages/chain/scripts/devnet-run.ts`): mint, test trades, harvest, engine split with real collector data, payouts, public round report. Still to do: a real pool and market buys (devnet has none; the mining part is paid from treasury supply), the transfer indexer (hold clocks from real transfers), and running rounds on a schedule.
 
 1. `packages/chain` (TypeScript, `@solana/web3.js` + `@solana/spl-token`):
    - `createHashMint()`: Token-2022 mint with the transfer-fee extension at 500 bps, a high max fee, and both fee authorities set to a multisig. Mint and freeze authorities revoked after minting; no other extensions. Devnet: a throwaway keypair from env, never committed.
@@ -102,8 +102,9 @@ Goal: prove fee → chest → payouts on devnet with fake miners.
 
 **Safety:**
 - Treasury in a Squads multisig, with signers who aren't all the same person. The hot payout wallet holds only the float, with an automatic refill from the multisig needing manual approval above a limit.
-- A kill switch: pause payouts.
-- Alerts: float low, epoch failed, pool feed stale, RPC errors, payout tx failures.
+- ✅ A kill switch: `ctl kill` blocks every send (Oct 16).
+- ✅ Alerts to a webhook: float low, round failed, no tax for N rounds, RPC errors, payout and buy failures, collector failing (Oct 16).
+- ✅ Dry run: `--dry-run` computes a round from live data and sends nothing (Oct 16).
 - Watch for block withholding: expected vs actual blocks per pool, and flag wallets with many shares but no blocks.
 - Rate limiting on the API (per IP and per wallet).
 
@@ -158,8 +159,9 @@ The static front end exists (`apps/web`, plain HTML/CSS/JS; see its README and `
   - Multisig configured and fee authorities moved.
   - Dev wallet locked or vested publicly.
   - Float funded (~$1K).
-  - Kill switch tested.
-  - Alerts on.
+  - Kill switch tested (✅ on devnet Oct 16; repeat on mainnet with `--dry-run` first).
+  - Alerts on (set `HASH_ALERT_WEBHOOK`).
+  - Payout loop: `HASH_MAINNET=yes`, Helius RPC, payout keypair outside the repo (the DBC `feeClaimer`), dev wallet, multisig, `HASH_PAYOUT_ADDRESS_PRL`; fill `market` in the mainnet config; `--dry-run` once before the first live round; after graduation `ctl handover-rate-authority <multisig> --yes`.
   - Waitlist emailed.
   - Contract address posted on the site first.
 

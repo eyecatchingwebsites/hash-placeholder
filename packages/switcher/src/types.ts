@@ -20,6 +20,8 @@ export interface CoinInfo {
   pools: PoolEndpoint[];
   /** The platform's payout address on this coin's pool. A coin without one is never assigned. */
   payoutAddress?: string;
+  /** The address above is for testing only (refused in production; see `applyPayoutAddresses`). */
+  payoutAddressIsTest?: boolean;
   /** Miner id from the miner manifest to use for this coin, per vendor. */
   miner: Partial<Record<Vendor, string>>;
 }

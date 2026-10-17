@@ -1,6 +1,7 @@
 import { DAY_MS, HOUR_MS, hourCredit, type Rules } from "@hashcoin/engine";
 import { gpuKey } from "@hashcoin/switcher";
 import type { KryptexPoolInfo, KryptexWorker } from "./kryptex.js";
+import type { TrueUpState } from "./trueup.js";
 
 /** What the API recorded for each pool worker (services/api WorkerRecord). */
 export interface WorkerRecord {
@@ -20,6 +21,8 @@ export interface CollectorState {
   workers: Record<string, { since: number; samples: { at: number; hs: number }[]; best: { at: number; hs: number }[] }>;
   /** Per wallet: credited mining hours by run, kept for the M-level window. */
   hours: Record<string, { at: number; h: number }[]>;
+  /** Estimates checked against what the pool actually credited (see trueup.ts). */
+  trueUp?: TrueUpState;
 }
 
 export interface WalletResult {
@@ -30,6 +33,8 @@ export interface WalletResult {
   hoursInWindow: number;
   minedCoins: number;
   minedUsd: number;
+  /** Before the true-up to the pool's actual credits (set by the run, not by `collect`). */
+  estimatedUsd?: number;
   gpus: { worker: string; gpu: string; hashrate: number; expected: number; credit: number; flagged?: string }[];
 }
 
@@ -51,6 +56,8 @@ export interface CollectResult {
   wallets: WalletResult[];
   /** Workers under our payout address that no assignment explains (old sessions, manual tests). */
   unknownWorkers: string[];
+  /** Estimated coins this run for every worker under the address, unknown ones included (for the true-up). */
+  estimatedCoins: number;
 }
 
 const SAMPLE_WINDOW_MS = 3 * HOUR_MS;
@@ -92,14 +99,20 @@ export function collect(x: CollectInput): CollectResult {
   const runMs = Math.min(MAX_RUN_MS, Math.max(0, x.now - prevAt));
   const runH = runMs / HOUR_MS;
   const perHash = coinsPerHash(x.pool);
-  const state: CollectorState = { at: x.now, workers: {}, hours: { ...(x.prev?.hours ?? {}) } };
+  const state: CollectorState = { at: x.now, workers: {}, hours: { ...(x.prev?.hours ?? {}) }, ...(x.prev?.trueUp ? { trueUp: x.prev.trueUp } : {}) };
   const byWallet = new Map<string, WalletResult>();
   const unknownWorkers: string[] = [];
+  let estimatedCoins = 0;
 
   for (const w of x.workers) {
     const key = `${x.coin}:${w.worker}`;
     const rec = x.registry[key];
-    if (!rec) { unknownWorkers.push(w.worker); continue; }
+    if (!rec) {
+      // Not ours to pay, but the pool pays for it into the same balance: count it for the true-up.
+      unknownWorkers.push(w.worker);
+      estimatedCoins += sessionHashrate(w, x.now) * (runMs / 1000) * perHash;
+      continue;
+    }
 
     const hs = sessionHashrate(w, x.now);
     const old = x.prev?.workers[key];
@@ -125,6 +138,7 @@ export function collect(x: CollectInput): CollectResult {
     // Hours count while at least one GPU mines, so the wallet takes its best GPU's credit.
     r.hoursCredited = Math.max(r.hoursCredited, runH * credit);
     const coins = hs * (runMs / 1000) * perHash;
+    estimatedCoins += coins;
     r.minedCoins += coins;
     r.minedUsd += coins * x.priceUsd;
     r.gpus.push({ worker: w.worker, gpu: rec.gpu, hashrate: avg3h, expected, credit, ...(flagged ? { flagged } : {}) });
@@ -142,5 +156,5 @@ export function collect(x: CollectInput): CollectResult {
     const kept = entries.filter((e) => e.at > windowStart);
     if (kept.length) state.hours[wallet] = kept; else delete state.hours[wallet];
   }
-  return { state, wallets: [...byWallet.values()], unknownWorkers };
+  return { state, wallets: [...byWallet.values()], unknownWorkers, estimatedCoins };
 }

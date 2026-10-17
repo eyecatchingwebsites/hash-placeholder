@@ -59,3 +59,32 @@ export async function fetchPriceUsd(coin: string, fetchFn: typeof fetch = fetch)
   if (!last || !(last.price > 0)) throw new Error(`no ${coin} price`);
   return last.price;
 }
+
+/** Pool balance (`/{coin}/api/v1/miner/balance/{address}`). Coins; `total` includes unconfirmed. */
+export interface KryptexBalance { total: number; confirmed: number; unconfirmed: number }
+
+/** One payout from `/{coin}/api/v1/miner/payouts/{address}`. `amount` is a decimal string. */
+export interface KryptexPayout { date: string | number; amount: string; received?: number; status: string; txid: string }
+
+/**
+ * Everything the pool has credited to the address so far: its balance plus every payout it has sent.
+ * This only grows, so the difference between two readings is what the pool actually paid for the
+ * shares in between, which is what the collector's estimates are trued up against.
+ */
+export async function fetchEarned(coin: string, address: string, fetchFn: typeof fetch = fetch): Promise<{ balance: number; paid: number; payouts: number; earned: number }> {
+  const balance = await getJson<KryptexBalance>(`${BASE}/${coin}/api/v1/miner/balance/${address}`, fetchFn);
+  let paid = 0, payouts = 0;
+  const seen = new Set<string>();
+  for (let page = 1; page <= 200; page++) {
+    const body = await getJson<{ results?: KryptexPayout[]; next?: string | null }>(`${BASE}/${coin}/api/v1/miner/payouts/${address}?page=${page}`, fetchFn);
+    const fresh = (body.results ?? []).filter((p) => !seen.has(`${p.txid}:${p.date}`));
+    for (const p of fresh) {
+      seen.add(`${p.txid}:${p.date}`);
+      paid += Number(p.amount) || 0;
+      payouts += 1;
+    }
+    if (!body.next || fresh.length === 0) break;
+  }
+  const total = Number(balance.total) || 0;
+  return { balance: total, paid, payouts, earned: total + paid };
+}

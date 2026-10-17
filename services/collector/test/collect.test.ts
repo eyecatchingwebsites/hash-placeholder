@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DAY_MS, DEFAULT_RULES } from "@hashcoin/engine";
 import { coinsPerHash, collect, sessionHashrate, type CollectorState, type WorkerRecord } from "../src/collect.js";
-import { fetchWorkers, type KryptexPoolInfo, type KryptexWorker } from "../src/kryptex.js";
+import { fetchEarned, fetchWorkers, type KryptexPoolInfo, type KryptexWorker } from "../src/kryptex.js";
+import { DEFAULT_TRUE_UP, trueUp } from "../src/trueup.js";
 
 const T0 = 1_791_150_000_000;
 const MIN = 60_000;
@@ -98,5 +99,54 @@ describe("collector", () => {
     expect((await fetchWorkers("prl", "addr", fake)).map((w) => w.worker)).toEqual(["a", "b", "c"]);
     const ignoresPaging = (async () => new Response(JSON.stringify({ results: [{ worker: "a" }] }))) as typeof fetch;
     expect((await fetchWorkers("prl", "addr", ignoresPaging)).map((w) => w.worker)).toEqual(["a"]);
+  });
+  it("counts unknown workers' mining for the true-up, without paying them", () => {
+    const a = run(T0, [worker("habc-0", 130, T0), worker("stranger", 130, T0)], null);
+    const b = run(T0 + 5 * MIN, [worker("habc-0", 130, T0 + 5 * MIN), worker("stranger", 130, T0 + 5 * MIN)], a.state);
+    expect(b.unknownWorkers).toEqual(["stranger"]);
+    expect(b.estimatedCoins).toBeCloseTo(2 * b.wallets[0]!.minedCoins, 9);
+  });
+
+  it("trues estimates up to what the pool actually credited", () => {
+    const H = 3_600_000;
+    // Baseline, then two stretches where the pool credited 90% of the estimate.
+    let t = trueUp(undefined, T0, 10, 0.4);
+    expect(t.ratio).toBe(1);
+    expect(t.state.estimatedSince).toBe(0);
+    t = trueUp(t.state, T0 + H, 10, 0.05); // pool total hasn't moved yet: the estimate waits
+    expect(t.ratio).toBe(1);
+    t = trueUp(t.state, T0 + 2 * H, 10.09, 0.05);
+    expect(t.window.estimated).toBeCloseTo(0.1, 9);
+    expect(t.raw).toBeCloseTo(0.9, 9);
+    expect(t.ratio).toBeCloseTo(0.9, 9);
+    // A payout moves coins from balance to paid: the running total doesn't change.
+    t = trueUp(t.state, T0 + 3 * H, 10.09, 0);
+    expect(t.ratio).toBeCloseTo(0.9, 9);
+    // The pool can't be read: the last ratio stands and the estimate keeps accumulating.
+    t = trueUp(t.state, T0 + 4 * H, null, 0.1);
+    expect(t.ratio).toBeCloseTo(0.9, 9);
+    expect(t.state.estimatedSince).toBeCloseTo(0.1, 9);
+    // Way off: clamped and flagged.
+    t = trueUp(t.state, T0 + 5 * H, 10.09 + 0.6, 0);
+    expect(t.raw).toBeCloseTo(0.69 / 0.2, 6);
+    expect(t.ratio).toBe(DEFAULT_TRUE_UP.max);
+    expect(t.flag).toMatch(/credited/);
+    // A day later the old stretches have aged out.
+    t = trueUp(t.state, T0 + 30 * H, 10.69, 0.01);
+    expect(t.ratio).toBe(1);
+    expect(trueUp(t.state, T0 + 31 * H, 5, 0).flag).toMatch(/went down/);
+  });
+
+  it("reads the pool's running total: balance plus every payout", async () => {
+    const pages: Record<string, unknown> = {
+      "/prl/api/v1/miner/balance/A": { total: 0.68, confirmed: 0.68, unconfirmed: 0 },
+      "/prl/api/v1/miner/payouts/A?page=1": { results: [{ date: "1", amount: "1.0", status: "FINISHED", txid: "a" }, { date: "2", amount: "1.5", status: "FINISHED", txid: "b" }], next: "page2" },
+      "/prl/api/v1/miner/payouts/A?page=2": { results: [{ date: "3", amount: "0.25", status: "FINISHED", txid: "c" }], next: null },
+    };
+    const fake = (async (url: string) => {
+      const body = pages[new URL(url).pathname + new URL(url).search];
+      return { ok: !!body, status: body ? 200 : 404, json: async () => body } as Response;
+    }) as typeof fetch;
+    expect(await fetchEarned("prl", "A", fake)).toEqual({ balance: 0.68, paid: 2.75, payouts: 3, earned: 3.43 });
   });
 });
