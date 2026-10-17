@@ -4,20 +4,20 @@ Launch: about **October 24, 2026**. One list for you, one for Claude. The how-to
 - `docs/HOSTING.md`: putting the website and the API live (about an hour).
 - `docs/LAUNCH-RUNBOOK.md`: T-48h to the first day, with every command.
 
-Last updated Oct 17.
+Last updated Oct 17 (domain bought: hashcoin.app).
 
 ---
 
 ## You
 
 ### Decide
-- [ ] **Domain.** See "Domain options" below. Everything else hangs off it.
+- [x] **Domain: hashcoin.app** (bought Oct 17).
 - [ ] **X handle.** It goes into the token metadata and the site.
 - [ ] **How the dev bag is locked in public**, e.g. a token lock on Streamflow or Jupiter Lock.
 - [ ] **Graduation target**, around Oct 22, from how the X posts do: 40 SOL if it's quiet, 50 SOL in the base case, 85 SOL if it's strong.
 
 ### Accounts (start now; some take days)
-- [ ] Buy the domain, ideally on Cloudflare Registrar (sold at cost, and the site is hosted there too).
+- [x] Buy the domain (hashcoin.app, Oct 17). If it was bought outside Cloudflare, point its nameservers to Cloudflare (HOSTING.md step 0).
 - [ ] Cloudflare: put the site and the API live (HOSTING.md steps 0–3, about an hour).
 - [ ] Helius: create an API key (the free tier is enough to start).
 - [ ] Discord: a server, and a webhook for alerts.
@@ -50,7 +50,7 @@ Last updated Oct 17.
 
 ### When you say go
 - [ ] Merge `claude/launch-hosting` and `claude/launch-rehearsal` into `claude/vibrant-cray-fpbieb` (both guides depend on it), and run every test.
-- [ ] Switch the site, the API and the token metadata to the chosen domain (`set_domain.mjs`).
+- [x] Domain: hashcoin.app is already what the hosting work uses; nothing to switch.
 - [ ] Follow-ups the sessions turned up: start the payout loop when Windows starts, and make market buys and harvests crash-safe (a crash in the second after a buy could buy twice; nobody is paid twice).
 
 ### Once the domain is live
@@ -66,7 +66,7 @@ Last updated Oct 17.
 
 ---
 
-## Domain options
+## Domain options (decided: hashcoin.app)
 
 Checked Oct 17 through the registries' public records. A domain listed as free can still be taken before you buy, so confirm at checkout.
 
