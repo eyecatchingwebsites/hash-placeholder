@@ -6,7 +6,7 @@
   "build": { "frontendDist": "../ui" },
   "app": {
     "withGlobalTauri": true,
-    "windows": [{ "label": "main", "title": "Hashcoin Miner", "width": 1040, "height": 700, "minWidth": 860, "minHeight": 600, "resizable": true }],
+    "windows": [{ "label": "main", "title": "Hashcoin Miner", "width": 1040, "height": 700, "minWidth": 860, "minHeight": 600, "resizable": true, "visible": false }],
     "security": { "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" }
   },
   "bundle": {
@@ -14,7 +14,16 @@
     "targets": ["nsis"],
     "icon": ["icons/icon.png", "icons/icon.ico"],
     "publisher": "Hashcoin",
+    "copyright": "Copyright © 2026 Hashcoin",
+    "category": "Utility",
+    "longDescription": "Mines with your graphics card when you start it, and pays you in $HASH.",
     "shortDescription": "Mine with your GPU, get paid in $HASH",
     "windows": { "nsis": { "installMode": "currentUser" } }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "REPLACE_WITH_UPDATER_PUBLIC_KEY",
+      "windows": { "installMode": "passive" }
+    }
   }
 }

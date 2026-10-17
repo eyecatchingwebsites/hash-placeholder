@@ -21,8 +21,20 @@ pub struct MinerSpec {
     #[serde(default)]
     pub dev_fee: f64,
     pub builds: HashMap<String, MinerBuild>,
-    /// Argument template with {algo} {pool} {user} {pass} {device} {apiPort} placeholders.
+    /// Argument template with {algo} {pool} {user} {pass} {device} {apiPort} {tempLimit} {tempResume}
+    /// placeholders. A template with {tempLimit} means the miner pauses a hot card itself.
     pub args: Vec<String>,
+    /// Added after `args` only when the user sets a power cap: {powerLimit} is the cap in watts.
+    /// Empty when the miner has no power-limit flag.
+    #[serde(default)]
+    pub power_args: Vec<String>,
+}
+
+impl MinerSpec {
+    /// The miner pauses a card above the temperature limit on its own (its template takes one).
+    pub fn handles_temperature(&self) -> bool {
+        self.args.iter().any(|a| a.contains("{tempLimit}"))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,5 +126,7 @@ mod tests {
         let forge = m.find("forgeminer").unwrap();
         assert!(forge.algos.iter().any(|a| a == "pearlhash"));
         assert_eq!(forge.builds["windows-x86_64"].sha256.len(), 64);
+        assert!(forge.handles_temperature());
+        assert!(forge.power_args.iter().any(|a| a.contains("{powerLimit}")));
     }
 }

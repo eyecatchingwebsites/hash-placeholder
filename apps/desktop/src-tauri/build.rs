@@ -1,3 +1,6 @@
 fn main() {
-    tauri_build::build()
+    println!("cargo:rerun-if-changed=app.manifest");
+    // Our own Windows manifest (app.manifest): Tauri's default plus "runs as the user, never as admin".
+    let windows = tauri_build::WindowsAttributes::new().app_manifest(include_str!("app.manifest"));
+    tauri_build::try_build(tauri_build::Attributes::new().windows_attributes(windows)).expect("failed to run tauri-build");
 }

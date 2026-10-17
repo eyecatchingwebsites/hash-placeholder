@@ -23,6 +23,9 @@ export interface ApiDeps {
   publicRecord?: () => { wallets?: Record<string, unknown>; priceUsd?: number } | null;
   /** Price history for the app's charts (PRL from the pool; $HASH once it trades). */
   prices?: () => Promise<unknown>;
+  /** The desktop app's update feed (Tauri's static update manifest, written by the release
+   *  workflow as latest.json), or null when there's no release to offer. */
+  appUpdate?: () => unknown | null;
 }
 
 /** One pool worker (one GPU) and the wallet it pays. */
@@ -99,6 +102,14 @@ export function createApi(deps: ApiDeps): { server: Server; state: Map<string, G
       if (!isSolanaAddress(address)) return send(400, { error: "not a Solana address" });
       const w = rec.wallets?.[address];
       return w ? send(200, { address, priceUsd: rec.priceUsd, ...(w as object) }) : send(404, { error: "no $HASH activity for this wallet yet" });
+    }
+    // Desktop app updates: /v1/app/update/<target>/<arch>/<current version>. The app compares versions
+    // and checks the installer's signature against the update key built into it, so this only
+    // serves what the release workflow signed. 204 = nothing to offer.
+    if (req.method === "GET" && url.pathname.startsWith("/v1/app/update/")) {
+      const feed = deps.appUpdate?.();
+      if (!feed) { res.writeHead(204, { "cache-control": "no-store" }); return res.end(); }
+      return send(200, feed);
     }
     if (req.method === "GET" && url.pathname === "/v1/keys") return send(200, { [deps.kid]: rawPublicKey(deps.signingKey) });
     if (req.method === "GET" && url.pathname === "/v1/miners") return send(200, manifestEnv);

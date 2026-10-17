@@ -13,12 +13,14 @@ const key = loadSigningKey(newSigningKey().privatePem);
 const WALLET = "4Nd1mYwSzKj7hJkBFtyxGRy3tHn1Ag7e4Ki6UPWuKEPF";
 let clock = 1_800_000_000_000;
 const recorded: WorkerRecord[] = [];
+let appFeed: unknown = null;
 const PRL_PAYOUT = cfg.coins.find((c: { id: string }) => c.id === "PRL").payoutAddress as string;
 const api = createApi({
   coins: cfg.coins, quotes, policy: cfg.policy, score: cfg.score, ttlMs: cfg.ttlMs, platformSell: () => ({}),
   minerManifest: { version: 1, miners: [] }, signingKey: key, kid: "t1", now: () => clock,
   onAssign: (w) => recorded.push(w),
   publicRecord: () => ({ round: 3, wallets: { [WALLET]: { holderLevel: 2 } } }),
+  appUpdate: () => appFeed,
 });
 let base = "";
 beforeAll(async () => { await new Promise<void>((r) => api.server.listen(0, r)); base = `http://127.0.0.1:${(api.server.address() as AddressInfo).port}`; });
@@ -71,5 +73,13 @@ describe("api", () => {
     expect(await w.json()).toEqual({ address: WALLET, holderLevel: 2 });
     expect((await fetch(`${base}/v1/wallet/not-an-address`)).status).toBe(400);
     expect((await fetch(`${base}/v1/wallet/11111111111111111111111111111111`)).status).toBe(404);
+  });
+  it("serves the desktop update feed, or 204 when there's no release", async () => {
+    const url = `${base}/v1/app/update/windows-x86_64/x86_64/0.1.0`;
+    expect((await fetch(url)).status).toBe(204);
+    appFeed = { version: "0.1.1", platforms: { "windows-x86_64": { signature: "sig", url: "https://example.com/setup.exe" } } };
+    const res = await fetch(url);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(appFeed);
   });
 });
