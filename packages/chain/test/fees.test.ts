@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { chunk, grossUp, transferFee, usdToBaseUnits } from "../src/fees.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import { base58, chunk, grossUp, transferFee, usdToBaseUnits } from "../src/fees.js";
 
 const MAX = 10n ** 18n;
 
@@ -29,5 +30,17 @@ describe("transfer fee maths", () => {
     expect(chunk([1, 2, 3, 4, 5, 6, 7], 3)).toEqual([[1, 2, 3], [4, 5, 6], [7]]);
     expect(usdToBaseUnits(1.5, 0.001, 6)).toBe(1_500_000_000n); // 1,500 tokens
     expect(usdToBaseUnits(0, 0.001, 6)).toBe(0n);
+  });
+});
+
+describe("base58", () => {
+  it("encodes like Solana does (keys and signatures), leading zero bytes included", () => {
+    for (let i = 0; i < 20; i++) {
+      const k = Keypair.generate().publicKey;
+      expect(base58(k.toBytes())).toBe(k.toBase58());
+    }
+    const zeros = new Uint8Array(32); zeros[31] = 1;
+    expect(base58(zeros)).toBe(new PublicKey(zeros).toBase58());
+    expect(base58(new Uint8Array(32))).toBe("11111111111111111111111111111111");
   });
 });

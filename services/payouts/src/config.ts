@@ -107,10 +107,11 @@ export const REPO_ROOT = resolve(here("../../.."));
 
 const PUBLIC_RPCS = ["api.mainnet-beta.solana.com", "api.devnet.solana.com", "api.testnet.solana.com"];
 
-function insideRepo(path: string): boolean {
-  const rel = relative(REPO_ROOT, resolve(path));
+function inside(dir: string, path: string): boolean {
+  const rel = relative(dir, resolve(path));
   return !!rel && !rel.startsWith("..") && !isAbsolute(rel);
 }
+const insideRepo = (path: string) => inside(REPO_ROOT, path);
 
 /** Read the config file and the environment, and refuse anything unsafe for the network. */
 export function loadRuntime(env: Record<string, string | undefined> = process.env): Runtime {
@@ -128,8 +129,10 @@ export function checkRuntime(cfg: PayoutsConfig, configPath: string, env: Record
   const keypairPath = env.HASH_KEYPAIR ? resolve(env.HASH_KEYPAIR) : null;
   const dataDir = resolve(env.HASH_DATA_DIR ?? here("../data"));
 
-  if (keypairPath && insideRepo(keypairPath) && !keypairPath.startsWith(resolve(here("../data")))) {
-    throw new Error(`HASH_KEYPAIR ${keypairPath} is inside the repository: keep keys outside it (or in the gitignored services/payouts/data on devnet)`);
+  // Devnet throwaway keys may sit in the gitignored data folders; anything else in the repo is refused.
+  const devnetKeyDirs = [resolve(here("../data")), resolve(REPO_ROOT, "packages/chain/data")];
+  if (keypairPath && insideRepo(keypairPath) && !devnetKeyDirs.some((d) => inside(d, keypairPath))) {
+    throw new Error(`HASH_KEYPAIR ${keypairPath} is inside the repository: keep keys outside it (or in the gitignored services/payouts/data or packages/chain/data on devnet)`);
   }
   let multisig: PublicKey | undefined;
   if (env.HASH_MULTISIG) {

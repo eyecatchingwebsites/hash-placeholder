@@ -36,3 +36,14 @@ export function usdToBaseUnits(usd: number, priceUsd: number, decimals: number):
   const frac = Math.floor((tokens - whole) * 10 ** decimals);
   return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac);
 }
+
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+/** Base58 (Solana's encoding for keys and transaction signatures). */
+export function base58(bytes: Uint8Array): string {
+  let n = 0n;
+  for (const b of bytes) n = n * 256n + BigInt(b);
+  let s = "";
+  while (n > 0n) { s = B58[Number(n % 58n)] + s; n /= 58n; }
+  for (const b of bytes) { if (b !== 0) break; s = `1${s}`; }
+  return s;
+}

@@ -18,6 +18,8 @@ export interface Owed {
    * price of the round that harvested it, so a retry doesn't re-price it. Only `buyUsd` is bought later.
    */
   taxTokens?: string;
+  /** Sent in this transaction, not yet confirmed: checked on chain before it is paid again (inflight.ts). */
+  inFlight?: { signature: string; lastValidBlockHeight: number };
 }
 
 /** Where the SOL for buying miners' $HASH comes from, and what it bought. */

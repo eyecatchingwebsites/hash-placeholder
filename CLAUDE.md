@@ -4,6 +4,7 @@ A Solana token plus a GPU-mining platform (presented as a real product, not a jo
 
 - Architecture: `docs/ARCHITECTURE.md`
 - Ordered build plan: `docs/TECHNICAL-PLAN.md` (start here for what to do next)
+- Launch day: `docs/LAUNCH-RUNBOOK.md` (rehearsed on devnet Oct 17: `docs/LAUNCH-REHEARSAL.md`)
 - Website: static front end in `apps/web` (`index.html`, `calculator.html`, `faq.html`; see `apps/web/README.md`). Live preview: https://claude.ai/artifact/6mwmqXA78PGKKqr17gNmSc. After a change: `python3 apps/web/scripts/build_standalone.py`, check with `node apps/web/scripts/check_site.mjs`, republish (`apps/web/scripts/artifact_page.py`). Brand: logo in `apps/web/brand/logo/`, gold #EBB447, no 3D models. Design brief: `docs/DESIGN-BRIEF.md`
 - Payout engine: `packages/engine` (TypeScript). Run `npm test` and `npm run typecheck` from the repo root.
 - Simulation: `python3 sim/hashsim.py` (stdlib only)

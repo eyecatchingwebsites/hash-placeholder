@@ -11,7 +11,7 @@ Runs the money side of $HASH, round after round:
 7. **Buy** the miners' $HASH on the market with SOL: DBC swap before graduation, DAMM v2 swap after, with a slippage floor and a cost limit. The SOL spent is grossed up for the transfer fee, and payouts are grossed up again, so miners receive the full amount (the withheld fees come back to the treasury at the next harvest).
 8. **Pay** miners, holders and dev, write the public record (`data/public.json`, served by `services/api`), raise alerts.
 
-Every round is written to the ledger as "owed" before the first transfer and cleared transfer by transfer, so a crash leaves the unpaid part owed (with its tokens) instead of losing it. Harvested tax is saved straight after the harvest.
+Every round is written to the ledger as "owed" before the first transfer and cleared transfer by transfer, so a crash leaves the unpaid part owed (with its tokens) instead of losing it. Each payout transaction is also recorded (signature, last valid block height) before it's sent; after a crash, a stop or a confirmation timeout, the next round looks it up on chain first: landed → recorded as paid, failed or expired → paid again, pending → wait (`src/inflight.ts`). So nothing is paid twice. What a market buy returned is read from the buy transaction itself. Harvested tax is saved straight after the harvest.
 
 ## Run
 
@@ -20,7 +20,10 @@ npx tsx services/payouts/src/main.ts             # run until stopped
 npx tsx services/payouts/src/main.ts --once      # one collect + one round
 npx tsx services/payouts/src/main.ts --dry-run   # compute a round from live data; sends nothing, saves nothing
 npx tsx services/payouts/src/ctl.ts status       # kill switch, ledger, funding, market phase, authorities
+npx tsx services/payouts/src/ctl.ts test-alert   # check HASH_ALERT_WEBHOOK
 ```
+
+On launch day the same with the settings from `%USERPROFILE%\.hashcoin\payouts.env`: `powershell -ExecutionPolicy Bypass -File services\payouts\scripts\payouts.ps1 [--dry-run | ctl ...]` (`docs/LAUNCH-RUNBOOK.md`).
 
 Settings: `config/payouts.json` (devnet rehearsal without a market), `config/payouts.mainnet.example.json` (mainnet), plus the environment:
 
@@ -72,3 +75,7 @@ npx tsx services/payouts/scripts/devnet-meteora.ts trade 2      # traders buy an
 npx tsx services/payouts/scripts/devnet-meteora.ts graduate buyout   # fill the curve (the loop sees "graduating")
 npx tsx services/payouts/scripts/devnet-meteora.ts graduate          # migrate to DAMM v2
 ```
+
+## Launch dress rehearsal (everything together)
+
+`scripts/launch-rehearsal.ts` drives the outside world for a launch-day rehearsal on devnet: keys and data in `packages/chain/data/rehearsal/`, the real `packages/chain/scripts/launch-mainnet.ts --cluster devnet`, traders, graduation, a local webhook, the miner's check-in on a local API. Commands: `keys | fund <keypair>... | config | webhook | register <api> | trade [n] | graduate [buyout] | reset-rate <bps> | execute <proposal> | balances`. Oct 17 run and results: `docs/LAUNCH-REHEARSAL.md`.

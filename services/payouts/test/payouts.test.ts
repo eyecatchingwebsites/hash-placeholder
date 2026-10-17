@@ -6,9 +6,11 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { DEFAULT_RULES, HOUR_MS, type PriceContext } from "@hashcoin/engine";
 import { guardSends, lamportsForUsd, SendBlockedError, sqrtPriceToPrice, type MintTx } from "@hashcoin/chain";
 import { Alerts, RpcWatch } from "../src/alerts.js";
-import { checkRuntime, type PayoutsConfig } from "../src/config.js";
+import { checkRuntime, type PayoutsConfig, REPO_ROOT } from "../src/config.js";
 import { engageKill, killReason, releaseKill } from "../src/control.js";
+import { resolveInFlight } from "../src/inflight.js";
 import { indexTransactions } from "../src/indexer.js";
+import { publicRecord } from "../src/publish.js";
 import { dayKey, emptyLedger, recordPrice } from "../src/ledger.js";
 import { solUsd } from "../src/price.js";
 import { rateProposal } from "../src/proposal.js";
@@ -341,6 +343,11 @@ describe("safety", () => {
     expect(() => checkRuntime(cfg, "x", { ...ok, HASH_RPC_URL: "https://api.mainnet-beta.solana.com" })).toThrow("dedicated RPC");
     expect(() => checkRuntime(cfg, "x", { ...ok, HASH_KEYPAIR: undefined })).toThrow("HASH_KEYPAIR");
     expect(() => checkRuntime(cfg, "x", { ...ok, HASH_KEYPAIR: "packages/chain/data/x.json" })).toThrow("inside the repository");
+    // Devnet: throwaway keys may sit in the gitignored data folders, nowhere else in the repo.
+    const devnet = { ...cfg, network: "devnet" as const, market: undefined, priceUsd: 0.05 };
+    expect(() => checkRuntime(devnet, "x", { HASH_KEYPAIR: join(REPO_ROOT, "packages/chain/data/rehearsal/payout.json") })).not.toThrow();
+    expect(() => checkRuntime(devnet, "x", { HASH_KEYPAIR: join(REPO_ROOT, "services/payouts/data/payout.json") })).not.toThrow();
+    expect(() => checkRuntime(devnet, "x", { HASH_KEYPAIR: join(REPO_ROOT, "packages/chain/src/payout.json") })).toThrow("inside the repository");
     expect(() => checkRuntime({ ...cfg, simulate: { miners: [{ wallet: ALICE, usdPerHour: 1 }] } }, "x", ok)).toThrow("devnet only");
     expect(() => checkRuntime({ ...cfg, settlement: { mode: "estimate", minAgeHours: 1 } }, "x", ok)).toThrow("sales");
   });
@@ -350,5 +357,78 @@ describe("safety", () => {
     expect(p.what).toMatch(/2.75%/);
     expect(p.instruction.programId).toBe("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
     expect(p.instruction.accounts.find((a) => a.isSigner)!.pubkey).toBe(MS_PK.toBase58());
+  });
+});
+
+describe("restart after a crash", () => {
+  // Round 8 of the Oct 17 dress rehearsal: the loop was killed 0.7 s after sending a payout; it landed,
+  // but the ledger still had it owed and the restart paid it again. Now each payout transaction is
+  // recorded before it is sent and looked up on chain before anything is paid again.
+  const owedWith = (sig: string, lvbh: number) => {
+    const l = emptyLedger("devnet", "mint");
+    l.owed = [
+      { address: MINER, usd: 1, buyUsd: 1, kind: "miner", why: "M1", tokens: "11896624", inFlight: { signature: sig, lastValidBlockHeight: lvbh } },
+      { address: ALICE, usd: 2, kind: "holder", why: "H1", tokens: "2000000", inFlight: { signature: sig, lastValidBlockHeight: lvbh } },
+      { address: BOB, usd: 3, kind: "holder", why: "H1", tokens: "3000000" },
+    ];
+    return l;
+  };
+  const chain = (status: { err: unknown; confirmationStatus?: string } | null, height: number) => ({ statuses: async (s: string[]) => s.map(() => status), blockHeight: async () => height });
+
+  it("a payout that landed is recorded as paid, not sent again", async () => {
+    const l = owedWith("sig1", 100);
+    const r = await resolveInFlight(l, chain({ err: null, confirmationStatus: "confirmed" }, 50), { now: t0, decimals: 6 });
+    expect(r).toEqual({ landed: 2, retry: 0, signatures: ["sig1"] });
+    expect(l.owed.map((o) => o.address)).toEqual([BOB]);
+    expect(l.paid[MINER]!.miner).toBe("11896624");
+    expect(l.paid[ALICE]!.holder).toBe("2000000");
+    // The next round's plan retries only what never went out.
+    const plan = planRound({
+      ledger: l, now: t0, roundId: "r", taxTokens: 0n, rateBps: 500, price, levelPrice: price, rules: DEFAULT_RULES, excluded: platform, dev: DEV,
+      payHolders: false, floatAvailableUsd: 0, settlement: { mode: "estimate", minAgeMs: 0, budgetUsd: 0, ratio: 1 }, minHolderPayoutUsd: 0,
+    });
+    expect(plan.payouts.map((p) => p.address)).toEqual([BOB]);
+  });
+
+  it("a failed or expired transaction is retried", async () => {
+    const failed = owedWith("sig2", 100);
+    expect(await resolveInFlight(failed, chain({ err: { InstructionError: [1, "Custom"] } }, 50), { now: t0, decimals: 6 })).toMatchObject({ landed: 0, retry: 2 });
+    expect(failed.owed.filter((o) => o.inFlight)).toHaveLength(0);
+    expect(failed.owed).toHaveLength(3);
+    const expired = owedWith("sig3", 100);
+    expect(await resolveInFlight(expired, chain(null, 101), { now: t0, decimals: 6 })).toMatchObject({ landed: 0, retry: 2 });
+    expect(Object.keys(expired.paid)).toHaveLength(0);
+  });
+
+  it("a transaction that may still land is waited for; past the wait the round stops instead of paying twice", async () => {
+    const l = owedWith("sig4", 100);
+    let calls = 0;
+    const later = { statuses: async (s: string[]) => s.map(() => (++calls < 3 ? null : { err: null, confirmationStatus: "finalized" })), blockHeight: async () => 90 };
+    expect(await resolveInFlight(l, later, { now: t0, decimals: 6, sleep: async () => {} })).toMatchObject({ landed: 2 });
+    const stuck = owedWith("sig5", 100);
+    await expect(resolveInFlight(stuck, chain(null, 90), { now: t0, decimals: 6, waitMs: 0, sleep: async () => {} })).rejects.toThrow("still unconfirmed");
+    expect(stuck.owed.filter((o) => o.inFlight)).toHaveLength(2);
+  });
+
+  it("the public record shows a miner paid before the indexer has seen them", () => {
+    const l = emptyLedger("devnet", "mint");
+    l.paid[MINER] = { miner: "5000000", holder: "0" };
+    l.pending.push({ address: MINER, epochId: "r1", miningUsd: 1.6, immediateUsd: 1.2, estimatedUsd: 0.4, at: t0 });
+    const rec = publicRecord(l, { now: t0, price, rules: DEFAULT_RULES, excluded: platform, explorer: (s) => s, rate: { bps: 500 }, rounds: [] });
+    expect(rec.wallets[MINER]).toMatchObject({ balanceTokens: 0, paidTokens: { miner: 5, holder: 0 }, pendingUsd: 0.4 });
+  });
+});
+
+describe("a market buy that can't be measured", () => {
+  // Round 21 of the Oct 17 rehearsal: a rate-limited balance read after the buy came back as 0, the
+  // loop computed "bought -47,757 $HASH", and the miner's payout was cleared with 0 tokens.
+  it("a miner's payout that needed buying is never sent as 0 tokens", () => {
+    const owed = [{ address: MINER, usd: 1, buyUsd: 1, kind: "miner" as const, why: "M1" }, { address: ALICE, usd: 2, kind: "holder" as const, why: "H1" }];
+    for (const bought of [-47_757_608_951n, 0n, null]) {
+      const parts = payoutParts(owed, bought, (usd) => T(usd * 40));
+      expect(parts[0]!.total).toBeUndefined(); // stays owed, bought next round
+      expect(parts[1]!.total).toBe(T(80)); // tax-funded payouts go out as usual
+    }
+    expect(payoutParts(owed, T(20), (usd) => T(usd * 40))[0]!.total).toBe(T(20));
   });
 });
