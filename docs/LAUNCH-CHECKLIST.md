@@ -20,7 +20,7 @@ Last updated Oct 17 (domain bought: hashcoin.app).
 - [x] Buy the domain (hashcoin.app, Oct 17). If it was bought outside Cloudflare, point its nameservers to Cloudflare (HOSTING.md step 0).
 - [ ] Cloudflare: put the site and the API live (HOSTING.md steps 0–3, about an hour).
 - [ ] Helius: create an API key (the free tier is enough to start).
-- [ ] Discord: a server, and a webhook for alerts.
+- [ ] Discord: create the server and run the setup script (`docs/DISCORD-SETUP.md`, about 20 minutes). It also creates the alerts webhook.
 - [ ] Squads (squads.so): create the multisig and copy its vault address.
 - [ ] GitHub: add the three repo variables (HOSTING.md step 4).
 - [ ] Legal check, even a short consult, before the X campaign gets loud.
